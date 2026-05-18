@@ -1,9 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/client/node_modules
-/server/node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -21,6 +19,14 @@
 
 # production
 /build
+
+# SQLite database (auto-created at runtime)
+/server/db/fitconnect.db
+/server/db/fitconnect.db-shm
+/server/db/fitconnect.db-wal
+
+# uploaded user images (auto-created at runtime)
+/public/uploads/
 
 # misc
 .DS_Store
