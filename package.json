@@ -1,0 +1,16 @@
+{
+  "name": "fitconnect",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FitConnect — a luxury personal trainer marketplace",
+  "scripts": {
+    "dev": "concurrently -k -n SERVER,CLIENT -c yellow.bold,cyan.bold \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "seed": "npm run seed --prefix server",
+    "build": "npm run build --prefix client",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "start": "npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
