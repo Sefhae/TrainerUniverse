@@ -15,6 +15,37 @@ import {
 import { useT } from '../hooks/useLanguage';
 import { cn, formatPrice } from '../lib/format';
 
+function SelectRow({
+  value,
+  options,
+  placeholder,
+  onChange,
+}: {
+  value: string;
+  options: string[];
+  placeholder: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className={cn(
+        'w-full bg-white/5 border border-white/15 px-3 py-2 text-sm appearance-none cursor-pointer',
+        'focus:outline-none focus:border-volt/60 transition-colors duration-200',
+        value ? 'text-bone' : 'text-bone/45'
+      )}
+    >
+      <option value="">{placeholder}</option>
+      {options.map((opt) => (
+        <option key={opt} value={opt} className="bg-charcoal text-bone">
+          {opt}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 interface FilterSidebarProps {
   filters: TrainerFilters;
   setFilters: (partial: Partial<TrainerFilters>) => void;
@@ -174,6 +205,18 @@ export default function FilterSidebar({
   activeFilterCount,
 }: FilterSidebarProps) {
   const t = useT();
+  const [cities, setCities] = useState<string[]>([]);
+  const [states, setStates] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch('/api/locations')
+      .then((r) => r.json())
+      .then((d) => {
+        setCities(d.cities ?? []);
+        setStates(d.states ?? []);
+      })
+      .catch(() => {});
+  }, []);
 
   const toggleInList = (list: string[], value: string) =>
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -254,6 +297,24 @@ export default function FilterSidebar({
               </button>
             ))}
           </div>
+        </FilterGroup>
+
+        <FilterGroup title={t.filters.city}>
+          <SelectRow
+            value={filters.city}
+            options={cities}
+            placeholder={t.filters.allCities}
+            onChange={(city) => setFilters({ city })}
+          />
+        </FilterGroup>
+
+        <FilterGroup title={t.filters.county}>
+          <SelectRow
+            value={filters.state}
+            options={states}
+            placeholder={t.filters.allCounties}
+            onChange={(state) => setFilters({ state })}
+          />
         </FilterGroup>
 
         <FilterGroup title={t.filters.rating}>

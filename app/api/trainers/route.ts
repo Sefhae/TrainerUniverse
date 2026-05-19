@@ -29,6 +29,8 @@ export function GET(req: NextRequest) {
   const availability = searchParams.get('availability');
   const experience = searchParams.get('experience');
   const sort = searchParams.get('sort');
+  const city = searchParams.get('city');
+  const state = searchParams.get('state');
 
   const wantedSpecialties = csv(specialty);
   if (wantedSpecialties.length) {
@@ -57,6 +59,24 @@ export function GET(req: NextRequest) {
     trainers = trainers.filter((t) =>
       wantedExperience.includes(experienceBucket(t.yearsExperience as number))
     );
+  }
+
+  if (city) {
+    const lc = city.toLowerCase();
+    trainers = trainers.filter((t) => {
+      const loc = String(t.location || '');
+      const parts = loc.split(',');
+      return parts[0]?.trim().toLowerCase() === lc;
+    });
+  }
+
+  if (state) {
+    const lc = state.toLowerCase();
+    trainers = trainers.filter((t) => {
+      const loc = String(t.location || '');
+      const parts = loc.split(',');
+      return parts[1]?.trim().toLowerCase() === lc;
+    });
   }
 
   switch (sort) {

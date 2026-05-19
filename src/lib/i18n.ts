@@ -155,6 +155,10 @@ export const translations = {
       ratingLabels: ['Any rating', '4.0 & up', '4.5 & up'],
       minPrice: 'Minimum price',
       maxPrice: 'Maximum price',
+      city: 'City',
+      county: 'County',
+      allCities: 'All Cities',
+      allCounties: 'All Counties',
     },
     sort: {
       label: 'Sort trainers',
@@ -530,6 +534,10 @@ export const translations = {
       ratingLabels: ['Herhangi bir puan', '4.0 ve üzeri', '4.5 ve üzeri'],
       minPrice: 'Minimum fiyat',
       maxPrice: 'Maksimum fiyat',
+      city: 'Şehir',
+      county: 'İlçe',
+      allCities: 'Tüm Şehirler',
+      allCounties: 'Tüm İlçeler',
     },
     sort: {
       label: 'Antrenörleri sırala',

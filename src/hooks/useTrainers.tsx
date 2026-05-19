@@ -15,6 +15,8 @@ export interface TrainerFilters {
   availability: string[];
   experience: string[];
   sort: string;
+  city: string;
+  state: string;
 }
 
 const DEFAULT_SORT = 'top-rated';
@@ -34,6 +36,8 @@ export function parseFilters(params: URLSearchParams): TrainerFilters {
     availability: csv(params, 'availability'),
     experience: csv(params, 'experience'),
     sort: params.get('sort') || DEFAULT_SORT,
+    city: params.get('city') || '',
+    state: params.get('state') || '',
   };
 }
 
@@ -47,6 +51,8 @@ function filtersToParams(f: TrainerFilters): URLSearchParams {
   if (f.availability.length) p.set('availability', f.availability.join(','));
   if (f.experience.length) p.set('experience', f.experience.join(','));
   if (f.sort !== DEFAULT_SORT) p.set('sort', f.sort);
+  if (f.city) p.set('city', f.city);
+  if (f.state) p.set('state', f.state);
   return p;
 }
 
@@ -58,6 +64,8 @@ export function countActiveFilters(f: TrainerFilters): number {
   if (f.minPrice > PRICE_MIN || f.maxPrice < PRICE_MAX) n += 1;
   if (f.mode !== 'all') n += 1;
   if (f.minRating > 0) n += 1;
+  if (f.city) n += 1;
+  if (f.state) n += 1;
   return n;
 }
 
