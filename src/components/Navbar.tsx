@@ -97,6 +97,10 @@ export default function Navbar() {
           <Link href="/faq" className={navLinkClass('/faq')}>
             {t.nav.faq}
           </Link>
+          <span className="mx-6 h-4 w-px bg-white/20" />
+          <Link href="/contact" className={navLinkClass('/contact')}>
+            {t.nav.contact}
+          </Link>
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
@@ -152,6 +156,9 @@ export default function Navbar() {
             </Link>
             <Link href="/faq" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
               {t.nav.faq}
+            </Link>
+            <Link href="/contact" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
+              {t.nav.contact}
             </Link>
             <div className="mt-3 flex flex-col gap-2.5 border-t border-white/10 pt-4">
               {isAuthenticated ? (
