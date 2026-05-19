@@ -169,6 +169,19 @@ function createDb() {
       message    TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS session_requests (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      trainer_id INTEGER NOT NULL,
+      student_id INTEGER NOT NULL,
+      package_id INTEGER,
+      message    TEXT NOT NULL DEFAULT '',
+      status     TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (trainer_id) REFERENCES trainer_profiles(id) ON DELETE CASCADE,
+      FOREIGN KEY (student_id) REFERENCES student_profiles(id) ON DELETE CASCADE,
+      FOREIGN KEY (package_id) REFERENCES pricing_packages(id) ON DELETE SET NULL
+    );
   `);
 
   return db;

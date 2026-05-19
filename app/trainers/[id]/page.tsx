@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Award, Globe, MapPin, Phone, Star } from 'lucide-react';
+import { ArrowLeft, Award, CalendarCheck, Globe, MapPin, Star } from 'lucide-react';
 import api from '../../../src/api/client';
 import type { Review, Trainer } from '../../../src/types';
 import { cn, formatPrice, initials, resolveImage } from '../../../src/lib/format';
@@ -13,7 +13,7 @@ import WorkGallery from '../../../src/components/WorkGallery';
 import ReviewCard from '../../../src/components/ReviewCard';
 import AvailabilityCalendar from '../../../src/components/AvailabilityCalendar';
 import EmptyState from '../../../src/components/EmptyState';
-import ContactModal from '../../../src/components/ContactModal';
+import BookingModal from '../../../src/components/BookingModal';
 import ReviewModal from '../../../src/components/ReviewModal';
 
 function SectionHeading({
@@ -207,8 +207,8 @@ export default function TrainerProfilePage() {
                 <span className="ml-1 font-sans text-sm font-medium text-bone/50">/ session</span>
               </p>
               <button onClick={() => setContactOpen(true)} className="btn btn-volt mt-4 w-full">
-                <Phone className="h-4 w-4" />
-                Book a Call
+                <CalendarCheck className="h-4 w-4" />
+                Book a Session
               </button>
             </div>
           </div>
@@ -374,10 +374,12 @@ export default function TrainerProfilePage() {
         </div>
       </section>
 
-      <ContactModal
+      <BookingModal
         open={contactOpen}
         onClose={() => setContactOpen(false)}
+        trainerId={trainer.id}
         trainerName={trainer.name}
+        packages={trainer.packages}
       />
       <ReviewModal
         open={reviewOpen}

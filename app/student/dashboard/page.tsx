@@ -220,7 +220,15 @@ export default function StudentDashboardPage() {
                       </Link>
                     </div>
                   ) : (
-                    <p className="px-5 py-8 text-sm text-ink/50">{sp.noTrainer}</p>
+                    <div className="flex flex-col items-start gap-4 px-5 py-8">
+                      <p className="text-sm text-ink/50">{sp.noTrainer}</p>
+                      <Link
+                        href="/trainers"
+                        className="btn btn-dark text-sm"
+                      >
+                        {sp.browseTrainers}
+                      </Link>
+                    </div>
                   )}
                 </div>
 

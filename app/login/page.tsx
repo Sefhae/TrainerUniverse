@@ -214,21 +214,30 @@ function LoginForm() {
             </button>
           </form>
 
-          {role === 'trainer' && (
-            <div className="mt-6 border border-ink/10 bg-white p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45">
-                {t.login.demoTitle}
-              </p>
-              <p className="mt-1 text-sm text-ink/60">{t.login.demoCredentials}</p>
-              <button
-                type="button"
-                onClick={useDemo}
-                className="mt-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-ink underline hover:text-ink/60"
-              >
-                {t.login.demoFill}
-              </button>
-            </div>
-          )}
+          <div className="mt-6 border border-ink/10 bg-white p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45">
+              {t.login.demoTitle}
+            </p>
+            <p className="mt-1 text-sm text-ink/60">
+              {role === 'trainer' ? t.login.demoCredentials : t.studentPortal.demoCredentials}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                if (role === 'trainer') {
+                  useDemo();
+                } else {
+                  setEmail('demo.student@fitconnect.com');
+                  setPassword('student123');
+                  setErrors({});
+                  setFormError('');
+                }
+              }}
+              className="mt-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-ink underline hover:text-ink/60"
+            >
+              {role === 'trainer' ? t.login.demoFill : t.studentPortal.demoFill}
+            </button>
+          </div>
         </div>
       </div>
     </div>

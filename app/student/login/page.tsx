@@ -19,6 +19,12 @@ export default function StudentLoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  function fillDemo() {
+    setEmail('demo.student@fitconnect.com');
+    setPassword('student123');
+    setError('');
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -90,6 +96,20 @@ export default function StudentLoginPage() {
             {loading ? '…' : sp.loginBtn}
           </button>
         </form>
+
+        <div className="mt-6 border border-ink/10 bg-white p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45">
+            {sp.demoTitle}
+          </p>
+          <p className="mt-1 text-sm text-ink/60">{sp.demoCredentials}</p>
+          <button
+            type="button"
+            onClick={fillDemo}
+            className="mt-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-ink underline hover:text-ink/60"
+          >
+            {sp.demoFill}
+          </button>
+        </div>
 
         <p className="mt-4 text-center text-sm text-ink/55">
           {sp.noAccount}{' '}

@@ -130,6 +130,19 @@ export interface Message {
   createdAt: string;
 }
 
+export interface SessionRequest {
+  id: number;
+  trainerId: number;
+  studentId: number;
+  studentName: string;
+  studentEmail: string;
+  packageId: number | null;
+  packageName: string | null;
+  message: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}
+
 export interface StudentAuthResponse {
   token: string;
   user: User;

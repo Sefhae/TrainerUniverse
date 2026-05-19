@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CalendarDays, DollarSign, ExternalLink, Image as ImageIcon, MessageSquare, Star, User, Users } from 'lucide-react';
+import { CalendarDays, DollarSign, ExternalLink, Image as ImageIcon, Inbox, MessageSquare, Star, User, Users } from 'lucide-react';
 import api from '../../src/api/client';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useT } from '../../src/hooks/useLanguage';
@@ -16,8 +16,9 @@ import ReviewsPanel from '../../src/components/dashboard/ReviewsPanel';
 import StudentsPanel from '../../src/components/dashboard/StudentsPanel';
 import TrainingCalendar from '../../src/components/dashboard/TrainingCalendar';
 import MessagesPanel from '../../src/components/dashboard/MessagesPanel';
+import SessionRequestsPanel from '../../src/components/dashboard/SessionRequestsPanel';
 
-type SectionId = 'profile' | 'pricing' | 'work' | 'reviews' | 'students' | 'calendar' | 'messages';
+type SectionId = 'profile' | 'pricing' | 'work' | 'reviews' | 'students' | 'calendar' | 'messages' | 'requests';
 
 function DashboardContent() {
   const { trainerId, user } = useAuth();
@@ -73,6 +74,7 @@ function DashboardContent() {
     { id: 'pricing', label: t.dashboard.pricing, icon: DollarSign, count: trainer.packages.length },
     { id: 'work', label: t.dashboard.previousWork, icon: ImageIcon, count: trainer.previousWork.length },
     { id: 'reviews', label: t.dashboard.reviews, icon: Star, count: trainer.reviews.length },
+    { id: 'requests', label: 'Requests', icon: Inbox },
     { id: 'students', label: t.dashboard.students, icon: Users },
     { id: 'calendar', label: t.dashboard.calendar, icon: CalendarDays },
     { id: 'messages', label: t.dashboard.messages, icon: MessageSquare },
@@ -168,6 +170,7 @@ function DashboardContent() {
             {section === 'pricing' && <PricingManager trainer={trainer} refresh={load} />}
             {section === 'work' && <WorkManager trainer={trainer} refresh={load} />}
             {section === 'reviews' && <ReviewsPanel trainer={trainer} />}
+            {section === 'requests' && <SessionRequestsPanel />}
             {section === 'students' && <StudentsPanel />}
             {section === 'calendar' && <TrainingCalendar role="trainer" />}
             {section === 'messages' && (
