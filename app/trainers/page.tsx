@@ -33,7 +33,7 @@ function DirectoryContent() {
             <span className="h-px w-8 bg-volt" />
             {t.trainers.eyebrow}
           </p>
-          <h1 className="mt-4 font-display text-6xl leading-none tracking-wide sm:text-7xl">
+          <h1 className="mt-4 font-display text-4xl leading-none tracking-wide sm:text-6xl lg:text-7xl">
             {t.trainers.title}
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-bone/55">{t.trainers.desc}</p>
