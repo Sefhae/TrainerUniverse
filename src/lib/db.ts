@@ -1,12 +1,26 @@
 import path from 'path';
+import fs from 'fs';
 import Database from 'better-sqlite3';
 
 declare global {
   var __fitconnect_db: Database.Database | undefined;
 }
 
+function resolveDbPath(): string {
+  const sourcePath = process.env.DB_PATH || path.join(process.cwd(), 'server', 'db', 'fitconnect.db');
+  // Vercel's deployed filesystem is read-only; copy the db to /tmp (writable) once per instance.
+  if (process.env.VERCEL) {
+    const tmpPath = '/tmp/fitconnect.db';
+    if (!fs.existsSync(tmpPath)) {
+      fs.copyFileSync(sourcePath, tmpPath);
+    }
+    return tmpPath;
+  }
+  return sourcePath;
+}
+
 function createDb() {
-  const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'server', 'db', 'fitconnect.db');
+  const dbPath = resolveDbPath();
   const db = new Database(dbPath);
 
   db.pragma('journal_mode = WAL');
