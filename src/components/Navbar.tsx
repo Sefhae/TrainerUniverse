@@ -10,14 +10,17 @@ import { cn } from '../lib/format';
 
 function Logo() {
   return (
-    <Link href="/" className="group flex items-center gap-2.5">
-      <svg viewBox="0 0 64 64" className="h-8 w-8 transition-transform duration-200 group-hover:scale-110">
-        <rect width="64" height="64" fill="#C8FF00" />
-        <path d="M37 8 L16 38 H30 L28 56 L48 26 H34 Z" fill="#0A0A0A" />
+    <Link href="/" className="group flex items-center gap-3">
+      <svg viewBox="0 0 40 40" className="h-9 w-9 shrink-0 transition-transform duration-300 group-hover:scale-110">
+        <circle cx="20" cy="20" r="20" fill="#C8FF00" />
+        <ellipse cx="20" cy="20" rx="13" ry="4.5" fill="none" stroke="#0A0A0A" strokeWidth="1.2"
+          transform="rotate(-38 20 20)" opacity="0.3" />
+        <path d="M24 4 L12 22 H20 L16 36 L28 18 H20 Z" fill="#0A0A0A" />
       </svg>
-      <span className="font-display text-2xl leading-none tracking-[0.08em] text-bone">
-        TRAINER<span className="text-volt">UNIVERSE</span>
-      </span>
+      <div className="flex flex-col leading-none">
+        <span className="font-display text-[22px] tracking-[0.06em] text-bone">TRAINER</span>
+        <span className="font-display text-[13px] tracking-[0.28em] text-volt">UNIVERSE</span>
+      </div>
     </Link>
   );
 }
