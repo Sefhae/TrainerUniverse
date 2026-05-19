@@ -17,7 +17,7 @@ export default function Footer() {
                 <path d="M37 8 L16 38 H30 L28 56 L48 26 H34 Z" fill="#0A0A0A" />
               </svg>
               <span className="font-display text-2xl tracking-[0.08em]">
-                FIT<span className="text-volt">CONNECT</span>
+                TRAINER<span className="text-volt">UNIVERSE</span>
               </span>
             </div>
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-bone/55">{t.footer.desc}</p>
@@ -66,7 +66,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-14 flex flex-col gap-3 border-t border-white/10 pt-7 text-[12px] text-bone/40 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} FitConnect. {t.footer.allRightsReserved}</p>
+          <p>© {year} TrainerUniverse. {t.footer.allRightsReserved}</p>
           <p className="uppercase tracking-[0.18em]">{t.footer.tagline}</p>
         </div>
       </div>

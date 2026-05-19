@@ -5,7 +5,7 @@ import Navbar from '../src/components/Navbar';
 import Footer from '../src/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'FitConnect — Find Your Perfect Trainer',
+  title: 'TrainerUniverse — Find Your Perfect Trainer',
   description:
     'The marketplace for elite personal training. Find a coach who matches your goals, your schedule, and your ambition.',
 };

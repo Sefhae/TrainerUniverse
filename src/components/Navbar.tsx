@@ -16,7 +16,7 @@ function Logo() {
         <path d="M37 8 L16 38 H30 L28 56 L48 26 H34 Z" fill="#0A0A0A" />
       </svg>
       <span className="font-display text-2xl leading-none tracking-[0.08em] text-bone">
-        FIT<span className="text-volt">CONNECT</span>
+        TRAINER<span className="text-volt">UNIVERSE</span>
       </span>
     </Link>
   );
@@ -79,8 +79,14 @@ export default function Navbar() {
         <Logo />
 
         <nav className="hidden items-center gap-9 md:flex">
+          <Link href="/" className={navLinkClass('/')}>
+            {t.nav.home}
+          </Link>
           <Link href="/trainers" className={navLinkClass('/trainers')}>
             {t.nav.findTrainer}
+          </Link>
+          <Link href="/faq" className={navLinkClass('/faq')}>
+            {t.nav.faq}
           </Link>
           <Link href="/register" className={navLinkClass('/register')}>
             {t.nav.becomeTrainer}
@@ -129,8 +135,14 @@ export default function Navbar() {
       {menuOpen && (
         <div className="animate-slide-down border-t border-white/10 bg-ink md:hidden">
           <nav className="flex flex-col px-5 py-4">
+            <Link href="/" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
+              {t.nav.home}
+            </Link>
             <Link href="/trainers" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
               {t.nav.findTrainer}
+            </Link>
+            <Link href="/faq" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
+              {t.nav.faq}
             </Link>
             <Link href="/register" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
               {t.nav.becomeTrainer}

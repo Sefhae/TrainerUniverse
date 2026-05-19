@@ -13,7 +13,7 @@ import { useT } from '../src/hooks/useLanguage';
 const TESTIMONIALS = [
   { quote: 'I found a strength coach in minutes. Six months later I deadlift double what I used to.', name: 'Rachel M.', role: 'Strength client', rating: 5 },
   { quote: 'The reviews and transformation photos made choosing a trainer genuinely easy.', name: 'Daniel R.', role: 'Weight-loss client', rating: 5 },
-  { quote: 'My boxing coach is incredible — FitConnect matched me perfectly on the first try.', name: 'Natalie S.', role: 'Boxing client', rating: 5 },
+  { quote: 'My boxing coach is incredible — TrainerUniverse matched me perfectly on the first try.', name: 'Natalie S.', role: 'Boxing client', rating: 5 },
   { quote: 'Remote yoga that actually fits my schedule. I have never been this mobile.', name: 'Olivia T.', role: 'Yoga client', rating: 5 },
   { quote: 'Down 30 pounds and my energy is through the roof. Worth every single session.', name: 'James O.', role: 'Nutrition client', rating: 5 },
   { quote: 'Came back from an ACL injury stronger than before thanks to my rehab coach.', name: 'Chris B.', role: 'Rehab client', rating: 5 },
@@ -31,7 +31,7 @@ function HeroImage({ src, label }: { src: string; label: string }) {
     <div className="relative h-full w-full overflow-hidden bg-charcoal">
       {failed ? (
         <div className="flex h-full w-full items-center justify-center">
-          <span className="font-display text-3xl text-white/10">FitConnect</span>
+          <span className="font-display text-3xl text-white/10">TrainerUniverse</span>
         </div>
       ) : (
         <img

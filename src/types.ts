@@ -1,4 +1,4 @@
-export type Role = 'trainer' | 'admin';
+export type Role = 'trainer' | 'admin' | 'student';
 
 export interface User {
   id: number;
@@ -87,4 +87,51 @@ export interface AuthResponse {
   token: string;
   user: User;
   trainerId: number | null;
+}
+
+export interface StudentProfile {
+  id: number;
+  userId: number;
+  name: string;
+  email: string;
+  enrolledAt: string;
+}
+
+export interface TrainingSession {
+  id: number;
+  trainerId: number;
+  studentId: number;
+  studentName: string;
+  title: string;
+  scheduledAt: string;
+  durationMin: number;
+  status: 'confirmed' | 'pending' | 'cancelled';
+  notes: string;
+  createdAt: string;
+  pendingChangeRequest?: SessionChangeRequest;
+}
+
+export interface SessionChangeRequest {
+  id: number;
+  sessionId: number;
+  requestedBy: 'trainer' | 'student';
+  proposedAt: string;
+  message: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}
+
+export interface Message {
+  id: number;
+  trainerId: number;
+  studentId: number;
+  sender: 'trainer' | 'student';
+  content: string;
+  createdAt: string;
+}
+
+export interface StudentAuthResponse {
+  token: string;
+  user: User;
+  studentId: number;
 }

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const TOKEN_KEY = 'fitconnect_token';
+export const TOKEN_KEY = 'traineruniverse_token';
 
 const api = axios.create({
   baseURL: '/api',

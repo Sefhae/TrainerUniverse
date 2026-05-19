@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useState, type ReactNode } from
 import api, { TOKEN_KEY } from '../api/client';
 import type { AuthResponse, User } from '../types';
 
-const AUTH_KEY = 'fitconnect_auth';
+const AUTH_KEY = 'traineruniverse_auth';
 
 interface AuthState {
   user: User | null;

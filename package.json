@@ -1,8 +1,8 @@
 {
-  "name": "fitconnect",
+  "name": "traineruniverse",
   "version": "1.0.0",
   "private": true,
-  "description": "FitConnect — Next.js personal trainer marketplace",
+  "description": "TrainerUniverse — Next.js personal trainer marketplace",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

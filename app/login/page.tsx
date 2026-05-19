@@ -8,6 +8,9 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { useToast } from '../../src/hooks/useToast';
 import { useT } from '../../src/hooks/useLanguage';
 import { cn, getApiError } from '../../src/lib/format';
+import api from '../../src/api/client';
+
+type Role = 'trainer' | 'student';
 
 function LoginForm() {
   const { login } = useAuth();
@@ -16,14 +19,22 @@ function LoginForm() {
   const toast = useToast();
   const t = useT();
 
+  const initialRole: Role = searchParams.get('role') === 'student' ? 'student' : 'trainer';
   const from = searchParams.get('from') || '/dashboard';
 
+  const [role, setRole] = useState<Role>(initialRole);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  function switchRole(next: Role) {
+    setRole(next);
+    setErrors({});
+    setFormError('');
+  }
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -35,12 +46,24 @@ function LoginForm() {
 
     setFormError('');
     setSubmitting(true);
+
     try {
-      await login(email.trim(), password);
-      toast.success(t.login.successMsg);
-      router.replace(from);
+      if (role === 'trainer') {
+        await login(email.trim(), password);
+        toast.success(t.login.successMsg);
+        router.replace(from);
+      } else {
+        const { data } = await api.post<{ token: string; user: { id: number; email: string; role: string }; studentId: number }>(
+          '/auth/student-login',
+          { email: email.trim(), password }
+        );
+        localStorage.setItem('traineruniverse_student_token', data.token);
+        localStorage.setItem('traineruniverse_student_auth', JSON.stringify({ user: data.user, studentId: data.studentId }));
+        localStorage.setItem('traineruniverse_token', data.token);
+        router.replace('/student/dashboard');
+      }
     } catch (err) {
-      setFormError(getApiError(err, t.login.fallbackError));
+      setFormError(getApiError(err, role === 'trainer' ? t.login.fallbackError : t.studentPortal.fallbackError));
     } finally {
       setSubmitting(false);
     }
@@ -84,12 +107,43 @@ function LoginForm() {
       {/* Form panel */}
       <div className="flex items-center justify-center bg-bone px-5 py-14">
         <div className="w-full max-w-md">
-          <h2 className="font-display text-5xl leading-none tracking-wide">{t.login.title}</h2>
+
+          {/* Role toggle */}
+          <div className="mb-8 flex border border-ink/15 bg-white">
+            {(['trainer', 'student'] as Role[]).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => switchRole(r)}
+                className={cn(
+                  'flex-1 py-2.5 text-[13px] font-semibold uppercase tracking-[0.12em] transition-colors duration-200',
+                  role === r ? 'bg-ink text-bone' : 'text-ink/45 hover:text-ink'
+                )}
+              >
+                {r === 'trainer' ? t.login.trainerTab : t.login.studentTab}
+              </button>
+            ))}
+          </div>
+
+          <h2 className="font-display text-5xl leading-none tracking-wide">
+            {role === 'trainer' ? t.login.title : t.studentPortal.loginTitle}
+          </h2>
           <p className="mt-2 text-sm text-ink/55">
-            {t.login.newAccount}{' '}
-            <Link href="/register" className="font-semibold text-ink underline hover:text-ink/70">
-              {t.login.becomeTrainer}
-            </Link>
+            {role === 'trainer' ? (
+              <>
+                {t.login.newAccount}{' '}
+                <Link href="/register" className="font-semibold text-ink underline hover:text-ink/70">
+                  {t.login.becomeTrainer}
+                </Link>
+              </>
+            ) : (
+              <>
+                {t.studentPortal.noAccount}{' '}
+                <Link href="/student/register" className="font-semibold text-ink underline hover:text-ink/70">
+                  {t.studentPortal.goToRegister}
+                </Link>
+              </>
+            )}
           </p>
 
           {formError && (
@@ -153,26 +207,28 @@ function LoginForm() {
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-bone border-t-transparent" />
               ) : (
                 <>
-                  {t.login.submit}
+                  {role === 'trainer' ? t.login.submit : t.studentPortal.loginBtn}
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-6 border border-ink/10 bg-white p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45">
-              {t.login.demoTitle}
-            </p>
-            <p className="mt-1 text-sm text-ink/60">{t.login.demoCredentials}</p>
-            <button
-              type="button"
-              onClick={useDemo}
-              className="mt-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-ink underline hover:text-ink/60"
-            >
-              {t.login.demoFill}
-            </button>
-          </div>
+          {role === 'trainer' && (
+            <div className="mt-6 border border-ink/10 bg-white p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45">
+                {t.login.demoTitle}
+              </p>
+              <p className="mt-1 text-sm text-ink/60">{t.login.demoCredentials}</p>
+              <button
+                type="button"
+                onClick={useDemo}
+                className="mt-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-ink underline hover:text-ink/60"
+              >
+                {t.login.demoFill}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

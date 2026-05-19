@@ -3,7 +3,7 @@ import fs from 'fs';
 import Database from 'better-sqlite3';
 
 declare global {
-  var __fitconnect_db: Database.Database | undefined;
+  var __traineruniverse_db: Database.Database | undefined;
 }
 
 function resolveDbPath(): string {
@@ -107,14 +107,67 @@ function createDb() {
       year       INTEGER,
       FOREIGN KEY (trainer_id) REFERENCES trainer_profiles(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS student_profiles (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id    INTEGER NOT NULL UNIQUE,
+      name       TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS trainer_students (
+      trainer_id  INTEGER NOT NULL,
+      student_id  INTEGER NOT NULL,
+      enrolled_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (trainer_id, student_id),
+      FOREIGN KEY (trainer_id) REFERENCES trainer_profiles(id) ON DELETE CASCADE,
+      FOREIGN KEY (student_id) REFERENCES student_profiles(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS training_sessions (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      trainer_id   INTEGER NOT NULL,
+      student_id   INTEGER NOT NULL,
+      title        TEXT NOT NULL DEFAULT 'Training Session',
+      scheduled_at TEXT NOT NULL,
+      duration_min INTEGER NOT NULL DEFAULT 60,
+      status       TEXT NOT NULL DEFAULT 'confirmed',
+      notes        TEXT NOT NULL DEFAULT '',
+      created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (trainer_id) REFERENCES trainer_profiles(id) ON DELETE CASCADE,
+      FOREIGN KEY (student_id) REFERENCES student_profiles(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS session_change_requests (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id   INTEGER NOT NULL,
+      requested_by TEXT NOT NULL,
+      proposed_at  TEXT NOT NULL,
+      message      TEXT NOT NULL DEFAULT '',
+      status       TEXT NOT NULL DEFAULT 'pending',
+      created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (session_id) REFERENCES training_sessions(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS messages (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      trainer_id INTEGER NOT NULL,
+      student_id INTEGER NOT NULL,
+      sender     TEXT NOT NULL,
+      content    TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (trainer_id) REFERENCES trainer_profiles(id) ON DELETE CASCADE,
+      FOREIGN KEY (student_id) REFERENCES student_profiles(id) ON DELETE CASCADE
+    );
   `);
 
   return db;
 }
 
-const db = globalThis.__fitconnect_db ?? createDb();
+const db = globalThis.__traineruniverse_db ?? createDb();
 if (process.env.NODE_ENV !== 'production') {
-  globalThis.__fitconnect_db = db;
+  globalThis.__traineruniverse_db = db;
 }
 
 export default db;

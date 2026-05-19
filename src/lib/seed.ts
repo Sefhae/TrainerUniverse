@@ -318,6 +318,26 @@ const TRAINERS: TrainerData[] = [
   },
 ];
 
+// Returns an ISO string for a date offset by `days` (negative = past) at a given hour (UTC)
+const schedAt = (days: number, hour: number) => {
+  const d = new Date(Date.now() + days * 86400000);
+  d.setUTCHours(hour, 0, 0, 0);
+  return d.toISOString();
+};
+
+interface StudentData {
+  email: string;
+  name: string;
+  trainerEmail: string;
+}
+
+const STUDENTS: StudentData[] = [
+  { email: 'alex@student.com',  name: 'Alex Johnson',  trainerEmail: 'marcus@fitconnect.com' },
+  { email: 'emma@student.com',  name: 'Emma Clarke',   trainerEmail: 'marcus@fitconnect.com' },
+  { email: 'cem@student.com',   name: 'Cem Yılmaz',    trainerEmail: 'sofia@fitconnect.com'  },
+  { email: 'sara@student.com',  name: 'Sara Koç',      trainerEmail: 'darnell@fitconnect.com'},
+];
+
 export function seed() {
   const insUser = db.prepare('INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)');
   const insProfile = db.prepare(`
@@ -344,9 +364,34 @@ export function seed() {
     INSERT INTO certifications (trainer_id, name, issuer, year)
     VALUES (@trainer_id, @name, @issuer, @year)
   `);
+  const insStudentProfile = db.prepare(`
+    INSERT INTO student_profiles (user_id, name, created_at)
+    VALUES (?, ?, datetime('now'))
+  `);
+  const insEnroll = db.prepare(`
+    INSERT INTO trainer_students (trainer_id, student_id, enrolled_at)
+    VALUES (?, ?, datetime('now'))
+  `);
+  const insSession = db.prepare(`
+    INSERT INTO training_sessions (trainer_id, student_id, title, scheduled_at, duration_min, status, notes)
+    VALUES (@trainer_id, @student_id, @title, @scheduled_at, @duration_min, @status, @notes)
+  `);
+  const insChangeReq = db.prepare(`
+    INSERT INTO session_change_requests (session_id, requested_by, proposed_at, message, status, created_at)
+    VALUES (?, ?, ?, ?, 'pending', datetime('now'))
+  `);
+  const insMessage = db.prepare(`
+    INSERT INTO messages (trainer_id, student_id, sender, content, created_at)
+    VALUES (?, ?, ?, ?, ?)
+  `);
 
   const run = db.transaction(() => {
     db.exec(`
+      DELETE FROM messages;
+      DELETE FROM session_change_requests;
+      DELETE FROM training_sessions;
+      DELETE FROM trainer_students;
+      DELETE FROM student_profiles;
       DELETE FROM trainer_specialties;
       DELETE FROM pricing_packages;
       DELETE FROM previous_work;
@@ -363,10 +408,11 @@ export function seed() {
       specId[name] = insSpec.run(name).lastInsertRowid;
     }
 
-    const passwordHash = bcrypt.hashSync('trainer123', 10);
+    const trainerHash = bcrypt.hashSync('trainer123', 10);
+    const trainerIdByEmail: Record<string, number | bigint> = {};
 
     for (const t of TRAINERS) {
-      const userId = insUser.run(t.email, passwordHash, 'trainer').lastInsertRowid;
+      const userId = insUser.run(t.email, trainerHash, 'trainer').lastInsertRowid;
       const trainerId = insProfile.run({
         user_id: userId,
         name: t.name,
@@ -380,6 +426,8 @@ export function seed() {
         availability: JSON.stringify(t.availability),
         is_published: 1,
       }).lastInsertRowid;
+
+      trainerIdByEmail[t.email] = trainerId;
 
       for (const s of t.specialties) {
         linkSpec.run(trainerId, specId[s]);
@@ -419,6 +467,97 @@ export function seed() {
         insCert.run({ trainer_id: trainerId, name: c.name, issuer: c.issuer, year: c.year });
       }
     }
+
+    // ── Students ────────────────────────────────────────────────────────────
+    const studentHash = bcrypt.hashSync('student123', 10);
+    const studentIdByEmail: Record<string, number | bigint> = {};
+
+    for (const s of STUDENTS) {
+      const userId = insUser.run(s.email, studentHash, 'student').lastInsertRowid;
+      const studentId = insStudentProfile.run(userId, s.name).lastInsertRowid;
+      studentIdByEmail[s.email] = studentId;
+      const trainerId = trainerIdByEmail[s.trainerEmail];
+      insEnroll.run(trainerId, studentId);
+    }
+
+    // ── Training sessions ────────────────────────────────────────────────────
+    // Marcus (trainer 1) ↔ Alex (student 1)
+    const marcus = trainerIdByEmail['marcus@fitconnect.com'];
+    const alexId  = studentIdByEmail['alex@student.com'];
+    const emmaId  = studentIdByEmail['emma@student.com'];
+    const sofia   = trainerIdByEmail['sofia@fitconnect.com'];
+    const cemId   = studentIdByEmail['cem@student.com'];
+    const darnell = trainerIdByEmail['darnell@fitconnect.com'];
+    const saraId  = studentIdByEmail['sara@student.com'];
+
+    // Past sessions — Marcus & Alex
+    insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Deadlift Technique',        scheduled_at: schedAt(-14, 9),  duration_min: 60, status: 'confirmed', notes: 'Focus on hip hinge and bar path.' });
+    insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Squat Progression',          scheduled_at: schedAt(-7,  9),  duration_min: 60, status: 'confirmed', notes: 'Working up to 3×5 back squat.' });
+    insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Upper Body Push',             scheduled_at: schedAt(-3,  10), duration_min: 60, status: 'confirmed', notes: 'Bench press + OHP accessory work.' });
+
+    // Upcoming sessions — Marcus & Alex
+    const sess1 = insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Pull Day — Rows & Pull-Ups', scheduled_at: schedAt(2,  9),  duration_min: 60, status: 'confirmed', notes: '' });
+    const sess2 = insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Leg Day — Heavy Squats',     scheduled_at: schedAt(7,  9),  duration_min: 75, status: 'confirmed', notes: 'Aiming for a new 5-rep max.' });
+    insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Conditioning Circuit',        scheduled_at: schedAt(14, 10), duration_min: 45, status: 'confirmed', notes: '' });
+
+    // Upcoming sessions — Marcus & Emma
+    insSession.run({ trainer_id: marcus, student_id: emmaId, title: 'Foundation Assessment',        scheduled_at: schedAt(3,  11), duration_min: 75, status: 'confirmed', notes: 'First session — movement screen and goal setting.' });
+    insSession.run({ trainer_id: marcus, student_id: emmaId, title: 'Barbell Basics',                scheduled_at: schedAt(10, 11), duration_min: 60, status: 'confirmed', notes: '' });
+
+    // Sofia & Cem
+    insSession.run({ trainer_id: sofia, student_id: cemId,   title: 'Hip Opener Flow',              scheduled_at: schedAt(1,  8),  duration_min: 60, status: 'confirmed', notes: '' });
+    insSession.run({ trainer_id: sofia, student_id: cemId,   title: 'Shoulder Mobility & Breath',    scheduled_at: schedAt(8,  8),  duration_min: 60, status: 'confirmed', notes: 'Bring a block and strap.' });
+
+    // Darnell & Sara
+    insSession.run({ trainer_id: darnell, student_id: saraId, title: 'Boxing Fundamentals',          scheduled_at: schedAt(4,  18), duration_min: 60, status: 'confirmed', notes: 'Bring hand wraps.' });
+    insSession.run({ trainer_id: darnell, student_id: saraId, title: 'Pad Work & Footwork',           scheduled_at: schedAt(11, 18), duration_min: 60, status: 'pending',   notes: '' });
+
+    // ── Change requests ──────────────────────────────────────────────────────
+    // Alex requests to move sess1 two days later
+    insChangeReq.run(
+      sess1.lastInsertRowid,
+      'student',
+      schedAt(4, 9),
+      "Something came up on Thursday — can we move to Saturday morning instead?"
+    );
+    // Marcus requests to move sess2 one day earlier
+    insChangeReq.run(
+      sess2.lastInsertRowid,
+      'trainer',
+      schedAt(6, 9),
+      "I have a scheduling conflict on the 7th. Can we do the 6th instead?"
+    );
+
+    // ── Messages — Marcus & Alex ─────────────────────────────────────────────
+    const msgs: Array<{ sender: 'trainer' | 'student'; content: string; hoursAgo: number }> = [
+      { sender: 'student',  content: "Hey Marcus! Quick question — should I eat before our morning sessions or train fasted?",                                                    hoursAgo: 72 },
+      { sender: 'trainer',  content: "Great question. For sessions under 60 minutes, fasted is fine if you tolerate it well. If you feel weak or dizzy, grab a banana 30 min before.",  hoursAgo: 71 },
+      { sender: 'student',  content: "Got it. I'll try fasted first and see how it goes. Also, my lower back was a bit sore after the deadlifts — is that normal?",             hoursAgo: 70 },
+      { sender: 'trainer',  content: "Some muscle soreness in the erectors is totally normal, especially early on. If it's sharp or on one side, tell me immediately. Otherwise it should clear in 48 hours.", hoursAgo: 69 },
+      { sender: 'student',  content: "It's just that dull muscle ache, feels fine. I'm actually excited for the squat session next week — been practicing the hip hinge at home.", hoursAgo: 48 },
+      { sender: 'trainer',  content: "Love the dedication! Make sure you're not rounding your lower back at the bottom. Record yourself from the side and send me a clip — happy to give you feedback.", hoursAgo: 47 },
+      { sender: 'student',  content: "Will do! Sent you a video in email. Also I requested to reschedule Thursday's session — something came up at work.",                        hoursAgo: 24 },
+      { sender: 'trainer',  content: "Saw the reschedule request — no problem, Saturday works. And I'll check the video tonight. Keep the work up, you're progressing really well.", hoursAgo: 23 },
+      { sender: 'student',  content: "Thanks! Really appreciate it. See you Saturday 💪",                                                                                         hoursAgo: 22 },
+      { sender: 'trainer',  content: "See you then. Rest up tomorrow — legs are gonna be working hard on Saturday.",                                                               hoursAgo: 21 },
+    ];
+
+    for (const m of msgs) {
+      const createdAt = new Date(Date.now() - m.hoursAgo * 3600000).toISOString();
+      insMessage.run(marcus, alexId, m.sender, m.content, createdAt);
+    }
+
+    // A short exchange — Sofia & Cem
+    const sofaMsgs: Array<{ sender: 'trainer' | 'student'; content: string; hoursAgo: number }> = [
+      { sender: 'student',  content: "Merhaba Sofia! Yarınki seans için hazır mıyım? Blok ve kayış getirmemi söylediniz.",  hoursAgo: 10 },
+      { sender: 'trainer',  content: "Merhaba Cem! Evet, bloğunu ve kayışını getir. Ayrıca rahat kıyafet giy — bugün kalça açılımına odaklanacağız.", hoursAgo: 9  },
+      { sender: 'student',  content: "Harika, teşekkürler. Görüşürüz!",                                                       hoursAgo: 9  },
+    ];
+
+    for (const m of sofaMsgs) {
+      const createdAt = new Date(Date.now() - m.hoursAgo * 3600000).toISOString();
+      insMessage.run(sofia, cemId, m.sender, m.content, createdAt);
+    }
   });
 
   run();
@@ -428,6 +567,10 @@ export function seed() {
 // Run directly: tsx src/lib/seed.ts
 if (process.argv[1] && process.argv[1].endsWith('seed.ts')) {
   const count = seed();
-  console.log(`Seeded ${count} trainers.`);
-  console.log('Demo login → marcus@fitconnect.com / trainer123');
+  console.log(`Seeded ${count} trainers + ${STUDENTS.length} students.`);
+  console.log('Trainer login  → marcus@fitconnect.com / trainer123');
+  console.log('Student logins → alex@student.com / student123');
+  console.log('               → emma@student.com / student123');
+  console.log('               → cem@student.com  / student123');
+  console.log('               → sara@student.com / student123');
 }

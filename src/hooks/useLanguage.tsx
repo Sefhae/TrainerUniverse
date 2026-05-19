@@ -17,7 +17,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>('en');
 
   useEffect(() => {
-    const saved = localStorage.getItem('fitconnect-lang') as Lang | null;
+    const saved = localStorage.getItem('traineruniverse-lang') as Lang | null;
     if (saved === 'en' || saved === 'tr') setLangState(saved);
   }, []);
 
@@ -27,7 +27,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLang = (l: Lang) => {
     setLangState(l);
-    localStorage.setItem('fitconnect-lang', l);
+    localStorage.setItem('traineruniverse-lang', l);
   };
 
   return (

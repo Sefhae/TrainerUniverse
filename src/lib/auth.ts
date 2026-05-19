@@ -2,13 +2,14 @@ import jwt from 'jsonwebtoken';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-export const JWT_SECRET = process.env.JWT_SECRET || 'fitconnect-dev-secret-change-me';
+export const JWT_SECRET = process.env.JWT_SECRET || 'traineruniverse-dev-secret-change-me';
 const TOKEN_TTL = '7d';
 
 export interface JwtPayload {
   userId: number;
   role: string;
   trainerId: number | null;
+  studentId?: number | null;
 }
 
 export function signToken(payload: JwtPayload) {

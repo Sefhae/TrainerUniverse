@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { DollarSign, ExternalLink, Image as ImageIcon, Star, User } from 'lucide-react';
+import { CalendarDays, DollarSign, ExternalLink, Image as ImageIcon, MessageSquare, Star, User, Users } from 'lucide-react';
 import api from '../../src/api/client';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useT } from '../../src/hooks/useLanguage';
@@ -13,8 +13,11 @@ import ProfileEditor from '../../src/components/dashboard/ProfileEditor';
 import PricingManager from '../../src/components/dashboard/PricingManager';
 import WorkManager from '../../src/components/dashboard/WorkManager';
 import ReviewsPanel from '../../src/components/dashboard/ReviewsPanel';
+import StudentsPanel from '../../src/components/dashboard/StudentsPanel';
+import TrainingCalendar from '../../src/components/dashboard/TrainingCalendar';
+import MessagesPanel from '../../src/components/dashboard/MessagesPanel';
 
-type SectionId = 'profile' | 'pricing' | 'work' | 'reviews';
+type SectionId = 'profile' | 'pricing' | 'work' | 'reviews' | 'students' | 'calendar' | 'messages';
 
 function DashboardContent() {
   const { trainerId, user } = useAuth();
@@ -70,6 +73,9 @@ function DashboardContent() {
     { id: 'pricing', label: t.dashboard.pricing, icon: DollarSign, count: trainer.packages.length },
     { id: 'work', label: t.dashboard.previousWork, icon: ImageIcon, count: trainer.previousWork.length },
     { id: 'reviews', label: t.dashboard.reviews, icon: Star, count: trainer.reviews.length },
+    { id: 'students', label: t.dashboard.students, icon: Users },
+    { id: 'calendar', label: t.dashboard.calendar, icon: CalendarDays },
+    { id: 'messages', label: t.dashboard.messages, icon: MessageSquare },
   ];
 
   const photo = resolveImage(trainer.profilePhoto);
@@ -162,6 +168,11 @@ function DashboardContent() {
             {section === 'pricing' && <PricingManager trainer={trainer} refresh={load} />}
             {section === 'work' && <WorkManager trainer={trainer} refresh={load} />}
             {section === 'reviews' && <ReviewsPanel trainer={trainer} />}
+            {section === 'students' && <StudentsPanel />}
+            {section === 'calendar' && <TrainingCalendar role="trainer" />}
+            {section === 'messages' && (
+              <MessagesPanel role="trainer" myTrainerId={trainerId ?? undefined} />
+            )}
           </div>
         </div>
       </div>
