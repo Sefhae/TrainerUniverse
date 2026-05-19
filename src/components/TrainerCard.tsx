@@ -45,11 +45,11 @@ export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-2xl leading-none tracking-wide text-bone">{trainer.name}</h3>
-        <p className="mt-2 line-clamp-1 text-sm text-bone/55">{trainer.tagline || 'Personal Trainer'}</p>
+      <div className="flex flex-1 flex-col p-3 sm:p-5">
+        <h3 className="font-display text-lg leading-none tracking-wide text-bone sm:text-2xl">{trainer.name}</h3>
+        <p className="mt-1 line-clamp-1 text-xs text-bone/55 sm:mt-2 sm:text-sm">{trainer.tagline || 'Personal Trainer'}</p>
 
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="mt-2 hidden flex-wrap gap-1.5 sm:flex">
           {visibleSpecs.map((s) => (
             <span key={s.id} className="chip border border-white/15 text-bone/70">
               {s.name}
@@ -58,23 +58,23 @@ export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
           {extra > 0 && <span className="chip text-volt">+{extra}</span>}
         </div>
 
-        <div className="mt-4 flex items-center gap-2">
-          <StarRating value={trainer.rating} size={14} tone="dark" />
+        <div className="mt-2 flex items-center gap-1.5 sm:mt-4 sm:gap-2">
+          <StarRating value={trainer.rating} size={12} tone="dark" />
           <span className="text-xs font-semibold text-bone">{trainer.rating.toFixed(1)}</span>
-          <span className="text-xs text-bone/45">({trainer.reviewCount})</span>
+          <span className="hidden text-xs text-bone/45 sm:inline">({trainer.reviewCount})</span>
         </div>
 
-        <div className="mt-auto flex items-end justify-between border-t border-white/10 pt-4">
+        <div className="mt-auto flex items-end justify-between border-t border-white/10 pt-2 sm:pt-4">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-bone/40">From</p>
-            <p className="font-display text-3xl leading-none text-volt">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-bone/40 sm:text-[10px]">From</p>
+            <p className="font-display text-xl leading-none text-volt sm:text-3xl">
               {formatPrice(trainer.startingPrice)}
-              <span className="ml-1 font-sans text-xs font-medium text-bone/45">/ session</span>
+              <span className="ml-0.5 font-sans text-[10px] font-medium text-bone/45 sm:ml-1 sm:text-xs">/ session</span>
             </p>
           </div>
-          <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-bone transition-colors duration-200 group-hover:text-volt">
+          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-bone transition-colors duration-200 group-hover:text-volt sm:text-[11px]">
             View
-            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+            <ArrowRight className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-1 sm:h-3.5 sm:w-3.5" />
           </span>
         </div>
       </div>

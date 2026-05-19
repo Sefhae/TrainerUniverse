@@ -65,7 +65,7 @@ function DirectoryContent() {
 
             <div className="mt-7">
               {loading ? (
-                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <TrainerCardSkeleton key={i} />
                   ))}
@@ -93,7 +93,7 @@ function DirectoryContent() {
                   }
                 />
               ) : (
-                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
                   {trainers.map((trainer, i) => (
                     <div
                       key={trainer.id}
@@ -143,7 +143,7 @@ export default function TrainersPage() {
       fallback={
         <div className="min-h-screen bg-ink text-bone">
           <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <TrainerCardSkeleton key={i} />
               ))}
