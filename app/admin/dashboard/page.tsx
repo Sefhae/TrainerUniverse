@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   LayoutDashboard, Users, GraduationCap, CalendarDays,
-  LogOut, Trash2, Eye, EyeOff, ShieldCheck, Pencil, Plus, X, DollarSign, Star,
+  LogOut, Trash2, Eye, EyeOff, ShieldCheck, Pencil, Plus, X, Star, Camera, UserCircle,
 } from 'lucide-react';
 import { useAdminAuth } from '../../../src/hooks/useAdminAuth';
 import api from '../../../src/api/client';
@@ -16,7 +17,7 @@ interface Stats { trainers: number; published: number; students: number; session
 interface AdminTrainer { id: number; name: string; email: string; specialties: string | null; is_published: number; student_count: number; session_count: number; created_at: string; }
 interface AdminStudent { id: number; name: string; email: string; trainer_name: string | null; session_count: number; created_at: string; }
 interface AdminSession { id: number; title: string; trainer_name: string; student_name: string; scheduled_at: string; duration_min: number; status: string; notes?: string; }
-interface TrainerProfile { id: number; name: string; tagline: string; bio: string; location: string; is_remote: number; years_experience: number; email: string; }
+interface TrainerProfile { id: number; name: string; tagline: string; bio: string; location: string; is_remote: number; years_experience: number; email: string; profile_photo: string | null; cover_photo: string | null; }
 interface PricingPackage { id: number; trainer_id: number; name: string; description: string; sessions: number; price: number; is_popular: number; }
 
 const NAV: { id: Section; label: string; icon: typeof LayoutDashboard }[] = [
@@ -64,6 +65,10 @@ function TrainerModal({ trainerId, onClose, onSaved }: { trainerId: number; onCl
   const [packages, setPackages] = useState<PricingPackage[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState<'profile' | 'cover' | null>(null);
+
+  const profilePhotoRef = useRef<HTMLInputElement>(null);
+  const coverPhotoRef = useRef<HTMLInputElement>(null);
 
   const [editingPkg, setEditingPkg] = useState<PricingPackage | null>(null);
   const [addingPkg, setAddingPkg] = useState(false);
@@ -79,6 +84,22 @@ function TrainerModal({ trainerId, onClose, onSaved }: { trainerId: number; onCl
       setPackages(pkg.data);
     }).finally(() => setLoadingProfile(false));
   }, [trainerId]);
+
+  async function uploadPhoto(type: 'profilePhoto' | 'coverPhoto', file?: File) {
+    if (!file || !profile) return;
+    setUploadingPhoto(type === 'profilePhoto' ? 'profile' : 'cover');
+    try {
+      const formData = new FormData();
+      formData.append(type, file);
+      const { data } = await api.post<{ profilePhoto?: string; coverPhoto?: string }>(
+        `/admin/trainers/${trainerId}/photos`, formData
+      );
+      if (data.profilePhoto) setProfile({ ...profile, profile_photo: data.profilePhoto });
+      if (data.coverPhoto) setProfile({ ...profile, cover_photo: data.coverPhoto });
+    } finally {
+      setUploadingPhoto(null);
+    }
+  }
 
   async function saveProfile() {
     if (!profile) return;
@@ -169,6 +190,51 @@ function TrainerModal({ trainerId, onClose, onSaved }: { trainerId: number; onCl
               {/* Profile Tab */}
               {tab === 'profile' && profile && (
                 <div className="space-y-4">
+                  {/* Photos */}
+                  <div className="flex gap-5 pb-2">
+                    {/* Profile photo */}
+                    <div className="flex flex-col items-center gap-1.5">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-bone/40">Profile Photo</p>
+                      <div className="relative h-20 w-20 overflow-hidden rounded border border-white/10 bg-white/5">
+                        {profile.profile_photo ? (
+                          <Image src={profile.profile_photo} alt="" fill className="object-cover" unoptimized />
+                        ) : (
+                          <UserCircle className="m-auto mt-4 h-10 w-10 text-bone/20" />
+                        )}
+                      </div>
+                      <input ref={profilePhotoRef} type="file" accept="image/*" className="hidden"
+                        onChange={(e) => uploadPhoto('profilePhoto', e.target.files?.[0])} />
+                      <button
+                        onClick={() => profilePhotoRef.current?.click()}
+                        disabled={!!uploadingPhoto}
+                        className="flex items-center gap-1 text-[11px] text-volt hover:underline disabled:opacity-40"
+                      >
+                        <Camera className="h-3 w-3" />
+                        {uploadingPhoto === 'profile' ? 'Uploading…' : 'Change'}
+                      </button>
+                    </div>
+                    {/* Cover photo */}
+                    <div className="flex flex-col items-center gap-1.5">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-bone/40">Cover Photo</p>
+                      <div className="relative h-20 w-44 overflow-hidden rounded border border-white/10 bg-white/5">
+                        {profile.cover_photo ? (
+                          <Image src={profile.cover_photo} alt="" fill className="object-cover" unoptimized />
+                        ) : (
+                          <Camera className="m-auto mt-6 h-7 w-7 text-bone/20" />
+                        )}
+                      </div>
+                      <input ref={coverPhotoRef} type="file" accept="image/*" className="hidden"
+                        onChange={(e) => uploadPhoto('coverPhoto', e.target.files?.[0])} />
+                      <button
+                        onClick={() => coverPhotoRef.current?.click()}
+                        disabled={!!uploadingPhoto}
+                        className="flex items-center gap-1 text-[11px] text-volt hover:underline disabled:opacity-40"
+                      >
+                        <Camera className="h-3 w-3" />
+                        {uploadingPhoto === 'cover' ? 'Uploading…' : 'Change'}
+                      </button>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Field label="Name">
                       <input className={inputCls} value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
@@ -400,6 +466,59 @@ function SessionModal({ session, onClose, onSaved }: { session: AdminSession; on
   );
 }
 
+/* ─── Add Trainer Modal ─── */
+function AddTrainerModal({ onClose, onCreated }: { onClose: () => void; onCreated: (t: AdminTrainer) => void }) {
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  async function create() {
+    setError('');
+    if (!form.name || !form.email || form.password.length < 6) {
+      setError('Name, email, and a password of at least 6 characters are required.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data } = await api.post<AdminTrainer>('/admin/trainers', form);
+      onCreated(data);
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setError(msg || 'Failed to create trainer.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded border border-white/10 bg-[#111] shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+          <p className="font-display text-lg tracking-wide">Add Trainer</p>
+          <button onClick={onClose} className="p-1 text-bone/40 hover:text-bone"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="space-y-4 p-6">
+          <p className="text-xs text-bone/40">The trainer will be created and <span className="text-volt">published immediately</span> — visible on Find a Trainer.</p>
+          {error && <p className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</p>}
+          <Field label="Full Name">
+            <input className={inputCls} placeholder="e.g. John Smith" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </Field>
+          <Field label="Email">
+            <input type="email" className={inputCls} placeholder="trainer@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          </Field>
+          <Field label="Password">
+            <input type="password" className={inputCls} placeholder="Min. 6 characters" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          </Field>
+          <div className="flex justify-end gap-2 pt-1">
+            <button onClick={onClose} className="btn btn-sm border border-white/10 px-5 text-bone/60 hover:text-bone">Cancel</button>
+            <button onClick={create} disabled={saving} className="btn btn-volt btn-sm px-6">{saving ? 'Creating…' : 'Create & Publish'}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main Dashboard ─── */
 export default function AdminDashboardPage() {
   const { isAuthenticated, logout } = useAdminAuth();
@@ -416,6 +535,7 @@ export default function AdminDashboardPage() {
 
   const [editingTrainerId, setEditingTrainerId] = useState<number | null>(null);
   const [editingSession, setEditingSession] = useState<AdminSession | null>(null);
+  const [addingTrainer, setAddingTrainer] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) router.replace('/admin/login');
@@ -590,8 +710,15 @@ export default function AdminDashboardPage() {
           {/* ── Trainers ── */}
           {section === 'trainers' && (
             <div>
-              <h1 className="font-display text-4xl tracking-wide">Trainers</h1>
-              <p className="mt-1 text-sm text-bone/40">{trainers.length} total</p>
+              <div className="flex items-end justify-between">
+                <div>
+                  <h1 className="font-display text-4xl tracking-wide">Trainers</h1>
+                  <p className="mt-1 text-sm text-bone/40">{trainers.length} total</p>
+                </div>
+                <button onClick={() => setAddingTrainer(true)} className="btn btn-volt btn-sm flex items-center gap-2">
+                  <Plus className="h-4 w-4" /> Add Trainer
+                </button>
+              </div>
               {loading ? <Spinner /> : (
                 <div className="mt-8 overflow-x-auto border border-white/10">
                   <table className="w-full text-sm">
@@ -766,6 +893,16 @@ export default function AdminDashboardPage() {
           onSaved={(updated) => {
             setSessions((p) => p.map((s) => s.id === updated.id ? updated : s));
             setEditingSession(null);
+          }}
+        />
+      )}
+      {addingTrainer && (
+        <AddTrainerModal
+          onClose={() => setAddingTrainer(false)}
+          onCreated={(t) => {
+            setTrainers((p) => [t, ...p]);
+            loadStats();
+            setAddingTrainer(false);
           }}
         />
       )}

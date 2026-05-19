@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const profile = db.prepare(`
     SELECT tp.id, tp.name, tp.tagline, tp.bio, tp.location, tp.is_remote,
-           tp.years_experience, tp.is_published, u.email
+           tp.years_experience, tp.is_published, tp.profile_photo, tp.cover_photo, u.email
     FROM trainer_profiles tp
     JOIN users u ON u.id = tp.user_id
     WHERE tp.id = ?
