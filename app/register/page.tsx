@@ -6,22 +6,17 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, Eye, EyeOff, TriangleAlert } from 'lucide-react';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useToast } from '../../src/hooks/useToast';
+import { useT } from '../../src/hooks/useLanguage';
 import { SPECIALTY_OPTIONS } from '../../src/lib/constants';
 import { cn, getApiError } from '../../src/lib/format';
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
-const BENEFITS = [
-  'Reach thousands of motivated clients',
-  'Set your own packages and pricing',
-  'Showcase real client transformations',
-  'Collect reviews that build your reputation',
-];
-
 export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -43,11 +38,11 @@ export default function RegisterPage() {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!name.trim()) errs.name = 'Please enter your full name.';
-    if (!EMAIL_RE.test(email.trim())) errs.email = 'Please enter a valid email address.';
-    if (password.length < 6) errs.password = 'Password must be at least 6 characters.';
-    if (specialties.length === 0) errs.specialties = 'Select at least one specialty.';
-    if (!agree) errs.agree = 'You must agree to the terms to continue.';
+    if (!name.trim()) errs.name = t.register.nameRequired;
+    if (!EMAIL_RE.test(email.trim())) errs.email = t.register.emailInvalid;
+    if (password.length < 6) errs.password = t.register.passwordShort;
+    if (specialties.length === 0) errs.specialties = t.register.specialtiesRequired;
+    if (!agree) errs.agree = t.register.agreeRequired;
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
@@ -55,10 +50,10 @@ export default function RegisterPage() {
     setSubmitting(true);
     try {
       await register({ name: name.trim(), email: email.trim(), password, specialties });
-      toast.success('Account created! Complete your profile to get listed.');
+      toast.success(t.register.successMsg);
       router.replace('/dashboard');
     } catch (err) {
-      setFormError(getApiError(err, 'Registration failed. Please try again.'));
+      setFormError(getApiError(err, t.register.fallbackError));
     } finally {
       setSubmitting(false);
     }
@@ -75,18 +70,18 @@ export default function RegisterPage() {
         />
         <p className="eyebrow relative text-volt">
           <span className="h-px w-8 bg-volt" />
-          For Trainers
+          {t.register.eyebrow}
         </p>
         <div className="relative">
           <h1 className="font-display text-7xl leading-[0.92] tracking-wide xl:text-8xl">
-            Build your
+            {t.register.brandTitle1}
             <br />
-            training
+            {t.register.brandTitle2}
             <br />
-            <span className="text-volt">business.</span>
+            <span className="text-volt">{t.register.brandTitle3}</span>
           </h1>
           <ul className="mt-8 space-y-3">
-            {BENEFITS.map((b) => (
+            {t.register.benefits.map((b) => (
               <li key={b} className="flex items-center gap-3 text-sm text-bone/70">
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center bg-volt text-ink">
                   <Check className="h-3.5 w-3.5" strokeWidth={4} />
@@ -97,18 +92,18 @@ export default function RegisterPage() {
           </ul>
         </div>
         <p className="relative text-[12px] uppercase tracking-[0.18em] text-bone/35">
-          FitConnect — Train smarter. Go further.
+          {t.register.brandTagline}
         </p>
       </div>
 
       {/* Form panel */}
       <div className="flex items-center justify-center bg-bone px-5 py-14">
         <div className="w-full max-w-md">
-          <h2 className="font-display text-5xl leading-none tracking-wide">Create Account</h2>
+          <h2 className="font-display text-5xl leading-none tracking-wide">{t.register.title}</h2>
           <p className="mt-2 text-sm text-ink/55">
-            Already have an account?{' '}
+            {t.register.hasAccount}{' '}
             <Link href="/login" className="font-semibold text-ink underline hover:text-ink/70">
-              Log In
+              {t.register.logIn}
             </Link>
           </p>
 
@@ -122,7 +117,7 @@ export default function RegisterPage() {
           <form onSubmit={submit} noValidate className="mt-6 space-y-4">
             <div>
               <label className="field-label" htmlFor="reg-name">
-                Full Name
+                {t.register.nameLabel}
               </label>
               <input
                 id="reg-name"
@@ -132,14 +127,14 @@ export default function RegisterPage() {
                   setName(e.target.value);
                   setErrors((p) => ({ ...p, name: '' }));
                 }}
-                placeholder="Alex Morgan"
+                placeholder={t.register.namePlaceholder}
               />
               {errors.name && <p className="field-error">{errors.name}</p>}
             </div>
 
             <div>
               <label className="field-label" htmlFor="reg-email">
-                Email Address
+                {t.register.emailLabel}
               </label>
               <input
                 id="reg-email"
@@ -151,14 +146,14 @@ export default function RegisterPage() {
                   setEmail(e.target.value);
                   setErrors((p) => ({ ...p, email: '' }));
                 }}
-                placeholder="you@example.com"
+                placeholder={t.register.emailPlaceholder}
               />
               {errors.email && <p className="field-error">{errors.email}</p>}
             </div>
 
             <div>
               <label className="field-label" htmlFor="reg-password">
-                Password
+                {t.register.passwordLabel}
               </label>
               <div className="relative">
                 <input
@@ -171,12 +166,12 @@ export default function RegisterPage() {
                     setPassword(e.target.value);
                     setErrors((p) => ({ ...p, password: '' }));
                   }}
-                  placeholder="At least 6 characters"
+                  placeholder={t.register.passwordPlaceholder}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw((v) => !v)}
-                  aria-label={showPw ? 'Hide password' : 'Show password'}
+                  aria-label={showPw ? t.register.hidePassword : t.register.showPassword}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 transition-colors duration-200 hover:text-ink"
                 >
                   {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -186,7 +181,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="field-label">Your Specialties</label>
+              <label className="field-label">{t.register.specialtiesLabel}</label>
               <div className="flex flex-wrap gap-2">
                 {SPECIALTY_OPTIONS.map((s) => {
                   const active = specialties.includes(s);
@@ -227,9 +222,7 @@ export default function RegisterPage() {
                 >
                   {agree && <Check className="h-3.5 w-3.5 text-volt" strokeWidth={4} />}
                 </span>
-                <span className="text-sm text-ink/65">
-                  I agree to the FitConnect Terms of Service and Privacy Policy.
-                </span>
+                <span className="text-sm text-ink/65">{t.register.agreeText}</span>
               </button>
               {errors.agree && <p className="field-error">{errors.agree}</p>}
             </div>
@@ -239,7 +232,7 @@ export default function RegisterPage() {
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-bone border-t-transparent" />
               ) : (
                 <>
-                  Create Account
+                  {t.register.submit}
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}

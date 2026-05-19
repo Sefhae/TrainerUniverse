@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useTrainers } from '../../src/hooks/useTrainers';
+import { useT } from '../../src/hooks/useLanguage';
 import FilterSidebar from '../../src/components/FilterSidebar';
 import SortBar from '../../src/components/SortBar';
 import TrainerCard from '../../src/components/TrainerCard';
@@ -12,6 +13,7 @@ import EmptyState from '../../src/components/EmptyState';
 function DirectoryContent() {
   const { trainers, total, loading, error, filters, setFilters, clearFilters, activeFilterCount } =
     useTrainers();
+  const t = useT();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -29,15 +31,12 @@ function DirectoryContent() {
         <div className="mx-auto max-w-7xl px-5 py-12 lg:px-8 lg:py-16">
           <p className="eyebrow text-volt">
             <span className="h-px w-8 bg-volt" />
-            The Directory
+            {t.trainers.eyebrow}
           </p>
           <h1 className="mt-4 font-display text-6xl leading-none tracking-wide sm:text-7xl">
-            Find Your Coach
+            {t.trainers.title}
           </h1>
-          <p className="mt-4 max-w-xl text-sm leading-relaxed text-bone/55">
-            Every trainer is filterable by specialty, price, location and availability. Refine the
-            list until it fits exactly what you need.
-          </p>
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-bone/55">{t.trainers.desc}</p>
         </div>
       </div>
 
@@ -74,22 +73,22 @@ function DirectoryContent() {
               ) : error ? (
                 <EmptyState
                   tone="dark"
-                  title="Something went wrong"
+                  title={t.trainers.errorTitle}
                   message={error}
                   action={
                     <button onClick={() => window.location.reload()} className="btn btn-volt">
-                      Try Again
+                      {t.trainers.tryAgain}
                     </button>
                   }
                 />
               ) : total === 0 ? (
                 <EmptyState
                   tone="dark"
-                  title="No trainers found"
-                  message="No trainers match your current filters. Try widening your search or clearing a few filters."
+                  title={t.trainers.noResultsTitle}
+                  message={t.trainers.noResultsMsg}
                   action={
                     <button onClick={clearFilters} className="btn btn-volt">
-                      Clear All Filters
+                      {t.trainers.clearAllFilters}
                     </button>
                   }
                 />
@@ -114,8 +113,8 @@ function DirectoryContent() {
       {drawerOpen && (
         <div className="animate-fade-in fixed inset-0 z-[140] flex flex-col bg-ink lg:hidden">
           <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-            <span className="font-display text-xl tracking-wide">Refine</span>
-            <button onClick={() => setDrawerOpen(false)} aria-label="Close filters">
+            <span className="font-display text-xl tracking-wide">{t.trainers.drawerTitle}</span>
+            <button onClick={() => setDrawerOpen(false)} aria-label={t.trainers.closeFilters}>
               <X className="h-6 w-6" />
             </button>
           </div>
@@ -129,7 +128,7 @@ function DirectoryContent() {
           </div>
           <div className="border-t border-white/10 p-4">
             <button onClick={() => setDrawerOpen(false)} className="btn btn-volt w-full">
-              Show {loading ? '…' : total} {total === 1 ? 'Trainer' : 'Trainers'}
+              {t.trainers.showTrainers} {loading ? '…' : total} {total === 1 ? t.trainers.trainerSingular : t.trainers.trainerPlural}
             </button>
           </div>
         </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { DollarSign, ExternalLink, Image as ImageIcon, Star, User } from 'lucide-react';
 import api from '../../src/api/client';
 import { useAuth } from '../../src/hooks/useAuth';
+import { useT } from '../../src/hooks/useLanguage';
 import type { Trainer } from '../../src/types';
 import { cn, initials, resolveImage } from '../../src/lib/format';
 import ProtectedRoute from '../../src/components/ProtectedRoute';
@@ -17,6 +18,7 @@ type SectionId = 'profile' | 'pricing' | 'work' | 'reviews';
 
 function DashboardContent() {
   const { trainerId, user } = useAuth();
+  const t = useT();
   const [trainer, setTrainer] = useState<Trainer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -54,22 +56,20 @@ function DashboardContent() {
   if (error || !trainer) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center bg-bone px-5 text-center">
-        <h1 className="font-display text-4xl tracking-wide">Dashboard Unavailable</h1>
-        <p className="mt-2 text-sm text-ink/55">
-          We couldn&apos;t load your trainer profile. Please try logging in again.
-        </p>
+        <h1 className="font-display text-4xl tracking-wide">{t.dashboard.unavailableTitle}</h1>
+        <p className="mt-2 text-sm text-ink/55">{t.dashboard.unavailableMsg}</p>
         <Link href="/login" className="btn btn-dark mt-6">
-          Back to Login
+          {t.dashboard.backToLogin}
         </Link>
       </div>
     );
   }
 
   const sections: { id: SectionId; label: string; icon: typeof User; count?: number }[] = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'pricing', label: 'Pricing', icon: DollarSign, count: trainer.packages.length },
-    { id: 'work', label: 'Previous Work', icon: ImageIcon, count: trainer.previousWork.length },
-    { id: 'reviews', label: 'Reviews', icon: Star, count: trainer.reviews.length },
+    { id: 'profile', label: t.dashboard.profile, icon: User },
+    { id: 'pricing', label: t.dashboard.pricing, icon: DollarSign, count: trainer.packages.length },
+    { id: 'work', label: t.dashboard.previousWork, icon: ImageIcon, count: trainer.previousWork.length },
+    { id: 'reviews', label: t.dashboard.reviews, icon: Star, count: trainer.reviews.length },
   ];
 
   const photo = resolveImage(trainer.profilePhoto);
@@ -99,7 +99,7 @@ function DashboardContent() {
                       trainer.isPublished ? 'text-volt' : 'text-yellow-400'
                     )}
                   >
-                    {trainer.isPublished ? '● Published' : '● Draft'}
+                    {trainer.isPublished ? t.dashboard.published : t.dashboard.draft}
                   </span>
                 </div>
               </div>
@@ -140,7 +140,7 @@ function DashboardContent() {
                   className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-bone/65 transition-colors duration-200 hover:text-volt"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  View Public Profile
+                  {t.dashboard.viewPublicProfile}
                 </Link>
               </div>
             </div>
@@ -150,10 +150,10 @@ function DashboardContent() {
           <div>
             <div className="mb-7">
               <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/45">
-                Trainer Dashboard
+                {t.dashboard.title}
               </p>
               <h1 className="mt-1 font-display text-4xl tracking-wide sm:text-5xl">
-                Welcome back, {trainer.name.split(' ')[0]}
+                {t.dashboard.welcomeBack} {trainer.name.split(' ')[0]}
               </h1>
               <p className="mt-1 text-sm text-ink/55">{user?.email}</p>
             </div>

@@ -2,6 +2,7 @@
 
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { SORT_OPTIONS } from '../lib/constants';
+import { useT } from '../hooks/useLanguage';
 
 interface SortBarProps {
   total: number;
@@ -20,6 +21,13 @@ export default function SortBar({
   onOpenFilters,
   activeFilterCount,
 }: SortBarProps) {
+  const t = useT();
+
+  const sortOptions = SORT_OPTIONS.map((opt, i) => ({
+    value: opt.value,
+    label: t.sort.options[i],
+  }));
+
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-baseline gap-2">
@@ -27,7 +35,7 @@ export default function SortBar({
           {loading ? '—' : total}
         </span>
         <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-bone/45">
-          {total === 1 ? 'Trainer' : 'Trainers'}
+          {total === 1 ? t.sort.trainerSingular : t.sort.trainerPlural}
         </span>
       </div>
 
@@ -37,7 +45,7 @@ export default function SortBar({
           className="relative flex items-center gap-2 border border-white/15 px-4 py-2.5 text-[12px] font-semibold uppercase tracking-[0.1em] text-bone transition-colors duration-200 hover:border-volt hover:text-volt lg:hidden"
         >
           <SlidersHorizontal className="h-4 w-4" />
-          Filters
+          {t.sort.filtersLabel}
           {activeFilterCount > 0 && (
             <span className="flex h-4 w-4 items-center justify-center bg-volt text-[10px] font-bold text-ink">
               {activeFilterCount}
@@ -47,7 +55,7 @@ export default function SortBar({
 
         <div className="relative">
           <label className="sr-only" htmlFor="sort-select">
-            Sort trainers
+            {t.sort.label}
           </label>
           <select
             id="sort-select"
@@ -55,7 +63,7 @@ export default function SortBar({
             onChange={(e) => onSortChange(e.target.value)}
             className="cursor-pointer appearance-none border border-white/15 bg-charcoal py-2.5 pl-4 pr-10 text-[12px] font-semibold uppercase tracking-[0.08em] text-bone outline-none transition-colors duration-200 hover:border-white/40 focus:border-volt"
           >
-            {SORT_OPTIONS.map((opt) => (
+            {sortOptions.map((opt) => (
               <option key={opt.value} value={opt.value} className="bg-charcoal">
                 {opt.label}
               </option>

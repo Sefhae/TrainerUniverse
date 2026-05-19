@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowRight, Eye, EyeOff, TriangleAlert } from 'lucide-react';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useToast } from '../../src/hooks/useToast';
+import { useT } from '../../src/hooks/useLanguage';
 import { cn, getApiError } from '../../src/lib/format';
 
 function LoginForm() {
@@ -13,6 +14,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const toast = useToast();
+  const t = useT();
 
   const from = searchParams.get('from') || '/dashboard';
 
@@ -26,8 +28,8 @@ function LoginForm() {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!email.trim()) errs.email = 'Email is required.';
-    if (!password) errs.password = 'Password is required.';
+    if (!email.trim()) errs.email = t.login.emailRequired;
+    if (!password) errs.password = t.login.passwordRequired;
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
@@ -35,10 +37,10 @@ function LoginForm() {
     setSubmitting(true);
     try {
       await login(email.trim(), password);
-      toast.success('Welcome back to FitConnect.');
+      toast.success(t.login.successMsg);
       router.replace(from);
     } catch (err) {
-      setFormError(getApiError(err, 'Login failed. Please try again.'));
+      setFormError(getApiError(err, t.login.fallbackError));
     } finally {
       setSubmitting(false);
     }
@@ -62,34 +64,31 @@ function LoginForm() {
         />
         <p className="eyebrow relative text-volt">
           <span className="h-px w-8 bg-volt" />
-          Trainer Login
+          {t.login.eyebrow}
         </p>
         <div className="relative">
           <h1 className="font-display text-7xl leading-[0.92] tracking-wide xl:text-8xl">
-            Welcome
+            {t.login.brandTitle1}
             <br />
-            back to the
+            {t.login.brandTitle2}
             <br />
-            <span className="text-volt">grind.</span>
+            <span className="text-volt">{t.login.brandTitle3}</span>
           </h1>
-          <p className="mt-6 max-w-sm text-bone/55">
-            Sign in to manage your profile, packages and transformations — and keep growing your
-            client base.
-          </p>
+          <p className="mt-6 max-w-sm text-bone/55">{t.login.brandDesc}</p>
         </div>
         <p className="relative text-[12px] uppercase tracking-[0.18em] text-bone/35">
-          FitConnect — Train smarter. Go further.
+          {t.login.brandTagline}
         </p>
       </div>
 
       {/* Form panel */}
       <div className="flex items-center justify-center bg-bone px-5 py-14">
         <div className="w-full max-w-md">
-          <h2 className="font-display text-5xl leading-none tracking-wide">Log In</h2>
+          <h2 className="font-display text-5xl leading-none tracking-wide">{t.login.title}</h2>
           <p className="mt-2 text-sm text-ink/55">
-            New to FitConnect?{' '}
+            {t.login.newAccount}{' '}
             <Link href="/register" className="font-semibold text-ink underline hover:text-ink/70">
-              Become a Trainer
+              {t.login.becomeTrainer}
             </Link>
           </p>
 
@@ -103,7 +102,7 @@ function LoginForm() {
           <form onSubmit={submit} noValidate className="mt-6 space-y-4">
             <div>
               <label className="field-label" htmlFor="login-email">
-                Email Address
+                {t.login.emailLabel}
               </label>
               <input
                 id="login-email"
@@ -115,14 +114,14 @@ function LoginForm() {
                   setEmail(e.target.value);
                   setErrors((p) => ({ ...p, email: '' }));
                 }}
-                placeholder="you@example.com"
+                placeholder={t.login.emailPlaceholder}
               />
               {errors.email && <p className="field-error">{errors.email}</p>}
             </div>
 
             <div>
               <label className="field-label" htmlFor="login-password">
-                Password
+                {t.login.passwordLabel}
               </label>
               <div className="relative">
                 <input
@@ -135,12 +134,12 @@ function LoginForm() {
                     setPassword(e.target.value);
                     setErrors((p) => ({ ...p, password: '' }));
                   }}
-                  placeholder="Your password"
+                  placeholder={t.login.passwordPlaceholder}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw((v) => !v)}
-                  aria-label={showPw ? 'Hide password' : 'Show password'}
+                  aria-label={showPw ? t.login.hidePassword : t.login.showPassword}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 transition-colors duration-200 hover:text-ink"
                 >
                   {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -154,7 +153,7 @@ function LoginForm() {
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-bone border-t-transparent" />
               ) : (
                 <>
-                  Log In
+                  {t.login.submit}
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -163,17 +162,15 @@ function LoginForm() {
 
           <div className="mt-6 border border-ink/10 bg-white p-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45">
-              Demo Account
+              {t.login.demoTitle}
             </p>
-            <p className="mt-1 text-sm text-ink/60">
-              marcus@fitconnect.com · trainer123
-            </p>
+            <p className="mt-1 text-sm text-ink/60">{t.login.demoCredentials}</p>
             <button
               type="button"
               onClick={useDemo}
               className="mt-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-ink underline hover:text-ink/60"
             >
-              Fill demo credentials
+              {t.login.demoFill}
             </button>
           </div>
         </div>

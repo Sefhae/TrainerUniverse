@@ -8,33 +8,7 @@ import type { TrainerSummary, TrainersResponse } from '../src/types';
 import TrainerCard from '../src/components/TrainerCard';
 import TrainerCardSkeleton from '../src/components/TrainerCardSkeleton';
 import StarRating from '../src/components/StarRating';
-
-const ROTATING = ['TRAINER', 'COACH', 'MENTOR', 'PARTNER'];
-
-const STATS = [
-  { value: '500+', label: 'Elite Trainers' },
-  { value: '10K+', label: 'Sessions Booked' },
-  { value: '98%', label: 'Satisfaction Rate' },
-  { value: '4.8', label: 'Average Rating' },
-];
-
-const STEPS = [
-  {
-    n: '01',
-    title: 'Browse Trainers',
-    text: 'Filter by specialty, price, location and availability to find coaches built around your goals.',
-  },
-  {
-    n: '02',
-    title: 'Explore Profiles',
-    text: 'Dig into credentials, transformation galleries, real client reviews and transparent pricing.',
-  },
-  {
-    n: '03',
-    title: 'Start Training',
-    text: 'Book a call, lock in your package, and begin your transformation with a coach who gets you.',
-  },
-];
+import { useT } from '../src/hooks/useLanguage';
 
 const TESTIMONIALS = [
   { quote: 'I found a strength coach in minutes. Six months later I deadlift double what I used to.', name: 'Rachel M.', role: 'Strength client', rating: 5 },
@@ -45,10 +19,10 @@ const TESTIMONIALS = [
   { quote: 'Came back from an ACL injury stronger than before thanks to my rehab coach.', name: 'Chris B.', role: 'Rehab client', rating: 5 },
 ];
 
-const HERO_SHOTS = [
-  { src: 'https://loremflickr.com/820/1080/gym,workout?lock=31', label: 'Strength & Conditioning' },
-  { src: 'https://loremflickr.com/720/680/basketball,sport?lock=47', label: 'Basketball' },
-  { src: 'https://loremflickr.com/720/680/swimming,pool?lock=58', label: 'Swimming' },
+const HERO_SRCS = [
+  'https://loremflickr.com/820/1080/gym,workout?lock=31',
+  'https://loremflickr.com/720/680/basketball,sport?lock=47',
+  'https://loremflickr.com/720/680/swimming,pool?lock=58',
 ];
 
 function HeroImage({ src, label }: { src: string; label: string }) {
@@ -75,19 +49,19 @@ function HeroImage({ src, label }: { src: string; label: string }) {
   );
 }
 
-function HeroCollage() {
+function HeroCollage({ avgRatingLabel, shots }: { avgRatingLabel: string; shots: readonly string[] }) {
   return (
     <div className="relative">
       <div className="absolute -right-4 -top-4 hidden h-24 w-24 bg-volt sm:block" />
       <div className="relative grid aspect-[5/6] grid-cols-2 grid-rows-2 gap-3">
         <div className="row-span-2 border border-white/10">
-          <HeroImage src={HERO_SHOTS[0].src} label={HERO_SHOTS[0].label} />
+          <HeroImage src={HERO_SRCS[0]} label={shots[0]} />
         </div>
         <div className="border border-white/10">
-          <HeroImage src={HERO_SHOTS[1].src} label={HERO_SHOTS[1].label} />
+          <HeroImage src={HERO_SRCS[1]} label={shots[1]} />
         </div>
         <div className="border border-volt">
-          <HeroImage src={HERO_SHOTS[2].src} label={HERO_SHOTS[2].label} />
+          <HeroImage src={HERO_SRCS[2]} label={shots[2]} />
         </div>
       </div>
       <div className="absolute -bottom-5 -left-5 hidden items-center gap-3 border border-white/15 bg-ink px-4 py-3 shadow-2xl shadow-black/40 sm:flex">
@@ -95,7 +69,7 @@ function HeroCollage() {
         <div>
           <p className="font-display text-2xl leading-none text-bone">4.8 / 5</p>
           <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-bone/45">
-            Average trainer rating
+            {avgRatingLabel}
           </p>
         </div>
       </div>
@@ -104,30 +78,28 @@ function HeroCollage() {
 }
 
 export default function Home() {
+  const t = useT();
   const [wordIndex, setWordIndex] = useState(0);
   const [featured, setFeatured] = useState<TrainerSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const t = window.setInterval(() => setWordIndex((i) => (i + 1) % ROTATING.length), 2600);
-    return () => window.clearInterval(t);
-  }, []);
+    const timer = window.setInterval(
+      () => setWordIndex((i) => (i + 1) % t.home.rotating.length),
+      2600
+    );
+    return () => window.clearInterval(timer);
+  }, [t.home.rotating.length]);
 
   useEffect(() => {
     let cancelled = false;
     api
       .get<TrainersResponse>('/trainers', { params: { sort: 'top-rated' } })
-      .then((res) => {
-        if (!cancelled) setFeatured(res.data.trainers.slice(0, 6));
-      })
+      .then((res) => { if (!cancelled) setFeatured(res.data.trainers.slice(0, 6)); })
       .catch(() => undefined)
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   const scrollCarousel = (dir: number) => {
@@ -147,32 +119,31 @@ export default function Home() {
           <div>
             <p className="eyebrow animate-fade-up text-volt">
               <span className="h-px w-8 bg-volt" />
-              The Personal Training Marketplace
+              {t.home.eyebrow}
             </p>
             <h1 className="mt-6 font-display leading-[0.9] tracking-wide">
               <span className="animate-fade-up block text-6xl sm:text-7xl xl:text-8xl" style={{ animationDelay: '0.08s' }}>
-                Find Your Perfect
+                {t.home.heroLine1}
               </span>
-              <span key={wordIndex} className="animate-fade-up mt-1 block text-7xl text-volt sm:text-8xl xl:text-9xl">
-                {ROTATING[wordIndex]}
+              <span key={`${wordIndex}-${t.home.rotating[wordIndex]}`} className="animate-fade-up mt-1 block text-7xl text-volt sm:text-8xl xl:text-9xl">
+                {t.home.rotating[wordIndex]}
               </span>
             </h1>
             <p className="animate-fade-up mt-6 max-w-xl text-base leading-relaxed text-bone/60 sm:text-lg" style={{ animationDelay: '0.16s' }}>
-              Browse elite coaches in strength, HIIT, yoga, boxing, nutrition and more. Real
-              reviews, real results, real transformations — matched to your goals.
+              {t.home.heroDesc}
             </p>
             <div className="animate-fade-up mt-8 flex flex-col gap-3 sm:flex-row" style={{ animationDelay: '0.24s' }}>
               <Link href="/trainers" className="btn btn-volt w-full sm:w-auto">
-                Find a Trainer
+                {t.home.findTrainer}
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link href="/register" className="btn btn-outline-light w-full sm:w-auto">
-                Become a Trainer
+                {t.home.becomeTrainer}
               </Link>
             </div>
           </div>
           <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <HeroCollage />
+            <HeroCollage avgRatingLabel={t.home.avgRatingLabel} shots={t.home.heroShots} />
           </div>
         </div>
       </section>
@@ -180,7 +151,7 @@ export default function Home() {
       {/* Stats bar */}
       <section className="bg-volt text-ink">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px lg:grid-cols-4">
-          {STATS.map((s) => (
+          {t.home.stats.map((s) => (
             <div key={s.label} className="px-5 py-10 text-center">
               <p className="font-display text-5xl leading-none tracking-wide lg:text-6xl">{s.value}</p>
               <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/65">
@@ -198,23 +169,23 @@ export default function Home() {
             <div>
               <p className="eyebrow text-volt">
                 <span className="h-px w-8 bg-volt" />
-                Top Rated
+                {t.home.featuredEyebrow}
               </p>
               <h2 className="mt-4 font-display text-5xl leading-none tracking-wide sm:text-6xl">
-                Featured Trainers
+                {t.home.featuredTitle}
               </h2>
             </div>
             <div className="hidden gap-2 sm:flex">
               <button
                 onClick={() => scrollCarousel(-1)}
-                aria-label="Scroll left"
+                aria-label={t.home.scrollLeft}
                 className="border border-white/15 p-3 transition-colors duration-200 hover:border-volt hover:text-volt"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 onClick={() => scrollCarousel(1)}
-                aria-label="Scroll right"
+                aria-label={t.home.scrollRight}
                 className="border border-white/15 p-3 transition-colors duration-200 hover:border-volt hover:text-volt"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -238,7 +209,7 @@ export default function Home() {
 
           <div className="mt-10 text-center">
             <Link href="/trainers" className="btn btn-outline-light">
-              View All Trainers
+              {t.home.viewAll}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -251,15 +222,15 @@ export default function Home() {
           <div className="text-center">
             <p className="eyebrow justify-center text-ink/50">
               <span className="h-px w-8 bg-ink/40" />
-              How It Works
+              {t.home.howEyebrow}
               <span className="h-px w-8 bg-ink/40" />
             </p>
             <h2 className="mt-4 font-display text-5xl leading-none tracking-wide sm:text-6xl">
-              Three Steps to Stronger
+              {t.home.howTitle}
             </h2>
           </div>
           <div className="mt-14 grid gap-px bg-ink/10 md:grid-cols-3">
-            {STEPS.map((step) => (
+            {t.home.steps.map((step) => (
               <div key={step.n} className="group bg-bone p-8 transition-colors duration-200 lg:p-10">
                 <div className="flex items-baseline gap-4">
                   <span className="font-display text-7xl leading-none text-ink/10 transition-colors duration-200 group-hover:text-volt">
@@ -280,26 +251,26 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-5 pt-20 lg:px-8 lg:pt-28">
           <p className="eyebrow text-volt">
             <span className="h-px w-8 bg-volt" />
-            Real Results
+            {t.home.testimonialsEyebrow}
           </p>
           <h2 className="mt-4 font-display text-5xl leading-none tracking-wide sm:text-6xl">
-            What Members Say
+            {t.home.testimonialsTitle}
           </h2>
         </div>
         <div className="marquee-wrap mt-12 pb-20 lg:pb-28">
           <div className="marquee-track flex w-max gap-5 animate-marquee">
-            {[...TESTIMONIALS, ...TESTIMONIALS].map((t, i) => (
+            {[...TESTIMONIALS, ...TESTIMONIALS].map((testimonial, i) => (
               <figure key={i} className="flex w-[340px] shrink-0 flex-col border border-white/10 bg-charcoal p-7">
                 <Quote className="h-7 w-7 text-volt" />
                 <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-bone/75">
-                  &ldquo;{t.quote}&rdquo;
+                  &ldquo;{testimonial.quote}&rdquo;
                 </blockquote>
                 <figcaption className="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
                   <div>
-                    <p className="font-semibold text-bone">{t.name}</p>
-                    <p className="text-xs text-bone/45">{t.role}</p>
+                    <p className="font-semibold text-bone">{testimonial.name}</p>
+                    <p className="text-xs text-bone/45">{testimonial.role}</p>
                   </div>
-                  <StarRating value={t.rating} size={13} tone="dark" />
+                  <StarRating value={testimonial.rating} size={13} tone="dark" />
                 </figcaption>
               </figure>
             ))}
@@ -313,25 +284,22 @@ export default function Home() {
           <div className="grid items-center gap-10 md:grid-cols-[1.5fr_1fr]">
             <div>
               <h2 className="font-display text-5xl leading-[0.95] tracking-wide sm:text-6xl lg:text-7xl">
-                Ready to train
+                {t.home.ctaTitle1}
                 <br />
-                like you mean it?
+                {t.home.ctaTitle2}
               </h2>
-              <p className="mt-5 max-w-md text-base text-ink/70">
-                Join thousands of people who found their perfect coach on FitConnect — or grow your
-                own training business with us.
-              </p>
+              <p className="mt-5 max-w-md text-base text-ink/70">{t.home.ctaDesc}</p>
             </div>
             <div className="flex flex-col gap-3">
               <Link href="/trainers" className="btn btn-dark w-full justify-between">
-                Find a Trainer
+                {t.home.findTrainer}
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/register"
                 className="btn w-full justify-between border border-ink/30 bg-transparent text-ink hover:bg-ink hover:text-bone"
               >
-                Become a Trainer
+                {t.home.becomeTrainer}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>

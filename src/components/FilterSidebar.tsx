@@ -12,6 +12,7 @@ import {
   RATING_OPTIONS,
   SPECIALTY_OPTIONS,
 } from '../lib/constants';
+import { useT } from '../hooks/useLanguage';
 import { cn, formatPrice } from '../lib/format';
 
 interface FilterSidebarProps {
@@ -20,12 +21,6 @@ interface FilterSidebarProps {
   clearFilters: () => void;
   activeFilterCount: number;
 }
-
-const MODES: { value: TrainerFilters['mode']; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'remote', label: 'Remote' },
-  { value: 'in-person', label: 'In-Person' },
-];
 
 function FilterGroup({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -101,10 +96,14 @@ function RadioRow({
 function PriceRange({
   min,
   max,
+  minLabel,
+  maxLabel,
   onCommit,
 }: {
   min: number;
   max: number;
+  minLabel: string;
+  maxLabel: string;
   onCommit: (min: number, max: number) => void;
 }) {
   const [localMin, setLocalMin] = useState(min);
@@ -141,7 +140,7 @@ function PriceRange({
         />
         <input
           type="range"
-          aria-label="Minimum price"
+          aria-label={minLabel}
           className="range-thumb"
           min={PRICE_MIN}
           max={PRICE_MAX}
@@ -151,7 +150,7 @@ function PriceRange({
         />
         <input
           type="range"
-          aria-label="Maximum price"
+          aria-label={maxLabel}
           className="range-thumb"
           min={PRICE_MIN}
           max={PRICE_MAX}
@@ -174,25 +173,48 @@ export default function FilterSidebar({
   clearFilters,
   activeFilterCount,
 }: FilterSidebarProps) {
+  const t = useT();
+
   const toggleInList = (list: string[], value: string) =>
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+
+  const modeOptions = [
+    { value: 'all' as const, label: t.filters.all },
+    { value: 'remote' as const, label: t.filters.remote },
+    { value: 'in-person' as const, label: t.filters.inPerson },
+  ];
+
+  const availabilityOptions = AVAILABILITY_OPTIONS.map((opt, i) => ({
+    value: opt.value,
+    label: t.filters.availabilityLabels[i],
+  }));
+
+  const experienceOptions = EXPERIENCE_OPTIONS.map((opt, i) => ({
+    value: opt.value,
+    label: t.filters.experienceLabels[i],
+  }));
+
+  const ratingOptions = RATING_OPTIONS.map((opt, i) => ({
+    value: opt.value,
+    label: t.filters.ratingLabels[i],
+  }));
 
   return (
     <div className="bg-charcoal">
       <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-        <h3 className="font-display text-xl tracking-wide text-bone">Filters</h3>
+        <h3 className="font-display text-xl tracking-wide text-bone">{t.filters.title}</h3>
         {activeFilterCount > 0 && (
           <button
             onClick={clearFilters}
             className="text-[11px] font-semibold uppercase tracking-[0.12em] text-volt transition-colors duration-200 hover:text-bone"
           >
-            Clear all ({activeFilterCount})
+            {t.filters.clearAll} ({activeFilterCount})
           </button>
         )}
       </div>
 
       <div className="px-5 py-2">
-        <FilterGroup title="Specialty">
+        <FilterGroup title={t.filters.specialty}>
           <div className="space-y-0.5">
             {SPECIALTY_OPTIONS.map((name) => (
               <CheckRow
@@ -205,17 +227,19 @@ export default function FilterSidebar({
           </div>
         </FilterGroup>
 
-        <FilterGroup title="Price / Session">
+        <FilterGroup title={t.filters.pricePerSession}>
           <PriceRange
             min={filters.minPrice}
             max={filters.maxPrice}
+            minLabel={t.filters.minPrice}
+            maxLabel={t.filters.maxPrice}
             onCommit={(minPrice, maxPrice) => setFilters({ minPrice, maxPrice })}
           />
         </FilterGroup>
 
-        <FilterGroup title="Location">
+        <FilterGroup title={t.filters.location}>
           <div className="grid grid-cols-3 gap-1">
-            {MODES.map((m) => (
+            {modeOptions.map((m) => (
               <button
                 key={m.value}
                 onClick={() => setFilters({ mode: m.value })}
@@ -232,9 +256,9 @@ export default function FilterSidebar({
           </div>
         </FilterGroup>
 
-        <FilterGroup title="Rating">
+        <FilterGroup title={t.filters.rating}>
           <div className="space-y-0.5">
-            {RATING_OPTIONS.map((r) => (
+            {ratingOptions.map((r) => (
               <RadioRow
                 key={r.value}
                 label={r.label}
@@ -245,9 +269,9 @@ export default function FilterSidebar({
           </div>
         </FilterGroup>
 
-        <FilterGroup title="Availability">
+        <FilterGroup title={t.filters.availability}>
           <div className="space-y-0.5">
-            {AVAILABILITY_OPTIONS.map((a) => (
+            {availabilityOptions.map((a) => (
               <CheckRow
                 key={a.value}
                 label={a.label}
@@ -258,9 +282,9 @@ export default function FilterSidebar({
           </div>
         </FilterGroup>
 
-        <FilterGroup title="Experience">
+        <FilterGroup title={t.filters.experience}>
           <div className="space-y-0.5">
-            {EXPERIENCE_OPTIONS.map((e) => (
+            {experienceOptions.map((e) => (
               <CheckRow
                 key={e.value}
                 label={e.label}

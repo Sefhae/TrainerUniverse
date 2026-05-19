@@ -1,6 +1,10 @@
+'use client';
+
 import Link from 'next/link';
+import { useT } from '../hooks/useLanguage';
 
 export default function Footer() {
+  const t = useT();
   const year = new Date().getFullYear();
   return (
     <footer className="relative overflow-hidden border-t border-white/10 bg-ink text-bone">
@@ -16,25 +20,22 @@ export default function Footer() {
                 FIT<span className="text-volt">CONNECT</span>
               </span>
             </div>
-            <p className="mt-5 max-w-sm text-sm leading-relaxed text-bone/55">
-              The marketplace for elite personal training. Find a coach who matches your goals,
-              your schedule, and your ambition.
-            </p>
+            <p className="mt-5 max-w-sm text-sm leading-relaxed text-bone/55">{t.footer.desc}</p>
           </div>
 
           <div>
             <h4 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-bone/40">
-              Explore
+              {t.footer.exploreTitle}
             </h4>
             <ul className="mt-5 space-y-3 text-sm">
               <li>
                 <Link href="/" className="text-bone/70 transition-colors duration-200 hover:text-volt">
-                  Home
+                  {t.footer.home}
                 </Link>
               </li>
               <li>
                 <Link href="/trainers" className="text-bone/70 transition-colors duration-200 hover:text-volt">
-                  Find a Trainer
+                  {t.footer.findTrainer}
                 </Link>
               </li>
             </ul>
@@ -42,17 +43,17 @@ export default function Footer() {
 
           <div>
             <h4 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-bone/40">
-              For Trainers
+              {t.footer.trainersTitle}
             </h4>
             <ul className="mt-5 space-y-3 text-sm">
               <li>
                 <Link href="/register" className="text-bone/70 transition-colors duration-200 hover:text-volt">
-                  Become a Trainer
+                  {t.footer.becomeTrainer}
                 </Link>
               </li>
               <li>
                 <Link href="/login" className="text-bone/70 transition-colors duration-200 hover:text-volt">
-                  Trainer Login
+                  {t.footer.trainerLogin}
                 </Link>
               </li>
             </ul>
@@ -60,8 +61,8 @@ export default function Footer() {
         </div>
 
         <div className="mt-14 flex flex-col gap-3 border-t border-white/10 pt-7 text-[12px] text-bone/40 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} FitConnect. All rights reserved.</p>
-          <p className="uppercase tracking-[0.18em]">Train smarter. Go further.</p>
+          <p>© {year} FitConnect. {t.footer.allRightsReserved}</p>
+          <p className="uppercase tracking-[0.18em]">{t.footer.tagline}</p>
         </div>
       </div>
     </footer>
