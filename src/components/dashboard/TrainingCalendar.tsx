@@ -49,7 +49,7 @@ export default function TrainingCalendar({ role = 'trainer', studentId: myStuden
   trainerId?: number;
 }) {
   const t = useT();
-  const { showToast } = useToast();
+  const toast = useToast();
   const today = new Date();
 
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
@@ -98,7 +98,7 @@ export default function TrainingCalendar({ role = 'trainer', studentId: myStuden
   function openAdd(day: Date) {
     if (role !== 'trainer') return;
     if (students.length === 0) {
-      showToast(t.sessionCalendar.noStudentsEnrolled, 'error');
+      toast.error(t.sessionCalendar.noStudentsEnrolled);
       return;
     }
     const dt = new Date(day);
@@ -153,7 +153,7 @@ export default function TrainingCalendar({ role = 'trainer', studentId: myStuden
       setModal(null);
       load();
     } catch {
-      showToast('Error saving session.', 'error');
+      toast.error('Error saving session.');
     } finally {
       setSaving(false);
     }
@@ -165,7 +165,7 @@ export default function TrainingCalendar({ role = 'trainer', studentId: myStuden
       await api.delete(`/sessions/${id}`);
       setSessions((prev) => prev.filter((s) => s.id !== id));
     } catch {
-      showToast('Error deleting session.', 'error');
+      toast.error('Error deleting session.');
     } finally {
       setDeleting(null);
     }
@@ -179,11 +179,11 @@ export default function TrainingCalendar({ role = 'trainer', studentId: myStuden
         proposedAt: new Date(crForm.proposedAt).toISOString(),
         message: crForm.message,
       });
-      showToast(t.sessionCalendar.changeRequestSent, 'success');
+      toast.success(t.sessionCalendar.changeRequestSent);
       setModal(null);
       load();
     } catch {
-      showToast('Error submitting request.', 'error');
+      toast.error('Error submitting request.');
     } finally {
       setSaving(false);
     }
@@ -194,7 +194,7 @@ export default function TrainingCalendar({ role = 'trainer', studentId: myStuden
       await api.put(`/change-requests/${crId}`, { action });
       load();
     } catch {
-      showToast('Error responding to request.', 'error');
+      toast.error('Error responding to request.');
     }
   }
 

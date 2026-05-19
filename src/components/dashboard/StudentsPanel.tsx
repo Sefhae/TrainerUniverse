@@ -16,7 +16,7 @@ interface Student {
 
 export default function StudentsPanel() {
   const t = useT();
-  const { showToast } = useToast();
+  const toast = useToast();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
@@ -44,15 +44,15 @@ export default function StudentsPanel() {
     setEnrolling(true);
     try {
       await api.post('/trainer/students', { email: email.trim() });
-      showToast(t.students.addSuccess, 'success');
+      toast.success(t.students.addSuccess);
       setEmail('');
       load();
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      if (msg?.includes('already')) showToast(t.students.alreadyEnrolled, 'error');
-      else if (msg?.includes('No student')) showToast(t.students.notFound, 'error');
-      else showToast(msg || 'Error', 'error');
+      if (msg?.includes('already')) toast.error(t.students.alreadyEnrolled);
+      else if (msg?.includes('No student')) toast.error(t.students.notFound);
+      else toast.error(msg || 'Error');
     } finally {
       setEnrolling(false);
     }
@@ -64,7 +64,7 @@ export default function StudentsPanel() {
       await api.delete(`/trainer/students?studentId=${studentId}`);
       setStudents((prev) => prev.filter((s) => s.id !== studentId));
     } catch {
-      showToast('Error removing student.', 'error');
+      toast.error('Error removing student.');
     } finally {
       setRemoving(null);
     }
