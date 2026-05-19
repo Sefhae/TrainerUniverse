@@ -41,7 +41,7 @@ export function GET(req: NextRequest) {
   if (maxPrice) trainers = trainers.filter((t) => t.startingPrice <= Number(maxPrice));
 
   if (mode === 'remote') trainers = trainers.filter((t) => t.isRemote);
-  if (mode === 'in-person') trainers = trainers.filter((t) => !t.isRemote);
+  if (mode === 'in-person') trainers = trainers.filter((t) => !t.isRemote || Boolean(t.location));
 
   if (minRating) trainers = trainers.filter((t) => t.rating >= Number(minRating));
 

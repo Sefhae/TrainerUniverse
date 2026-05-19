@@ -258,7 +258,7 @@ export default function ProfileEditor({ trainer, refresh }: Props) {
                 checked={isRemote}
                 onChange={setIsRemote}
                 label="Offer Remote Training"
-                description="Show a 'Remote Available' badge on your profile."
+                description="Clients will see a 'Remote Available' badge on your profile. Set a location too to offer both in-person and remote."
               />
             </div>
 

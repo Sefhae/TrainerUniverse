@@ -179,17 +179,21 @@ export default function TrainerProfilePage() {
                   <span className="font-semibold text-bone">{trainer.rating.toFixed(1)}</span>
                   <span className="text-bone/45">({trainer.reviewCount} reviews)</span>
                 </span>
-                <span className="flex items-center gap-1.5 text-bone/65">
-                  {trainer.isRemote ? (
-                    <>
-                      <Globe className="h-4 w-4 text-volt" /> Remote Available
-                    </>
-                  ) : (
-                    <>
-                      <MapPin className="h-4 w-4 text-volt" /> {trainer.location || 'In-Person'}
-                    </>
-                  )}
-                </span>
+                {trainer.isRemote && (
+                  <span className="flex items-center gap-1.5 text-bone/65">
+                    <Globe className="h-4 w-4 text-volt" /> Remote Available
+                  </span>
+                )}
+                {trainer.location && (
+                  <span className="flex items-center gap-1.5 text-bone/65">
+                    <MapPin className="h-4 w-4 text-volt" /> {trainer.location}
+                  </span>
+                )}
+                {!trainer.isRemote && !trainer.location && (
+                  <span className="flex items-center gap-1.5 text-bone/65">
+                    <MapPin className="h-4 w-4 text-volt" /> In-Person
+                  </span>
+                )}
                 <span className="text-bone/65">{trainer.yearsExperience} years experience</span>
               </div>
             </div>

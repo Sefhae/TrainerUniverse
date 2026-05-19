@@ -30,18 +30,22 @@ export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
           </div>
         )}
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink/90 to-transparent" />
-        <div className="absolute left-3 top-3">
-          <span className="chip bg-ink/85 text-bone backdrop-blur">
-            {trainer.isRemote ? (
-              <>
-                <Globe className="mr-1 h-3 w-3 text-volt" /> Remote
-              </>
-            ) : (
-              <>
-                <MapPin className="mr-1 h-3 w-3 text-volt" /> {trainer.location || 'In-Person'}
-              </>
-            )}
-          </span>
+        <div className="absolute left-3 top-3 flex flex-col gap-1">
+          {trainer.isRemote && (
+            <span className="chip bg-ink/85 text-bone backdrop-blur">
+              <Globe className="mr-1 h-3 w-3 text-volt" /> Remote
+            </span>
+          )}
+          {trainer.location && (
+            <span className="chip bg-ink/85 text-bone backdrop-blur">
+              <MapPin className="mr-1 h-3 w-3 text-volt" /> {trainer.location}
+            </span>
+          )}
+          {!trainer.isRemote && !trainer.location && (
+            <span className="chip bg-ink/85 text-bone backdrop-blur">
+              <MapPin className="mr-1 h-3 w-3 text-volt" /> In-Person
+            </span>
+          )}
         </div>
       </div>
 
