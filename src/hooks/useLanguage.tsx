@@ -43,5 +43,5 @@ export function useLanguage() {
 
 export function useT(): Translations {
   const { lang } = useLanguage();
-  return translations[lang];
+  return translations[lang] as unknown as Translations;
 }
