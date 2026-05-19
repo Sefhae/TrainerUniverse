@@ -6,13 +6,19 @@ import { serializeTrainerDetail } from '../../../../src/lib/serialize';
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, { params }: Params) {
-  const { id } = await params;
-  const row = db.prepare('SELECT * FROM trainer_profiles WHERE id = ?').get(Number(id)) as Record<string, unknown> | undefined;
-  if (!row) return NextResponse.json({ error: 'Trainer not found.' }, { status: 404 });
-  return NextResponse.json(serializeTrainerDetail(row));
+  try {
+    const { id } = await params;
+    const row = db.prepare('SELECT * FROM trainer_profiles WHERE id = ?').get(Number(id)) as Record<string, unknown> | undefined;
+    if (!row) return NextResponse.json({ error: 'Trainer not found.' }, { status: 404 });
+    return NextResponse.json(serializeTrainerDetail(row));
+  } catch (err) {
+    console.error('[trainer GET]', err);
+    return NextResponse.json({ error: 'Could not load trainer.' }, { status: 500 });
+  }
 }
 
 export async function PUT(req: NextRequest, { params }: Params) {
+  try {
   const { id } = await params;
   const payload = verifyToken(req);
   if (!payload) return unauthorized();
@@ -53,4 +59,8 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
   const updated = db.prepare('SELECT * FROM trainer_profiles WHERE id = ?').get(Number(id)) as Record<string, unknown>;
   return NextResponse.json(serializeTrainerDetail(updated));
+  } catch (err) {
+    console.error('[trainer PUT]', err);
+    return NextResponse.json({ error: 'Could not update profile.' }, { status: 500 });
+  }
 }

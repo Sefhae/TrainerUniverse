@@ -12,6 +12,7 @@ function parseBool(value: unknown, fallback = false): boolean {
 }
 
 export async function PUT(req: NextRequest, { params }: Params) {
+  try {
   const { id, workId } = await params;
   const payload = verifyToken(req);
   if (!payload) return unauthorized();
@@ -68,6 +69,10 @@ export async function PUT(req: NextRequest, { params }: Params) {
   );
   const updated = db.prepare('SELECT * FROM previous_work WHERE id = ?').get(Number(workId)) as Record<string, unknown>;
   return NextResponse.json(mapWork(updated));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Could not update work entry.';
+    return NextResponse.json({ error: msg }, { status: 400 });
+  }
 }
 
 export async function DELETE(req: NextRequest, { params }: Params) {

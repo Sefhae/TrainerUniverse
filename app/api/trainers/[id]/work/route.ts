@@ -20,44 +20,49 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 export async function POST(req: NextRequest, { params }: Params) {
-  const { id } = await params;
-  const payload = verifyToken(req);
-  if (!payload) return unauthorized();
-  if (payload.trainerId !== Number(id)) return forbidden();
+  try {
+    const { id } = await params;
+    const payload = verifyToken(req);
+    if (!payload) return unauthorized();
+    if (payload.trainerId !== Number(id)) return forbidden();
 
-  const contentType = req.headers.get('content-type') || '';
-  let studentName = '', goal = '', duration = '', description = '', isVisible = true;
-  let photoPath = '';
+    const contentType = req.headers.get('content-type') || '';
+    let studentName = '', goal = '', duration = '', description = '', isVisible = true;
+    let photoPath = '';
 
-  if (contentType.includes('multipart/form-data')) {
-    const fd = await req.formData();
-    studentName = String(fd.get('studentName') || '');
-    goal = String(fd.get('goal') || '');
-    duration = String(fd.get('duration') || '');
-    description = String(fd.get('description') || '');
-    isVisible = parseBool(fd.get('isVisible'), true);
-    const photo = fd.get('photo') as File | null;
-    if (photo instanceof File) photoPath = await saveUploadedFile(photo);
-  } else {
-    const body = await req.json().catch(() => ({}));
-    studentName = String(body.studentName || '');
-    goal = String(body.goal || '');
-    duration = String(body.duration || '');
-    description = String(body.description || '');
-    isVisible = parseBool(body.isVisible, true);
-    if (body.photo) photoPath = String(body.photo);
+    if (contentType.includes('multipart/form-data')) {
+      const fd = await req.formData();
+      studentName = String(fd.get('studentName') || '');
+      goal = String(fd.get('goal') || '');
+      duration = String(fd.get('duration') || '');
+      description = String(fd.get('description') || '');
+      isVisible = parseBool(fd.get('isVisible'), true);
+      const photo = fd.get('photo') as File | null;
+      if (photo instanceof File) photoPath = await saveUploadedFile(photo);
+    } else {
+      const body = await req.json().catch(() => ({}));
+      studentName = String(body.studentName || '');
+      goal = String(body.goal || '');
+      duration = String(body.duration || '');
+      description = String(body.description || '');
+      isVisible = parseBool(body.isVisible, true);
+      if (body.photo) photoPath = String(body.photo);
+    }
+
+    const orderRow = db.prepare('SELECT COUNT(*) AS c FROM previous_work WHERE trainer_id = ?').get(Number(id)) as { c: number };
+    const order = orderRow.c;
+
+    const info = db
+      .prepare(`
+        INSERT INTO previous_work
+          (trainer_id, photo, student_name, goal, duration, description, display_order, is_visible)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .run(Number(id), photoPath, studentName, goal, duration, description, order, isVisible ? 1 : 0);
+    const created = db.prepare('SELECT * FROM previous_work WHERE id = ?').get(info.lastInsertRowid) as Record<string, unknown>;
+    return NextResponse.json(mapWork(created), { status: 201 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Could not save work entry.';
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
-
-  const orderRow = db.prepare('SELECT COUNT(*) AS c FROM previous_work WHERE trainer_id = ?').get(Number(id)) as { c: number };
-  const order = orderRow.c;
-
-  const info = db
-    .prepare(`
-      INSERT INTO previous_work
-        (trainer_id, photo, student_name, goal, duration, description, display_order, is_visible)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `)
-    .run(Number(id), photoPath, studentName, goal, duration, description, order, isVisible ? 1 : 0);
-  const created = db.prepare('SELECT * FROM previous_work WHERE id = ?').get(info.lastInsertRowid) as Record<string, unknown>;
-  return NextResponse.json(mapWork(created), { status: 201 });
 }

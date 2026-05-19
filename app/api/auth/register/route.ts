@@ -6,6 +6,7 @@ import { signToken } from '../../../../src/lib/auth';
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 export async function POST(req: NextRequest) {
+  try {
   const body = await req.json().catch(() => ({}));
   const { name, email, password, specialties } = body || {};
 
@@ -49,4 +50,8 @@ export async function POST(req: NextRequest) {
     { token, user: { id: userId, email: normalizedEmail, role: 'trainer' }, trainerId },
     { status: 201 }
   );
+  } catch (err) {
+    console.error('[register]', err);
+    return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 });
+  }
 }

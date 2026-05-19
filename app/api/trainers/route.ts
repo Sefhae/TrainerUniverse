@@ -16,6 +16,7 @@ function csv(value: string | null): string[] {
 }
 
 export function GET(req: NextRequest) {
+  try {
   const { searchParams } = new URL(req.url);
   const rows = db.prepare('SELECT * FROM trainer_profiles WHERE is_published = 1').all() as Record<string, unknown>[];
   let trainers = rows.map(serializeTrainerSummary);
@@ -86,4 +87,8 @@ export function GET(req: NextRequest) {
   }
 
   return NextResponse.json({ trainers, total: trainers.length });
+  } catch (err) {
+    console.error('[trainers]', err);
+    return NextResponse.json({ error: 'Could not load trainers.' }, { status: 500 });
+  }
 }
