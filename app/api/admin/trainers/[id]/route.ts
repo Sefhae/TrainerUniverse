@@ -4,6 +4,22 @@ import { verifyToken, unauthorized } from '../../../../../src/lib/auth';
 
 type Params = { params: Promise<{ id: string }> };
 
+export async function GET(req: NextRequest, { params }: Params) {
+  const p = verifyToken(req);
+  if (!p || p.role !== 'admin') return unauthorized();
+
+  const { id } = await params;
+  const profile = db.prepare(`
+    SELECT tp.id, tp.name, tp.tagline, tp.bio, tp.location, tp.is_remote,
+           tp.years_experience, tp.is_published, u.email
+    FROM trainer_profiles tp
+    JOIN users u ON u.id = tp.user_id
+    WHERE tp.id = ?
+  `).get(Number(id));
+  if (!profile) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json(profile);
+}
+
 export async function DELETE(req: NextRequest, { params }: Params) {
   const p = verifyToken(req);
   if (!p || p.role !== 'admin') return unauthorized();

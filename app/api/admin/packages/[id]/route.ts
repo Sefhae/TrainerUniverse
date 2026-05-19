@@ -9,11 +9,11 @@ export async function PUT(req: NextRequest, { params }: Params) {
   if (!p || p.role !== 'admin') return unauthorized();
 
   const { id } = await params;
-  const { title, scheduledAt, durationMin, status, notes } = await req.json();
+  const { name, description, sessions, price, isPopular } = await req.json();
 
   db.prepare(
-    'UPDATE training_sessions SET title = ?, scheduled_at = ?, duration_min = ?, status = ?, notes = ? WHERE id = ?'
-  ).run(title, scheduledAt, Number(durationMin) || 60, status, notes ?? '', Number(id));
+    'UPDATE pricing_packages SET name = ?, description = ?, sessions = ?, price = ?, is_popular = ? WHERE id = ?'
+  ).run(name, description ?? '', Number(sessions) || 1, Number(price) || 0, isPopular ? 1 : 0, Number(id));
 
   return NextResponse.json({ ok: true });
 }
@@ -23,7 +23,6 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   if (!p || p.role !== 'admin') return unauthorized();
 
   const { id } = await params;
-  const result = db.prepare('DELETE FROM training_sessions WHERE id = ?').run(Number(id));
-  if (result.changes === 0) return NextResponse.json({ error: 'Session not found.' }, { status: 404 });
+  db.prepare('DELETE FROM pricing_packages WHERE id = ?').run(Number(id));
   return NextResponse.json({ ok: true });
 }
