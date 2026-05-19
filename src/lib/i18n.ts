@@ -177,11 +177,63 @@ export const translations = {
       unavailableMsg: "We couldn't load your trainer profile. Please try logging in again.",
       backToLogin: 'Back to Login',
     },
+    faq: {
+      eyebrow: 'Support',
+      title: 'Frequently Asked Questions',
+      desc: 'Everything you need to know about FitConnect — for clients and trainers alike.',
+      clientsTitle: 'For Clients',
+      trainersTitle: 'For Trainers',
+      clients: [
+        {
+          q: 'How does FitConnect work?',
+          a: 'Browse trainer profiles, filter by specialty, price, location and availability, then contact your chosen trainer directly to book sessions. Every profile includes certifications, client transformation photos and real reviews.',
+        },
+        {
+          q: 'Is it free to browse?',
+          a: 'Yes — searching profiles, reading reviews and exploring packages is completely free. There are no sign-up fees for clients. Pricing is set individually by each trainer.',
+        },
+        {
+          q: 'Can I train remotely?',
+          a: 'Many trainers on FitConnect offer remote coaching via video call. Use the "Remote" filter on the Find a Trainer page to see coaches who train online.',
+        },
+        {
+          q: 'How do I know a trainer is qualified?',
+          a: 'Every profile lists the trainer\'s certifications, issuing bodies and years of experience. Client reviews and transformation galleries give you a real picture of their coaching style.',
+        },
+        {
+          q: 'What happens after I contact a trainer?',
+          a: 'You reach out directly via the Contact button on their profile. From there you agree on schedule, format and pricing with your trainer — FitConnect facilitates the match.',
+        },
+      ],
+      trainers: [
+        {
+          q: 'How do I create a profile?',
+          a: 'Click "Become a Trainer", register with your name, email and specialties, and you\'ll land on your dashboard. Complete your bio, photos, packages and previous work — then publish when ready.',
+        },
+        {
+          q: 'How do I set my pricing?',
+          a: 'Under "Pricing" in your dashboard, add as many packages as you like. Each has a name, description, session count and price. Mark your most popular package to highlight it on your profile.',
+        },
+        {
+          q: 'When does my profile go live?',
+          a: 'Your profile starts as a draft — only you can see it. When you\'re ready for clients, toggle the Publish switch in the Profile section of your dashboard.',
+        },
+        {
+          q: 'Can I edit my profile after publishing?',
+          a: 'Yes, at any time. Changes to your bio, photos, packages and availability are reflected on your public profile immediately after saving.',
+        },
+        {
+          q: 'How do client reviews work?',
+          a: 'Clients leave reviews directly on your public profile page. Reviews display the client\'s name, star rating and written comment — they cannot be deleted, which keeps your reputation authentic.',
+        },
+      ],
+    },
     footer: {
       desc: 'The marketplace for elite personal training. Find a coach who matches your goals, your schedule, and your ambition.',
       exploreTitle: 'Explore',
       home: 'Home',
       findTrainer: 'Find a Trainer',
+      faq: 'FAQ',
       trainersTitle: 'For Trainers',
       becomeTrainer: 'Become a Trainer',
       trainerLogin: 'Trainer Login',
@@ -368,11 +420,63 @@ export const translations = {
       unavailableMsg: 'Antrenör profiliniz yüklenemedi. Lütfen tekrar giriş yapmayı deneyin.',
       backToLogin: 'Girişe Dön',
     },
+    faq: {
+      eyebrow: 'Destek',
+      title: 'Sıkça Sorulan Sorular',
+      desc: 'FitConnect hakkında bilmeniz gereken her şey — müşteriler ve antrenörler için.',
+      clientsTitle: 'Müşteriler İçin',
+      trainersTitle: 'Antrenörler İçin',
+      clients: [
+        {
+          q: 'FitConnect nasıl çalışır?',
+          a: 'Antrenör profillerine göz atın, uzmanlık, fiyat, konum ve müsaitliğe göre filtreleyin, ardından seçtiğiniz antrenörle seans rezervasyonu için doğrudan iletişime geçin. Her profil sertifikaları, dönüşüm fotoğraflarını ve gerçek yorumları içerir.',
+        },
+        {
+          q: 'Göz atmak ücretsiz mi?',
+          a: 'Evet — profillere bakmak, yorumları okumak ve paketleri incelemek tamamen ücretsizdir. Müşteriler için kayıt ücreti yoktur. Fiyatlandırma her antrenör tarafından bireysel olarak belirlenir.',
+        },
+        {
+          q: 'Uzaktan antrenman yapabilir miyim?',
+          a: 'FitConnect\'teki pek çok antrenör video görüşmesiyle uzaktan koçluk sunmaktadır. Çevrimiçi antrenörler için "Antrenör Bul" sayfasındaki "Uzaktan" filtresini kullanın.',
+        },
+        {
+          q: 'Bir antrenörün nitelikli olduğunu nasıl anlarım?',
+          a: 'Her profil antrenörün sertifikalarını, veren kuruluşları ve deneyim yıllarını listeler. Müşteri yorumları ve dönüşüm galerileri, koçluk tarzları hakkında gerçek bir fikir sunar.',
+        },
+        {
+          q: 'Bir antrenörle iletişime geçtikten sonra ne olur?',
+          a: 'Profillerindeki İletişim butonu aracılığıyla doğrudan ulaşırsınız. Oradan antrenörünüzle program, format ve fiyatlandırma konusunda anlaşırsınız — FitConnect eşleşmeyi kolaylaştırır.',
+        },
+      ],
+      trainers: [
+        {
+          q: 'Nasıl profil oluştururum?',
+          a: '"Antrenör Ol"a tıklayın, adınız, e-postanız ve uzmanlık alanlarınızla kayıt olun; panele yönlendirilirsiniz. Biyografinizi, fotoğraflarınızı, paketlerinizi ve önceki çalışmalarınızı tamamlayın, hazır olduğunuzda yayınlayın.',
+        },
+        {
+          q: 'Fiyatlandırmamı nasıl belirlerim?',
+          a: 'Panelinizdeki "Fiyatlandırma" bölümünden istediğiniz kadar paket ekleyebilirsiniz. Her paketin adı, açıklaması, seans sayısı ve fiyatı vardır. En popüler paketinizi profilinizde öne çıkarmak için işaretleyin.',
+        },
+        {
+          q: 'Profilim ne zaman yayına girer?',
+          a: 'Profiliniz başlangıçta taslak olarak kaydedilir — yalnızca siz görebilirsiniz. Müşterilere hazır olduğunuzda panelinizin Profil bölümündeki Yayınla düğmesini açın.',
+        },
+        {
+          q: 'Yayınladıktan sonra profilimi düzenleyebilir miyim?',
+          a: 'Evet, istediğiniz zaman. Biyografi, fotoğraf, paket ve müsaitlikteki değişiklikler kaydedildikten hemen sonra herkese açık profilinize yansır.',
+        },
+        {
+          q: 'Müşteri yorumları nasıl çalışır?',
+          a: 'Müşteriler yorumlarını doğrudan herkese açık profilinizde bırakır. Yorumlar müşterinin adını, yıldız puanını ve yazılı yorumu gösterir — silinemezler, bu da itibarınızın özgünlüğünü korur.',
+        },
+      ],
+    },
     footer: {
       desc: 'Elit kişisel antrenman için platform. Hedeflerinize, programınıza ve hırsınıza uyan bir koç bulun.',
       exploreTitle: 'Keşfet',
       home: 'Ana Sayfa',
       findTrainer: 'Antrenör Bul',
+      faq: 'SSS',
       trainersTitle: 'Antrenörler İçin',
       becomeTrainer: 'Antrenör Ol',
       trainerLogin: 'Antrenör Girişi',

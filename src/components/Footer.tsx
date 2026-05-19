@@ -38,6 +38,11 @@ export default function Footer() {
                   {t.footer.findTrainer}
                 </Link>
               </li>
+              <li>
+                <Link href="/faq" className="text-bone/70 transition-colors duration-200 hover:text-volt">
+                  {t.footer.faq}
+                </Link>
+              </li>
             </ul>
           </div>
 
