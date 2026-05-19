@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
   LayoutDashboard, Users, GraduationCap, CalendarDays,
-  LogOut, Trash2, Eye, EyeOff, ShieldCheck, Pencil, Plus, X, Star, Camera, UserCircle,
+  LogOut, Trash2, Eye, EyeOff, ShieldCheck, Pencil, Plus, X, Star, Camera, UserCircle, KeyRound,
 } from 'lucide-react';
 import { useAdminAuth } from '../../../src/hooks/useAdminAuth';
 import api from '../../../src/api/client';
 import { cn } from '../../../src/lib/format';
+import CitySearch from '../../../src/components/CitySearch';
 
 type Section = 'overview' | 'trainers' | 'students' | 'sessions';
 
@@ -19,6 +20,7 @@ interface AdminStudent { id: number; name: string; email: string; trainer_name: 
 interface AdminSession { id: number; title: string; trainer_name: string; student_name: string; scheduled_at: string; duration_min: number; status: string; notes?: string; }
 interface TrainerProfile { id: number; name: string; tagline: string; bio: string; location: string; is_remote: number; years_experience: number; email: string; profile_photo: string | null; cover_photo: string | null; }
 interface PricingPackage { id: number; trainer_id: number; name: string; description: string; sessions: number; price: number; is_popular: number; }
+interface StudentDetail { id: number; user_id: number; name: string; email: string; created_at: string; }
 
 const NAV: { id: Section; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -60,12 +62,15 @@ const inputCls = 'w-full rounded border border-white/10 bg-white/5 px-3 py-2 tex
 
 /* ─── Trainer Modal ─── */
 function TrainerModal({ trainerId, onClose, onSaved }: { trainerId: number; onClose: () => void; onSaved: () => void }) {
-  const [tab, setTab] = useState<'profile' | 'pricing'>('profile');
+  const [tab, setTab] = useState<'profile' | 'pricing' | 'credentials'>('profile');
   const [profile, setProfile] = useState<TrainerProfile | null>(null);
   const [packages, setPackages] = useState<PricingPackage[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState<'profile' | 'cover' | null>(null);
+  const [creds, setCreds] = useState({ email: '', password: '', confirmPassword: '' });
+  const [credsError, setCredsError] = useState('');
+  const [credsSaved, setCredsSaved] = useState(false);
 
   const profilePhotoRef = useRef<HTMLInputElement>(null);
   const coverPhotoRef = useRef<HTMLInputElement>(null);
@@ -82,6 +87,7 @@ function TrainerModal({ trainerId, onClose, onSaved }: { trainerId: number; onCl
     ]).then(([p, pkg]) => {
       setProfile(p.data);
       setPackages(pkg.data);
+      setCreds({ email: p.data.email, password: '', confirmPassword: '' });
     }).finally(() => setLoadingProfile(false));
   }, [trainerId]);
 
@@ -114,6 +120,29 @@ function TrainerModal({ trainerId, onClose, onSaved }: { trainerId: number; onCl
         isRemote: profile.is_remote,
       });
       onSaved();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveCredentials() {
+    setCredsError('');
+    setCredsSaved(false);
+    if (!creds.email) { setCredsError('Email is required.'); return; }
+    if (creds.password && creds.password !== creds.confirmPassword) { setCredsError('Passwords do not match.'); return; }
+    if (creds.password && creds.password.length < 6) { setCredsError('Password must be at least 6 characters.'); return; }
+    setSaving(true);
+    try {
+      await api.put(`/admin/trainers/${trainerId}/credentials`, {
+        email: creds.email,
+        ...(creds.password ? { password: creds.password } : {}),
+      });
+      setCredsSaved(true);
+      setCreds((c) => ({ ...c, password: '', confirmPassword: '' }));
+      onSaved();
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setCredsError(msg || 'Failed to update credentials.');
     } finally {
       setSaving(false);
     }
@@ -173,13 +202,14 @@ function TrainerModal({ trainerId, onClose, onSaved }: { trainerId: number; onCl
         </div>
 
         <div className="flex border-b border-white/10">
-          {(['profile', 'pricing'] as const).map((t) => (
+          {(['profile', 'pricing', 'credentials'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={cn('px-6 py-3 text-xs font-bold uppercase tracking-widest transition-colors', tab === t ? 'border-b-2 border-volt text-volt' : 'text-bone/40 hover:text-bone')}
+              className={cn('flex items-center gap-1.5 px-5 py-3 text-xs font-bold uppercase tracking-widest transition-colors', tab === t ? 'border-b-2 border-volt text-volt' : 'text-bone/40 hover:text-bone')}
             >
-              {t === 'profile' ? 'Profile' : 'Pricing Packages'}
+              {t === 'credentials' && <KeyRound className="h-3 w-3" />}
+              {t === 'profile' ? 'Profile' : t === 'pricing' ? 'Pricing' : 'Credentials'}
             </button>
           ))}
         </div>
@@ -240,7 +270,11 @@ function TrainerModal({ trainerId, onClose, onSaved }: { trainerId: number; onCl
                       <input className={inputCls} value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
                     </Field>
                     <Field label="Location">
-                      <input className={inputCls} value={profile.location ?? ''} onChange={(e) => setProfile({ ...profile, location: e.target.value })} />
+                      <CitySearch
+                        className={inputCls}
+                        value={profile.location ?? ''}
+                        onChange={(city) => setProfile({ ...profile, location: city })}
+                      />
                     </Field>
                   </div>
                   <Field label="Tagline">
@@ -270,6 +304,29 @@ function TrainerModal({ trainerId, onClose, onSaved }: { trainerId: number; onCl
                   <div className="flex justify-end pt-2">
                     <button onClick={saveProfile} disabled={saving} className="btn btn-volt btn-sm px-6">
                       {saving ? 'Saving…' : 'Save Profile'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Credentials Tab */}
+              {tab === 'credentials' && (
+                <div className="space-y-4">
+                  <p className="text-xs text-bone/40">Change this trainer&apos;s login email or password. Leave password blank to keep the current one.</p>
+                  {credsError && <p className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">{credsError}</p>}
+                  {credsSaved && <p className="rounded border border-volt/30 bg-volt/10 px-3 py-2 text-xs text-volt">Credentials updated successfully.</p>}
+                  <Field label="Email">
+                    <input type="email" className={inputCls} value={creds.email} onChange={(e) => { setCreds((c) => ({ ...c, email: e.target.value })); setCredsSaved(false); }} />
+                  </Field>
+                  <Field label="New Password">
+                    <input type="password" className={inputCls} placeholder="Leave blank to keep current password" value={creds.password} onChange={(e) => { setCreds((c) => ({ ...c, password: e.target.value })); setCredsSaved(false); }} />
+                  </Field>
+                  <Field label="Confirm New Password">
+                    <input type="password" className={inputCls} placeholder="Repeat new password" value={creds.confirmPassword} onChange={(e) => { setCreds((c) => ({ ...c, confirmPassword: e.target.value })); setCredsSaved(false); }} />
+                  </Field>
+                  <div className="flex justify-end pt-2">
+                    <button onClick={saveCredentials} disabled={saving} className="btn btn-volt btn-sm px-6">
+                      {saving ? 'Saving…' : 'Update Credentials'}
                     </button>
                   </div>
                 </div>
@@ -466,6 +523,82 @@ function SessionModal({ session, onClose, onSaved }: { session: AdminSession; on
   );
 }
 
+/* ─── Student Edit Modal ─── */
+function StudentModal({ studentId, onClose, onSaved }: { studentId: number; onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    api.get<StudentDetail>(`/admin/students/${studentId}`).then(({ data }) => {
+      setForm({ name: data.name, email: data.email, password: '', confirmPassword: '' });
+    }).finally(() => setLoading(false));
+  }, [studentId]);
+
+  async function save() {
+    setError('');
+    setSaved(false);
+    if (!form.name) { setError('Name is required.'); return; }
+    if (!form.email) { setError('Email is required.'); return; }
+    if (form.password && form.password !== form.confirmPassword) { setError('Passwords do not match.'); return; }
+    if (form.password && form.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    setSaving(true);
+    try {
+      await api.put(`/admin/students/${studentId}`, {
+        name: form.name,
+        email: form.email,
+        ...(form.password ? { password: form.password } : {}),
+      });
+      setSaved(true);
+      setForm((f) => ({ ...f, password: '', confirmPassword: '' }));
+      onSaved();
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setError(msg || 'Failed to update student.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded border border-white/10 bg-[#111] shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+          <p className="font-display text-lg tracking-wide">Edit Student</p>
+          <button onClick={onClose} className="p-1 text-bone/40 hover:text-bone"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="space-y-4 p-6">
+          {loading ? <div className="flex justify-center py-6"><span className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-volt" /></div> : (
+            <>
+              <p className="text-xs text-bone/40">Edit the student&apos;s name, email, or password. Leave password blank to keep the current one.</p>
+              {error && <p className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</p>}
+              {saved && <p className="rounded border border-volt/30 bg-volt/10 px-3 py-2 text-xs text-volt">Student updated successfully.</p>}
+              <Field label="Full Name">
+                <input className={inputCls} value={form.name} onChange={(e) => { setForm((f) => ({ ...f, name: e.target.value })); setSaved(false); }} />
+              </Field>
+              <Field label="Email">
+                <input type="email" className={inputCls} value={form.email} onChange={(e) => { setForm((f) => ({ ...f, email: e.target.value })); setSaved(false); }} />
+              </Field>
+              <Field label="New Password">
+                <input type="password" className={inputCls} placeholder="Leave blank to keep current password" value={form.password} onChange={(e) => { setForm((f) => ({ ...f, password: e.target.value })); setSaved(false); }} />
+              </Field>
+              <Field label="Confirm New Password">
+                <input type="password" className={inputCls} placeholder="Repeat new password" value={form.confirmPassword} onChange={(e) => { setForm((f) => ({ ...f, confirmPassword: e.target.value })); setSaved(false); }} />
+              </Field>
+              <div className="flex justify-end gap-2 pt-1">
+                <button onClick={onClose} className="btn btn-sm border border-white/10 px-5 text-bone/60 hover:text-bone">Close</button>
+                <button onClick={save} disabled={saving} className="btn btn-volt btn-sm px-6">{saving ? 'Saving…' : 'Save Changes'}</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Add Trainer Modal ─── */
 function AddTrainerModal({ onClose, onCreated }: { onClose: () => void; onCreated: (t: AdminTrainer) => void }) {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -534,6 +667,7 @@ export default function AdminDashboardPage() {
   const [toggling, setToggling] = useState<number | null>(null);
 
   const [editingTrainerId, setEditingTrainerId] = useState<number | null>(null);
+  const [editingStudentId, setEditingStudentId] = useState<number | null>(null);
   const [editingSession, setEditingSession] = useState<AdminSession | null>(null);
   const [addingTrainer, setAddingTrainer] = useState(false);
 
@@ -804,13 +938,22 @@ export default function AdminDashboardPage() {
                           <td className="px-4 py-3 text-center">{s.session_count}</td>
                           <td className="px-4 py-3 text-xs text-bone/40">{new Date(s.created_at).toLocaleDateString()}</td>
                           <td className="px-4 py-3">
-                            <button
-                              onClick={() => deleteStudent(s.id)}
-                              disabled={deleting === s.id}
-                              className="p-1.5 text-bone/40 hover:text-red-400 disabled:opacity-40"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => setEditingStudentId(s.id)}
+                                title="Edit student"
+                                className="p-1.5 text-bone/40 hover:text-volt"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => deleteStudent(s.id)}
+                                disabled={deleting === s.id}
+                                className="p-1.5 text-bone/40 hover:text-red-400 disabled:opacity-40"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -883,7 +1026,14 @@ export default function AdminDashboardPage() {
         <TrainerModal
           trainerId={editingTrainerId}
           onClose={() => setEditingTrainerId(null)}
-          onSaved={() => { loadTrainers(); setEditingTrainerId(null); }}
+          onSaved={() => { loadTrainers(); }}
+        />
+      )}
+      {editingStudentId !== null && (
+        <StudentModal
+          studentId={editingStudentId}
+          onClose={() => setEditingStudentId(null)}
+          onSaved={() => { loadStudents(); }}
         />
       )}
       {editingSession !== null && (
