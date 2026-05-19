@@ -5,15 +5,16 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowRight, Eye, EyeOff, TriangleAlert } from 'lucide-react';
 import { useAuth } from '../../src/hooks/useAuth';
+import { useStudentAuth } from '../../src/hooks/useStudentAuth';
 import { useToast } from '../../src/hooks/useToast';
 import { useT } from '../../src/hooks/useLanguage';
 import { cn, getApiError } from '../../src/lib/format';
-import api from '../../src/api/client';
 
 type Role = 'trainer' | 'student';
 
 function LoginForm() {
   const { login } = useAuth();
+  const { login: studentLogin } = useStudentAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const toast = useToast();
@@ -53,13 +54,7 @@ function LoginForm() {
         toast.success(t.login.successMsg);
         router.replace(from);
       } else {
-        const { data } = await api.post<{ token: string; user: { id: number; email: string; role: string }; studentId: number }>(
-          '/auth/student-login',
-          { email: email.trim(), password }
-        );
-        localStorage.setItem('traineruniverse_student_token', data.token);
-        localStorage.setItem('traineruniverse_student_auth', JSON.stringify({ user: data.user, studentId: data.studentId }));
-        localStorage.setItem('traineruniverse_token', data.token);
+        await studentLogin(email.trim(), password);
         router.replace('/student/dashboard');
       }
     } catch (err) {
