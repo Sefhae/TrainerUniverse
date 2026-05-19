@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Providers from '../src/components/Providers';
-import Navbar from '../src/components/Navbar';
-import Footer from '../src/components/Footer';
+import SiteShell from '../src/components/SiteShell';
 
 export const metadata: Metadata = {
   title: 'TrainerUniverse — Find Your Perfect Trainer',
@@ -24,9 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <Providers>
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
+          <SiteShell>{children}</SiteShell>
         </Providers>
       </body>
     </html>

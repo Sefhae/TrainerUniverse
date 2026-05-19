@@ -14,6 +14,17 @@ import CitySearch from '../../../src/components/CitySearch';
 
 type Section = 'overview' | 'trainers' | 'students' | 'sessions';
 
+const SEEDED_TRAINER_EMAILS = new Set([
+  'marcus@fitconnect.com', 'sofia@fitconnect.com', 'darnell@fitconnect.com',
+  'elena@fitconnect.com', 'jordan@fitconnect.com', 'aisha@fitconnect.com',
+  'tommy@fitconnect.com', 'grace@fitconnect.com',
+]);
+
+const SEEDED_STUDENT_EMAILS = new Set([
+  'demo.student@fitconnect.com', 'alex@student.com', 'emma@student.com',
+  'cem@student.com', 'sara@student.com',
+]);
+
 interface Stats { trainers: number; published: number; students: number; sessions: number; messages: number; }
 interface AdminTrainer { id: number; name: string; email: string; specialties: string | null; is_published: number; student_count: number; session_count: number; created_at: string; }
 interface AdminStudent { id: number; name: string; email: string; trainer_name: string | null; session_count: number; created_at: string; }
@@ -858,7 +869,7 @@ export default function AdminDashboardPage() {
                   <table className="w-full text-sm">
                     <thead className="border-b border-white/10 bg-white/4 text-left">
                       <tr>
-                        {['ID', 'Name', 'Email', 'Specialties', 'Status', 'Students', 'Sessions', 'Joined', 'Actions'].map((h) => (
+                        {['ID', 'Name', 'Email', 'Password', 'Specialties', 'Status', 'Students', 'Sessions', 'Joined', 'Actions'].map((h) => (
                           <th key={h} className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-bone/40">{h}</th>
                         ))}
                       </tr>
@@ -869,6 +880,7 @@ export default function AdminDashboardPage() {
                           <td className="px-4 py-3 text-bone/40">{t.id}</td>
                           <td className="px-4 py-3 font-semibold">{t.name}</td>
                           <td className="px-4 py-3 text-bone/60">{t.email}</td>
+                          <td className="px-4 py-3 font-mono text-xs text-volt">{SEEDED_TRAINER_EMAILS.has(t.email) ? 'trainer123' : '—'}</td>
                           <td className="px-4 py-3 text-bone/50 text-xs">{t.specialties || '—'}</td>
                           <td className="px-4 py-3">
                             <span className={cn('text-[10px] font-bold uppercase', t.is_published ? 'text-volt' : 'text-bone/30')}>
@@ -923,7 +935,7 @@ export default function AdminDashboardPage() {
                   <table className="w-full text-sm">
                     <thead className="border-b border-white/10 bg-white/4 text-left">
                       <tr>
-                        {['ID', 'Name', 'Email', 'Trainer', 'Sessions', 'Joined', 'Actions'].map((h) => (
+                        {['ID', 'Name', 'Email', 'Password', 'Trainer', 'Sessions', 'Joined', 'Actions'].map((h) => (
                           <th key={h} className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-bone/40">{h}</th>
                         ))}
                       </tr>
@@ -934,6 +946,7 @@ export default function AdminDashboardPage() {
                           <td className="px-4 py-3 text-bone/40">{s.id}</td>
                           <td className="px-4 py-3 font-semibold">{s.name}</td>
                           <td className="px-4 py-3 text-bone/60">{s.email}</td>
+                          <td className="px-4 py-3 font-mono text-xs text-volt">{SEEDED_STUDENT_EMAILS.has(s.email) ? 'student123' : '—'}</td>
                           <td className="px-4 py-3 text-bone/50">{s.trainer_name ?? '—'}</td>
                           <td className="px-4 py-3 text-center">{s.session_count}</td>
                           <td className="px-4 py-3 text-xs text-bone/40">{new Date(s.created_at).toLocaleDateString()}</td>
