@@ -316,12 +316,12 @@ export default function TrainingCalendar({ role = 'trainer', studentId: myStuden
               </div>
 
               <div className="divide-y divide-ink/8">
-                {daySessionsList.length === 0 ? (
+                {daySessionsSelected.length === 0 ? (
                   <p className="px-4 py-8 text-center text-sm text-ink/40">
                     {t.sessionCalendar.noSessions}
                   </p>
                 ) : (
-                  daySessionsList.map((s) => (
+                  daySessionsSelected.map((s) => (
                     <div key={s.id} className="px-4 py-4 space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
