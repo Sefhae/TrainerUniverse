@@ -81,18 +81,21 @@ export default function Navbar() {
       <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 lg:px-8">
         <Logo />
 
-        <nav className="hidden items-center gap-9 md:flex">
+        <nav className="hidden items-center md:flex">
           <Link href="/" className={navLinkClass('/')}>
             {t.nav.home}
           </Link>
+          <span className="mx-6 h-4 w-px bg-white/20" />
           <Link href="/trainers" className={navLinkClass('/trainers')}>
             {t.nav.findTrainer}
           </Link>
-          <Link href="/faq" className={navLinkClass('/faq')}>
-            {t.nav.faq}
-          </Link>
+          <span className="mx-6 h-4 w-px bg-white/20" />
           <Link href="/register" className={navLinkClass('/register')}>
             {t.nav.becomeTrainer}
+          </Link>
+          <span className="mx-6 h-4 w-px bg-white/20" />
+          <Link href="/faq" className={navLinkClass('/faq')}>
+            {t.nav.faq}
           </Link>
         </nav>
 
@@ -144,11 +147,11 @@ export default function Navbar() {
             <Link href="/trainers" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
               {t.nav.findTrainer}
             </Link>
-            <Link href="/faq" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
-              {t.nav.faq}
-            </Link>
             <Link href="/register" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
               {t.nav.becomeTrainer}
+            </Link>
+            <Link href="/faq" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
+              {t.nav.faq}
             </Link>
             <div className="mt-3 flex flex-col gap-2.5 border-t border-white/10 pt-4">
               {isAuthenticated ? (
