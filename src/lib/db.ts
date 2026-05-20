@@ -197,4 +197,11 @@ if (process.env.NODE_ENV !== 'production') {
   globalThis.__traineruniverse_db = db;
 }
 
+// Auto-seed on first boot (empty DB in deployed environments)
+const trainerCount = (db.prepare('SELECT COUNT(*) as n FROM trainer_profiles').get() as { n: number }).n;
+if (trainerCount === 0) {
+  const { seed } = require('./seed') as { seed: () => void };
+  seed();
+}
+
 export default db;
