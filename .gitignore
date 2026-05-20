@@ -20,8 +20,7 @@ node_modules/
 # production
 /build
 
-# SQLite database (auto-created at runtime)
-/server/db/fitconnect.db
+# SQLite WAL temporary files (main DB is committed for Vercel deployments)
 /server/db/fitconnect.db-shm
 /server/db/fitconnect.db-wal
 
