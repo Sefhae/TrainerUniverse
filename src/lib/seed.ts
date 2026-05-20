@@ -4,33 +4,53 @@ import db from './db';
 const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
 
 const SPECIALTIES = [
-  'Weight Loss', 'Muscle Building', 'HIIT', 'Yoga', 'Rehabilitation',
-  'Nutrition', 'Boxing', 'Strength Training', 'Mobility', 'Conditioning',
+  // Sports & Athletics
+  'Gym Training', 'Muscle Building', 'Powerlifting', 'Calisthenics', 'HIIT', 'Conditioning', 'Weight Loss', 'CrossFit', 'Boxing', 'Martial Arts', 'Soccer', 'Basketball', 'Tennis', 'Volleyball', 'Baseball', 'Cricket', 'Badminton', 'Running', 'Cycling', 'Swimming',
+  // Wellness & Health
+  'Yoga', 'Pilates', 'Mobility', 'Rehabilitation', 'Stretching', 'Meditation', 'Nutrition', 'Meal Planning', 'Sports Nutrition', 'Weight Management',
+  // Academic
+  'Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History',
+  // Creative & Tech
+  'Programming', 'Web Development', 'Data Science', 'UI/UX Design', 'Graphic Design', 'Photography', 'Video Editing', 'Music',
 ];
 
 const loremflickr = (w: number, h: number, keywords: string, lock: number) =>
   `https://loremflickr.com/${w}/${h}/${keywords}?lock=${lock}`;
 
 const COVER_IMAGERY: Record<string, { keywords: string; lock: number }> = {
-  'marcus@fitconnect.com': { keywords: 'gym,workout', lock: 31 },
-  'sofia@fitconnect.com': { keywords: 'yoga', lock: 34 },
-  'darnell@fitconnect.com': { keywords: 'boxing', lock: 37 },
-  'elena@fitconnect.com': { keywords: 'healthy,food', lock: 40 },
-  'jordan@fitconnect.com': { keywords: 'fitness,training', lock: 43 },
-  'aisha@fitconnect.com': { keywords: 'running', lock: 46 },
-  'tommy@fitconnect.com': { keywords: 'gym,fitness', lock: 49 },
-  'grace@fitconnect.com': { keywords: 'fitness,workout', lock: 52 },
+  'marcus@fitconnect.com':  { keywords: 'gym,workout',      lock: 31 },
+  'sofia@fitconnect.com':   { keywords: 'yoga',             lock: 34 },
+  'darnell@fitconnect.com': { keywords: 'boxing',           lock: 37 },
+  'elena@fitconnect.com':   { keywords: 'healthy,food',     lock: 40 },
+  'jordan@fitconnect.com':  { keywords: 'fitness,training', lock: 43 },
+  'aisha@fitconnect.com':   { keywords: 'running',          lock: 46 },
+  'tommy@fitconnect.com':   { keywords: 'gym,fitness',      lock: 49 },
+  'grace@fitconnect.com':   { keywords: 'fitness,workout',  lock: 52 },
+  'alex.t@fitconnect.com':  { keywords: 'math,education',   lock: 55 },
+  'maya@fitconnect.com':    { keywords: 'design,art',       lock: 58 },
+  'ryan@fitconnect.com':    { keywords: 'computer,coding',  lock: 61 },
+  'carlos@fitconnect.com':  { keywords: 'soccer,football',  lock: 64 },
+  'wade@fitconnect.com':    { keywords: 'basketball',       lock: 67 },
+  'emma.l@fitconnect.com':  { keywords: 'running,marathon', lock: 70 },
+  'kai@fitconnect.com':     { keywords: 'swimming,pool',    lock: 73 },
 };
 
 const WORK_IMAGERY: Record<string, { keywords: string; lock: number }> = {
-  'marcus@fitconnect.com': { keywords: 'gym,strength', lock: 110 },
-  'sofia@fitconnect.com': { keywords: 'yoga,stretching', lock: 120 },
-  'darnell@fitconnect.com': { keywords: 'boxing,training', lock: 130 },
-  'elena@fitconnect.com': { keywords: 'fitness,healthy', lock: 140 },
-  'jordan@fitconnect.com': { keywords: 'fitness,exercise', lock: 150 },
-  'aisha@fitconnect.com': { keywords: 'running,workout', lock: 160 },
-  'tommy@fitconnect.com': { keywords: 'gym,fitness', lock: 170 },
-  'grace@fitconnect.com': { keywords: 'fitness,workout', lock: 180 },
+  'marcus@fitconnect.com':  { keywords: 'gym,strength',      lock: 110 },
+  'sofia@fitconnect.com':   { keywords: 'yoga,stretching',   lock: 120 },
+  'darnell@fitconnect.com': { keywords: 'boxing,training',   lock: 130 },
+  'elena@fitconnect.com':   { keywords: 'fitness,healthy',   lock: 140 },
+  'jordan@fitconnect.com':  { keywords: 'fitness,exercise',  lock: 150 },
+  'aisha@fitconnect.com':   { keywords: 'running,workout',   lock: 160 },
+  'tommy@fitconnect.com':   { keywords: 'gym,fitness',       lock: 170 },
+  'grace@fitconnect.com':   { keywords: 'fitness,workout',   lock: 180 },
+  'alex.t@fitconnect.com':  { keywords: 'study,learning',    lock: 190 },
+  'maya@fitconnect.com':    { keywords: 'design,creative',   lock: 200 },
+  'ryan@fitconnect.com':    { keywords: 'coding,technology', lock: 210 },
+  'carlos@fitconnect.com':  { keywords: 'soccer,sport',      lock: 220 },
+  'wade@fitconnect.com':    { keywords: 'basketball,sport',  lock: 230 },
+  'emma.l@fitconnect.com':  { keywords: 'running,road',      lock: 240 },
+  'kai@fitconnect.com':     { keywords: 'swimming,water',    lock: 250 },
 };
 
 const coverPhotoFor = (email: string) => {
@@ -316,6 +336,217 @@ const TRAINERS: TrainerData[] = [
       { name: 'ACE Certified Personal Trainer', issuer: 'American Council on Exercise', year: 2015 },
     ],
   },
+  {
+    email: 'alex.t@fitconnect.com',
+    name: 'Alex Torres',
+    tagline: 'Math made simple — from algebra to calculus.',
+    bio: `I have been tutoring mathematics for over eight years, from middle school fundamentals to university-level calculus and statistics. My method is patient, systematic, and deeply visual — I believe every concept clicks once it is explained the right way. Whether you are preparing for an exam or rebuilding your confidence after years of struggle, I will meet you exactly where you are.`,
+    profilePhoto: 'https://i.pravatar.cc/600?img=15',
+    location: 'Boston, MA',
+    isRemote: true,
+    years: 8,
+    availability: ['weekdays', 'weekends', 'evenings'],
+    specialties: ['Mathematics'],
+    packages: [
+      { name: 'Single Session', description: 'A focused 60-minute tutoring session on any topic you choose.', sessions: 1, price: 60, popular: false },
+      { name: 'Exam Prep Pack', description: 'Five targeted sessions designed around your upcoming test.', sessions: 5, price: 270, popular: true },
+      { name: 'Monthly Tutoring', description: 'Eight sessions per month with weekly progress tracking and practice sheets.', sessions: 8, price: 400, popular: false },
+    ],
+    work: [
+      { student: 'Jamie', goal: 'Passed calculus with an A', duration: '3 months', description: 'Jamie had failed calculus twice. We rebuilt the foundation from limits upward — she aced the final.', visible: true },
+      { student: 'Oscar', goal: 'SAT Math score jumped 180 points', duration: '6 weeks', description: 'Targeted practice on Oscar\'s weak areas closed the gap dramatically before his test date.', visible: true },
+    ],
+    reviews: [
+      { name: 'Linda K.', rating: 5, comment: 'Alex explains things in a way that just makes sense. My son went from failing to loving math.', created_at: daysAgo(8) },
+      { name: 'Tom R.', rating: 5, comment: 'Incredibly patient and thorough. Worth every session.', created_at: daysAgo(25) },
+      { name: 'Priya S.', rating: 4, comment: 'Great tutor. Remote sessions work perfectly.', created_at: daysAgo(52) },
+    ],
+    certs: [
+      { name: 'BSc Mathematics', issuer: 'MIT', year: 2016 },
+      { name: 'Certified Tutoring Professional', issuer: 'NCTM', year: 2018 },
+    ],
+  },
+  {
+    email: 'maya@fitconnect.com',
+    name: 'Maya Chen',
+    tagline: 'Design skills that get you hired.',
+    bio: `I am a senior graphic designer turned coach, with a decade of agency experience across branding, UI, and print. I teach the tools — Figma, Illustrator, Photoshop — but more importantly I teach design thinking: how to see, how to communicate, and how to build a portfolio that stands out. Whether you are switching careers or leveling up your freelance work, I will fast-track your growth.`,
+    profilePhoto: 'https://i.pravatar.cc/600?img=5',
+    location: 'San Francisco, CA',
+    isRemote: true,
+    years: 10,
+    availability: ['weekdays', 'weekends', 'afternoons'],
+    specialties: ['Graphic Design'],
+    packages: [
+      { name: 'Intro Session', description: 'A 90-minute orientation — we review your goals and create a personalised learning roadmap.', sessions: 1, price: 80, popular: false },
+      { name: 'Portfolio Sprint', description: 'Eight sessions over four weeks to build three portfolio-ready projects.', sessions: 8, price: 580, popular: true },
+      { name: 'Career Accelerator', description: 'Sixteen sessions covering tools, design theory, portfolio, and freelance business fundamentals.', sessions: 16, price: 1040, popular: false },
+    ],
+    work: [
+      { student: 'Ben', goal: 'Landed a junior designer role in 3 months', duration: '3 months', description: 'Ben came from a marketing background with zero design experience. His portfolio impressed three agencies.', visible: true },
+      { student: 'Leila', goal: 'Grew freelance income by 200%', duration: '5 months', description: 'Leila already designed but lacked confidence. Better process and a sharper portfolio tripled her rates.', visible: true },
+    ],
+    reviews: [
+      { name: 'Chris M.', rating: 5, comment: 'Maya bridges the gap between theory and real-world work like nobody else. My portfolio is unrecognisable.', created_at: daysAgo(6) },
+      { name: 'Fiona T.', rating: 5, comment: 'Practical, honest, and inspiring. I got my first design job two weeks after finishing with Maya.', created_at: daysAgo(30) },
+      { name: 'Daniel H.', rating: 4, comment: 'Excellent content and very supportive. Sessions could be a touch longer but the quality is top.', created_at: daysAgo(61) },
+    ],
+    certs: [
+      { name: 'BFA Graphic Design', issuer: 'California College of the Arts', year: 2014 },
+      { name: 'Google UX Design Certificate', issuer: 'Google', year: 2021 },
+    ],
+  },
+  {
+    email: 'ryan@fitconnect.com',
+    name: 'Ryan Park',
+    tagline: 'From zero to developer — at your own pace.',
+    bio: `I am a full-stack software engineer with nine years of professional experience and a genuine passion for teaching. I have helped over two hundred people learn to code — from total beginners to professionals learning a second language or framework. My sessions are hands-on and project-based. We write real code from day one, and I explain the why behind every line.`,
+    profilePhoto: 'https://i.pravatar.cc/600?img=68',
+    location: 'Seattle, WA',
+    isRemote: true,
+    years: 9,
+    availability: ['weekdays', 'evenings', 'weekends'],
+    specialties: ['Programming'],
+    packages: [
+      { name: 'Single Session', description: 'A 60-minute session on any topic — debugging, concepts, or code review.', sessions: 1, price: 90, popular: false },
+      { name: 'Bootcamp Prep', description: 'Ten sessions covering HTML, CSS, JavaScript fundamentals, and Git.', sessions: 10, price: 800, popular: true },
+      { name: 'Full-Stack Immersion', description: 'Twenty sessions from frontend to backend, with a deployed project at the end.', sessions: 20, price: 1400, popular: false },
+    ],
+    work: [
+      { student: 'Sam', goal: 'Got into a top bootcamp', duration: '6 weeks', description: "Sam needed a coding foundation fast. Ryan's structured prep landed him a spot in a competitive programme.", visible: true },
+      { student: 'Nina', goal: 'Switched careers from finance to dev', duration: '5 months', description: 'Nina learned Python and Django from scratch, built a portfolio, and landed her first developer role.', visible: true },
+      { student: 'Jake', goal: 'Promoted to senior developer', duration: '3 months', description: 'Jake filled his architecture gaps with targeted sessions on system design and algorithms.', visible: true },
+    ],
+    reviews: [
+      { name: 'Mark L.', rating: 5, comment: 'Ryan explains complex ideas so clearly. I actually understand what I am writing now.', created_at: daysAgo(7) },
+      { name: 'Sarah O.', rating: 5, comment: 'Best investment I have made. I got a job offer six months after our first session.', created_at: daysAgo(29) },
+      { name: 'Ahmed K.', rating: 5, comment: 'Patient, smart, and always prepared. Truly exceptional teacher.', created_at: daysAgo(55) },
+    ],
+    certs: [
+      { name: 'BSc Computer Science', issuer: 'University of Washington', year: 2015 },
+      { name: 'AWS Certified Developer', issuer: 'Amazon Web Services', year: 2020 },
+    ],
+  },
+  {
+    email: 'carlos@fitconnect.com',
+    name: 'Carlos Silva',
+    tagline: 'Play smarter. Move faster. Think like a pro.',
+    bio: `I played semi-professional soccer for twelve years across three countries before transitioning to full-time coaching. I coach players from age ten to adult, focusing on technical skill, tactical awareness, and the mental side of the game. My sessions are high-energy and demanding — but every drill has a clear purpose. If you are serious about soccer, I will make you a better player.`,
+    profilePhoto: 'https://i.pravatar.cc/600?img=56',
+    location: 'Miami, FL',
+    isRemote: false,
+    years: 12,
+    availability: ['weekdays', 'weekends', 'mornings', 'afternoons'],
+    specialties: ['Soccer', 'Conditioning'],
+    packages: [
+      { name: 'Single Training', description: 'One 75-minute private session focused on your chosen area — technical, tactical, or fitness.', sessions: 1, price: 70, popular: false },
+      { name: 'Pre-Season Block', description: 'Ten sessions to sharpen your game before a competitive season begins.', sessions: 10, price: 620, popular: true },
+      { name: 'Elite Development', description: 'Twenty sessions of full player development — skill, tactics, video analysis and fitness.', sessions: 20, price: 1100, popular: false },
+    ],
+    work: [
+      { student: 'Miguel', goal: 'Made the varsity team', duration: '4 months', description: 'Miguel was cut the year before. Focused technical work and tactical sessions got him into the starting lineup.', visible: true },
+      { student: 'Ava', goal: 'Earned a college scholarship', duration: '8 months', description: "Ava's speed was already there — Carlos sharpened her decision-making and positioning dramatically.", visible: true },
+    ],
+    reviews: [
+      { name: 'Pedro M.', rating: 5, comment: "Carlos sees the game differently. His coaching raised my son's level in ways I could not have imagined.", created_at: daysAgo(9) },
+      { name: 'Laura F.', rating: 5, comment: 'Demanding but brilliant. Every session has purpose and energy.', created_at: daysAgo(33) },
+      { name: 'Jorge R.', rating: 4, comment: 'Great technical coach. Pushes you hard but is always fair.', created_at: daysAgo(60) },
+    ],
+    certs: [
+      { name: 'UEFA B Coaching Licence', issuer: 'UEFA', year: 2016 },
+      { name: 'USSF National Youth Coaching Certificate', issuer: 'US Soccer Federation', year: 2018 },
+    ],
+  },
+  {
+    email: 'wade@fitconnect.com',
+    name: 'Marcus Wade',
+    tagline: 'IQ on the court. Strength in the gym. Greatness everywhere.',
+    bio: `I played Division I college basketball and spent five years coaching at the professional development level before going independent. I work with players who want to get serious — improving ball handling, shooting mechanics, footwork, and basketball IQ at the same time. Off the court, I build the athleticism to back it all up. If you are willing to put in the work, I will show you exactly what that looks like.`,
+    profilePhoto: 'https://i.pravatar.cc/600?img=57',
+    location: 'Atlanta, GA',
+    isRemote: false,
+    years: 7,
+    availability: ['weekdays', 'weekends', 'mornings', 'evenings'],
+    specialties: ['Basketball', 'Conditioning'],
+    packages: [
+      { name: 'Single Session', description: 'One 90-minute skills session — shooting, handles, footwork or defence.', sessions: 1, price: 85, popular: false },
+      { name: 'Skill Block', description: 'Eight focused sessions to lock in a specific skill area in four weeks.', sessions: 8, price: 600, popular: true },
+      { name: 'Full Player Development', description: 'Twenty sessions covering every dimension of the game plus athletic training.', sessions: 20, price: 1400, popular: false },
+    ],
+    work: [
+      { student: 'Darius', goal: 'Walked on to a D3 roster', duration: '6 months', description: 'Darius was a late bloomer. Six months of daily habits and skill work turned raw potential into a real player.', visible: true },
+      { student: 'Zoe', goal: 'Led her high school team in assists', duration: '5 months', description: "We overhauled Zoe's court vision and decision-making. She ran the offence by mid-season.", visible: true },
+    ],
+    reviews: [
+      { name: 'Kevin J.', rating: 5, comment: 'Wade elevated my game like nobody else could. His eye for detail is extraordinary.', created_at: daysAgo(10) },
+      { name: 'Tamara B.', rating: 5, comment: 'My daughter credits Marcus with changing her relationship with basketball entirely.', created_at: daysAgo(27) },
+      { name: 'Deon P.', rating: 4, comment: 'Intense, professional, and genuinely gifted at coaching. Highly recommend.', created_at: daysAgo(58) },
+    ],
+    certs: [
+      { name: 'USA Basketball Gold Licence', issuer: 'USA Basketball', year: 2019 },
+      { name: 'NSCA-CPT Certified Personal Trainer', issuer: 'NSCA', year: 2020 },
+    ],
+  },
+  {
+    email: 'emma.l@fitconnect.com',
+    name: 'Emma Laurent',
+    tagline: 'Run farther, run faster, run smarter.',
+    bio: `I qualified for the Boston Marathon twice and have been coaching runners of all levels for seven years. I believe that most people can run better than they think — they just need the right training structure, form cues, and recovery strategy. Whether you are chasing your first 5k or a new personal best at the marathon, I build plans that fit your life and get you to the start line healthy and ready.`,
+    profilePhoto: 'https://i.pravatar.cc/600?img=25',
+    location: 'Portland, OR',
+    isRemote: true,
+    years: 7,
+    availability: ['weekdays', 'weekends', 'mornings'],
+    specialties: ['Running', 'Conditioning'],
+    packages: [
+      { name: 'Form Analysis', description: 'A 60-minute session with video gait analysis and a corrective action plan.', sessions: 1, price: 65, popular: false },
+      { name: '12-Week Race Prep', description: 'A fully structured training plan with four coaching check-ins and weekly feedback.', sessions: 4, price: 320, popular: true },
+      { name: 'Monthly Coaching', description: 'Ongoing weekly check-ins, adaptive training plans, and injury prevention guidance.', sessions: 4, price: 280, popular: false },
+    ],
+    work: [
+      { student: 'Claire', goal: 'Finished her first marathon', duration: '4 months', description: 'Claire had never run more than 10k. A progressive build-up plan got her to the finish line strong.', visible: true },
+      { student: 'Josh', goal: 'Cut 12 minutes off his half-marathon PB', duration: '3 months', description: 'Targeted tempo work and better pacing strategy dropped Josh\'s time dramatically.', visible: true },
+    ],
+    reviews: [
+      { name: 'Rachel G.', rating: 5, comment: 'Emma\'s plans are intelligent and genuinely enjoyable to follow. My running has never felt this good.', created_at: daysAgo(5) },
+      { name: 'Matt P.', rating: 5, comment: 'The form work alone was worth it. I have not had a single injury since working with Emma.', created_at: daysAgo(23) },
+      { name: 'Sophie C.', rating: 4, comment: 'Great coach and extremely responsive. My pacing improved hugely.', created_at: daysAgo(50) },
+    ],
+    certs: [
+      { name: 'RRCA Certified Running Coach', issuer: 'Road Runners Club of America', year: 2017 },
+      { name: 'NASM Certified Personal Trainer', issuer: 'NASM', year: 2018 },
+    ],
+  },
+  {
+    email: 'kai@fitconnect.com',
+    name: 'Kai Nakamura',
+    tagline: 'Technique is speed. Speed is everything.',
+    bio: `I swam competitively through college and spent three years as an assistant coach at a Division I programme before pursuing private coaching full-time. I work with swimmers at every level — from beginners learning their first strokes to club swimmers trying to shave tenths off their times. My coaching is detail-obsessed and highly technical, because in swimming, every detail matters.`,
+    profilePhoto: 'https://i.pravatar.cc/600?img=62',
+    location: 'San Diego, CA',
+    isRemote: false,
+    years: 6,
+    availability: ['weekdays', 'weekends', 'mornings', 'afternoons'],
+    specialties: ['Swimming', 'Conditioning'],
+    packages: [
+      { name: 'Single Lane Session', description: 'One 60-minute private pool session with video analysis and technical feedback.', sessions: 1, price: 75, popular: false },
+      { name: 'Stroke Clinic', description: 'Six sessions targeting one specific stroke, with video review after each session.', sessions: 6, price: 420, popular: true },
+      { name: 'Competitive Season Prep', description: 'Twelve sessions of structured technical and race-pace training.', sessions: 12, price: 780, popular: false },
+    ],
+    work: [
+      { student: 'Tyler', goal: 'Dropped 4 seconds off his 100m freestyle', duration: '8 weeks', description: 'Targeted underwater work and turn mechanics slashed Tyler\'s time and got him a personal best.', visible: true },
+      { student: 'Mei', goal: 'Learned to swim at 28', duration: '3 months', description: 'Mei went from terrified of deep water to confidently swimming laps with proper technique.', visible: true },
+    ],
+    reviews: [
+      { name: 'Hiro T.', rating: 5, comment: 'Kai is one of the most technical coaches I have ever met. My times dropped and my form is completely different.', created_at: daysAgo(7) },
+      { name: 'Linda N.', rating: 5, comment: 'He turned my son into a competitive swimmer in less than a year. Extraordinary coach.', created_at: daysAgo(21) },
+      { name: 'David W.', rating: 4, comment: 'Focused, disciplined, and incredibly knowledgeable. Exactly what I needed.', created_at: daysAgo(48) },
+    ],
+    certs: [
+      { name: 'ASCA Level 4 Certified Coach', issuer: 'American Swimming Coaches Association', year: 2019 },
+      { name: 'USA Swimming Coach Safety Training', issuer: 'USA Swimming', year: 2021 },
+    ],
+  },
 ];
 
 // Returns an ISO string for a date offset by `days` (negative = past) at a given hour (UTC)
@@ -332,6 +563,7 @@ interface StudentData {
 }
 
 const STUDENTS: StudentData[] = [
+  { email: 'demo.student@fitconnect.com', name: 'Demo Student',  trainerEmail: 'marcus@fitconnect.com' },
   { email: 'alex@student.com',  name: 'Alex Johnson',  trainerEmail: 'marcus@fitconnect.com' },
   { email: 'emma@student.com',  name: 'Emma Clarke',   trainerEmail: 'marcus@fitconnect.com' },
   { email: 'cem@student.com',   name: 'Cem Yılmaz',    trainerEmail: 'sofia@fitconnect.com'  },

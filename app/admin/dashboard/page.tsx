@@ -26,10 +26,10 @@ const SEEDED_STUDENT_EMAILS = new Set([
 ]);
 
 interface Stats { trainers: number; published: number; students: number; sessions: number; messages: number; }
-interface AdminTrainer { id: number; name: string; email: string; specialties: string | null; is_published: number; student_count: number; session_count: number; created_at: string; }
+interface AdminTrainer { id: number; name: string; email: string; specialties: string | null; is_published: number; is_verified: number; student_count: number; session_count: number; created_at: string; }
 interface AdminStudent { id: number; name: string; email: string; trainer_name: string | null; session_count: number; created_at: string; }
 interface AdminSession { id: number; title: string; trainer_name: string; student_name: string; scheduled_at: string; duration_min: number; status: string; notes?: string; }
-interface TrainerProfile { id: number; name: string; tagline: string; bio: string; location: string; is_remote: number; years_experience: number; email: string; profile_photo: string | null; cover_photo: string | null; }
+interface TrainerProfile { id: number; name: string; tagline: string; bio: string; location: string; is_remote: number; years_experience: number; is_verified: number; response_time: string; email: string; profile_photo: string | null; cover_photo: string | null; }
 interface PricingPackage { id: number; trainer_id: number; name: string; description: string; sessions: number; price: number; is_popular: number; }
 interface StudentDetail { id: number; user_id: number; name: string; email: string; created_at: string; }
 
@@ -122,14 +122,20 @@ function TrainerModal({ trainerId, onClose, onSaved }: { trainerId: number; onCl
     if (!profile) return;
     setSaving(true);
     try {
-      await api.put(`/admin/trainers/${trainerId}/profile`, {
-        name: profile.name,
-        tagline: profile.tagline,
-        bio: profile.bio,
-        location: profile.location,
-        yearsExperience: profile.years_experience,
-        isRemote: profile.is_remote,
-      });
+      await Promise.all([
+        api.put(`/admin/trainers/${trainerId}/profile`, {
+          name: profile.name,
+          tagline: profile.tagline,
+          bio: profile.bio,
+          location: profile.location,
+          yearsExperience: profile.years_experience,
+          isRemote: profile.is_remote,
+        }),
+        api.put(`/admin/trainers/${trainerId}`, {
+          isVerified: !!profile.is_verified,
+          responseTime: profile.response_time,
+        }),
+      ]);
       onSaved();
     } finally {
       setSaving(false);
@@ -310,6 +316,34 @@ function TrainerModal({ trainerId, onClose, onSaved }: { trainerId: number; onCl
                           <span className="text-sm text-bone/70">{profile.is_remote ? 'Yes' : 'No'}</span>
                         </label>
                       </div>
+                    </Field>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Verified Badge">
+                      <div className="flex h-[38px] items-center">
+                        <label className="flex cursor-pointer items-center gap-3">
+                          <div
+                            onClick={() => setProfile({ ...profile, is_verified: profile.is_verified ? 0 : 1 })}
+                            className={cn('relative h-5 w-9 rounded-full transition-colors', profile.is_verified ? 'bg-volt' : 'bg-white/15')}
+                          >
+                            <span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all', profile.is_verified ? 'left-[18px]' : 'left-0.5')} />
+                          </div>
+                          <span className="text-sm text-bone/70">{profile.is_verified ? 'Verified' : 'Not verified'}</span>
+                        </label>
+                      </div>
+                    </Field>
+                    <Field label="Response Time">
+                      <select
+                        className={inputCls}
+                        value={profile.response_time ?? 'within 24 hours'}
+                        onChange={(e) => setProfile({ ...profile, response_time: e.target.value })}
+                      >
+                        <option value="within 1 hour">Within 1 hour</option>
+                        <option value="within a few hours">Within a few hours</option>
+                        <option value="within 24 hours">Within 24 hours</option>
+                        <option value="within 2 days">Within 2 days</option>
+                        <option value="within a week">Within a week</option>
+                      </select>
                     </Field>
                   </div>
                   <div className="flex justify-end pt-2">
@@ -883,9 +917,14 @@ export default function AdminDashboardPage() {
                           <td className="px-4 py-3 font-mono text-xs text-volt">{SEEDED_TRAINER_EMAILS.has(t.email) ? 'trainer123' : '—'}</td>
                           <td className="px-4 py-3 text-bone/50 text-xs">{t.specialties || '—'}</td>
                           <td className="px-4 py-3">
-                            <span className={cn('text-[10px] font-bold uppercase', t.is_published ? 'text-volt' : 'text-bone/30')}>
-                              {t.is_published ? 'Live' : 'Draft'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={cn('text-[10px] font-bold uppercase', t.is_published ? 'text-volt' : 'text-bone/30')}>
+                                {t.is_published ? 'Live' : 'Draft'}
+                              </span>
+                              {!!t.is_verified && (
+                                <ShieldCheck className="h-3.5 w-3.5 text-volt" aria-label="Verified" />
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-3 text-center">{t.student_count}</td>
                           <td className="px-4 py-3 text-center">{t.session_count}</td>

@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, Menu, X } from 'lucide-react';
+import { BookOpen, ChevronDown, Cpu, HeartPulse, LogOut, Menu, Trophy, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useStudentAuth } from '../hooks/useStudentAuth';
 import { useLanguage, useT } from '../hooks/useLanguage';
 import { cn } from '../lib/format';
+import { SPECIALTY_GROUPS } from '../lib/constants';
 
 function Logo() {
   return (
@@ -53,18 +55,31 @@ function LangToggle() {
 }
 
 export default function Navbar() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated: isTrainerAuth, logout: trainerLogout } = useAuth();
+  const { isAuthenticated: isStudentAuth, logout: studentLogout } = useStudentAuth();
+  const isAuthenticated = isTrainerAuth || isStudentAuth;
   const router = useRouter();
   const pathname = usePathname();
   const t = useT();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [activeGroup, setActiveGroup] = useState(SPECIALTY_GROUPS[0].label);
+  const categoriesRef = useRef<HTMLDivElement>(null);
+
+  const groupIcons: Record<string, React.ReactNode> = {
+    'Sports & Athletics': <Trophy className="h-3.5 w-3.5 shrink-0" />,
+    'Wellness & Health':  <HeartPulse className="h-3.5 w-3.5 shrink-0" />,
+    'Academic':           <BookOpen className="h-3.5 w-3.5 shrink-0" />,
+    'Creative & Tech':    <Cpu className="h-3.5 w-3.5 shrink-0" />,
+  };
 
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
 
   const handleLogout = () => {
-    logout();
+    if (isTrainerAuth) trainerLogout();
+    if (isStudentAuth) studentLogout();
     router.push('/');
   };
 
@@ -86,9 +101,94 @@ export default function Navbar() {
             {t.nav.home}
           </Link>
           <span className="mx-6 h-4 w-px bg-white/20" />
-          <Link href="/trainers" className={navLinkClass('/trainers')}>
-            {t.nav.findTrainer}
-          </Link>
+
+          {/* Find Trainer dropdown */}
+          <div
+            ref={categoriesRef}
+            className="relative"
+            onMouseEnter={() => setCategoriesOpen(true)}
+            onMouseLeave={() => setCategoriesOpen(false)}
+          >
+            <Link
+              href="/trainers"
+              className={cn(navLinkClass('/trainers'), 'flex items-center gap-1')}
+            >
+              {t.nav.findTrainer}
+              <ChevronDown
+                className={cn(
+                  'h-3.5 w-3.5 transition-transform duration-200',
+                  categoriesOpen ? 'rotate-180' : ''
+                )}
+              />
+            </Link>
+
+            {categoriesOpen && (
+              <div className="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-3">
+                <div className="flex w-[520px] border border-white/10 bg-ink shadow-2xl">
+                  {/* Left: category group list */}
+                  <div className="w-[200px] shrink-0 border-r border-white/10 py-2">
+                    <p className="px-4 pb-2 pt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-bone/30">
+                      Browse by Category
+                    </p>
+                    {SPECIALTY_GROUPS.map((group) => (
+                      <Link
+                        key={group.label}
+                        href={`/trainers?specialty=${group.options.map(encodeURIComponent).join(',')}`}
+                        onMouseEnter={() => setActiveGroup(group.label)}
+                        onClick={() => setCategoriesOpen(false)}
+                        className={cn(
+                          'flex w-full items-center gap-2.5 justify-between px-4 py-2.5 text-left text-[12px] font-semibold uppercase tracking-[0.1em] transition-colors duration-150',
+                          activeGroup === group.label
+                            ? 'bg-white/8 text-volt'
+                            : 'text-bone/60 hover:bg-white/5 hover:text-bone'
+                        )}
+                      >
+                        <span className="flex items-center gap-2.5">
+                          {groupIcons[group.label]}
+                          {group.label}
+                        </span>
+                        <ChevronDown className="-rotate-90 h-3 w-3 opacity-50 shrink-0" />
+                      </Link>
+                    ))}
+                    <div className="border-t border-white/10 px-4 pt-3 pb-2">
+                      <Link
+                        href="/trainers"
+                        className="text-[11px] font-semibold uppercase tracking-[0.12em] text-volt hover:text-bone transition-colors duration-200"
+                        onClick={() => setCategoriesOpen(false)}
+                      >
+                        View All Trainers →
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Right: specialties for active group */}
+                  <div className="flex-1 p-4">
+                    {SPECIALTY_GROUPS.filter((g) => g.label === activeGroup).map((group) => (
+                      <div key={group.label}>
+                        <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.2em] text-volt/70">
+                          {group.label}
+                        </p>
+                        <ul className="grid grid-cols-2 gap-x-3 gap-y-1">
+                          {group.options.map((name) => (
+                            <li key={name}>
+                              <Link
+                                href={`/trainers?specialty=${encodeURIComponent(name)}`}
+                                className="block py-1 text-[12px] text-bone/65 transition-colors duration-150 hover:text-volt"
+                                onClick={() => setCategoriesOpen(false)}
+                              >
+                                {name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <span className="mx-6 h-4 w-px bg-white/20" />
           <Link href="/register" className={navLinkClass('/register')}>
             {t.nav.becomeTrainer}
@@ -104,7 +204,6 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
-          <LangToggle />
           {isAuthenticated ? (
             <>
               <Link href="/dashboard" className="btn btn-sm btn-volt">
@@ -180,9 +279,6 @@ export default function Navbar() {
                   </Link>
                 </>
               )}
-              <div className="flex justify-center pt-1">
-                <LangToggle />
-              </div>
             </div>
           </nav>
         </div>

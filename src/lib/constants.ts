@@ -2,18 +2,26 @@ export const PRICE_MIN = 0;
 export const PRICE_MAX = 200;
 export const PRICE_STEP = 5;
 
-export const SPECIALTY_OPTIONS = [
-  'Weight Loss',
-  'Muscle Building',
-  'HIIT',
-  'Yoga',
-  'Rehabilitation',
-  'Nutrition',
-  'Boxing',
-  'Strength Training',
-  'Mobility',
-  'Conditioning',
+export const SPECIALTY_GROUPS: { label: string; options: string[] }[] = [
+  {
+    label: 'Sports & Athletics',
+    options: ['Gym Training', 'Muscle Building', 'Powerlifting', 'Calisthenics', 'HIIT', 'Conditioning', 'Weight Loss', 'CrossFit', 'Boxing', 'Martial Arts', 'Soccer', 'Basketball', 'Tennis', 'Volleyball', 'Baseball', 'Cricket', 'Badminton', 'Running', 'Cycling', 'Swimming'],
+  },
+  {
+    label: 'Wellness & Health',
+    options: ['Yoga', 'Pilates', 'Mobility', 'Rehabilitation', 'Stretching', 'Meditation', 'Nutrition', 'Meal Planning', 'Sports Nutrition', 'Weight Management'],
+  },
+  {
+    label: 'Academic',
+    options: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History'],
+  },
+  {
+    label: 'Creative & Tech',
+    options: ['Programming', 'Web Development', 'Data Science', 'UI/UX Design', 'Graphic Design', 'Photography', 'Video Editing', 'Music'],
+  },
 ];
+
+export const SPECIALTY_OPTIONS = SPECIALTY_GROUPS.flatMap((g) => g.options);
 
 export const AVAILABILITY_OPTIONS = [
   { value: 'weekdays', label: 'Weekdays' },

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CalendarDays, DollarSign, ExternalLink, Image as ImageIcon, Inbox, MessageSquare, Star, User, Users } from 'lucide-react';
+import { CalendarDays, DollarSign, ExternalLink, Image as ImageIcon, Inbox, MessageSquare, Settings, Star, User, Users } from 'lucide-react';
 import api from '../../src/api/client';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useT } from '../../src/hooks/useLanguage';
@@ -17,8 +17,9 @@ import StudentsPanel from '../../src/components/dashboard/StudentsPanel';
 import TrainingCalendar from '../../src/components/dashboard/TrainingCalendar';
 import MessagesPanel from '../../src/components/dashboard/MessagesPanel';
 import SessionRequestsPanel from '../../src/components/dashboard/SessionRequestsPanel';
+import SettingsPanel from '../../src/components/dashboard/SettingsPanel';
 
-type SectionId = 'profile' | 'pricing' | 'work' | 'reviews' | 'students' | 'calendar' | 'messages' | 'requests';
+type SectionId = 'profile' | 'pricing' | 'work' | 'reviews' | 'students' | 'calendar' | 'messages' | 'requests' | 'settings';
 
 function DashboardContent() {
   const { trainerId, user } = useAuth();
@@ -78,6 +79,7 @@ function DashboardContent() {
     { id: 'students', label: t.dashboard.students, icon: Users },
     { id: 'calendar', label: t.dashboard.calendar, icon: CalendarDays },
     { id: 'messages', label: t.dashboard.messages, icon: MessageSquare },
+    { id: 'settings', label: t.dashboard.settings, icon: Settings },
   ];
 
   const photo = resolveImage(trainer.profilePhoto);
@@ -176,6 +178,7 @@ function DashboardContent() {
             {section === 'messages' && (
               <MessagesPanel role="trainer" myTrainerId={trainerId ?? undefined} />
             )}
+            {section === 'settings' && <SettingsPanel />}
           </div>
         </div>
       </div>

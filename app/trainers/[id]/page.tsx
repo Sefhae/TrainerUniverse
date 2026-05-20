@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Award, CalendarCheck, Globe, MapPin, Star } from 'lucide-react';
+import { ArrowLeft, Award, CalendarCheck, Clock, Globe, MapPin, MessageCircle, Star } from 'lucide-react';
+import VerifiedBadge from '../../../src/components/VerifiedBadge';
 import api from '../../../src/api/client';
 import type { Review, Trainer } from '../../../src/types';
 import { cn, formatPrice, initials, resolveImage } from '../../../src/lib/format';
@@ -14,6 +15,7 @@ import ReviewCard from '../../../src/components/ReviewCard';
 import AvailabilityCalendar from '../../../src/components/AvailabilityCalendar';
 import EmptyState from '../../../src/components/EmptyState';
 import BookingModal from '../../../src/components/BookingModal';
+import MessageModal from '../../../src/components/MessageModal';
 import ReviewModal from '../../../src/components/ReviewModal';
 
 function SectionHeading({
@@ -51,6 +53,7 @@ export default function TrainerProfilePage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  const [messageOpen, setMessageOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
 
   useEffect(() => {
@@ -170,6 +173,11 @@ export default function TrainerProfilePage() {
               </div>
               <h1 className="mt-3 font-display text-6xl leading-[0.92] tracking-wide sm:text-7xl lg:text-8xl">
                 {trainer.name}
+                {trainer.isVerified && (
+                  <span className="ml-3 inline-block align-middle">
+                    <VerifiedBadge size="lg" />
+                  </span>
+                )}
               </h1>
               <p className="mt-2 max-w-2xl text-base text-bone/65 sm:text-lg">{trainer.tagline}</p>
 
@@ -206,9 +214,17 @@ export default function TrainerProfilePage() {
                 {formatPrice(trainer.startingPrice)}
                 <span className="ml-1 font-sans text-sm font-medium text-bone/50">/ session</span>
               </p>
+              <p className="mt-2 flex items-center gap-1.5 text-[12px] text-bone/55">
+                <Clock className="h-3.5 w-3.5 text-volt" />
+                Responds {trainer.responseTime}
+              </p>
               <button onClick={() => setContactOpen(true)} className="btn btn-volt mt-4 w-full">
                 <CalendarCheck className="h-4 w-4" />
                 Book a Session
+              </button>
+              <button onClick={() => setMessageOpen(true)} className="btn btn-outline-light mt-2 w-full">
+                <MessageCircle className="h-4 w-4" />
+                Send a Message
               </button>
             </div>
           </div>
@@ -380,6 +396,12 @@ export default function TrainerProfilePage() {
         trainerId={trainer.id}
         trainerName={trainer.name}
         packages={trainer.packages}
+      />
+      <MessageModal
+        open={messageOpen}
+        onClose={() => setMessageOpen(false)}
+        trainerId={trainer.id}
+        trainerName={trainer.name}
       />
       <ReviewModal
         open={reviewOpen}

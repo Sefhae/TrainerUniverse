@@ -5,6 +5,7 @@ import { ArrowRight, Globe, MapPin } from 'lucide-react';
 import type { TrainerSummary } from '../types';
 import { formatPrice, initials, resolveImage } from '../lib/format';
 import StarRating from './StarRating';
+import VerifiedBadge from './VerifiedBadge';
 
 export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
   const photo = resolveImage(trainer.profilePhoto);
@@ -14,7 +15,7 @@ export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
   return (
     <Link
       href={`/trainers/${trainer.id}`}
-      className="group flex flex-col border border-white/10 bg-charcoal transition-all duration-200 hover:border-volt"
+      className="group flex h-full flex-col border border-white/10 bg-charcoal transition-all duration-200 hover:border-volt"
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-ink">
         {photo ? (
@@ -50,7 +51,10 @@ export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
       </div>
 
       <div className="flex flex-1 flex-col p-3 sm:p-5">
-        <h3 className="font-display text-lg leading-none tracking-wide text-bone sm:text-2xl">{trainer.name}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-display text-lg leading-none tracking-wide text-bone sm:text-2xl">{trainer.name}</h3>
+          {trainer.isVerified && <VerifiedBadge size="sm" />}
+        </div>
         <p className="mt-1 line-clamp-1 text-xs text-bone/55 sm:mt-2 sm:text-sm">{trainer.tagline || 'Personal Trainer'}</p>
 
         <div className="mt-2 hidden flex-wrap gap-1.5 sm:flex">

@@ -16,6 +16,7 @@ interface StudentAuthState {
 interface StudentAuthContextValue extends StudentAuthState {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithData: (data: { token: string; user: User; studentId: number | null }) => void;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -60,6 +61,13 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
     persist({ user: data.user, token: data.token, studentId: data.studentId });
   }, [persist]);
 
+  const loginWithData = useCallback(
+    (data: { token: string; user: User; studentId: number | null }) => {
+      persist({ user: data.user, token: data.token, studentId: data.studentId });
+    },
+    [persist]
+  );
+
   const register = useCallback(async (name: string, email: string, password: string) => {
     const { data } = await api.post<{ token: string; user: User; studentId: number }>(
       '/auth/student-register',
@@ -77,6 +85,7 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
       ...state,
       isAuthenticated: Boolean(state.token),
       login,
+      loginWithData,
       register,
       logout,
     }}>

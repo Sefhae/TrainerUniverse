@@ -18,7 +18,7 @@ export const translations = {
       heroLine1: 'Find Your Perfect',
       rotating: ['TRAINER', 'COACH', 'MENTOR', 'PARTNER'],
       heroDesc:
-        'Browse elite coaches in strength, HIIT, yoga, boxing, nutrition and more. Real reviews, real results, real transformations — matched to your goals.',
+        'Browse elite coaches in sports, fitness, wellness, academics, programming and more. Real reviews, real results, real transformations — matched to your goals.',
       avgRatingLabel: 'Average trainer rating',
       stats: [
         { value: '500+', label: 'Elite Trainers' },
@@ -26,7 +26,7 @@ export const translations = {
         { value: '98%', label: 'Satisfaction Rate' },
         { value: '4.8', label: 'Average Rating' },
       ],
-      heroShots: ['Strength & Conditioning', 'Basketball', 'Swimming'],
+      heroShots: ['Sports & Fitness', 'Academic Coaching', 'Creative & Tech'],
       featuredEyebrow: 'Top Rated',
       featuredTitle: 'Featured Trainers',
       viewAll: 'View All Trainers',
@@ -141,7 +141,7 @@ export const translations = {
     filters: {
       title: 'Filters',
       clearAll: 'Clear all',
-      specialty: 'Specialty',
+      specialty: 'Category',
       pricePerSession: 'Price / Session',
       location: 'Location',
       all: 'All',
@@ -185,6 +185,10 @@ export const translations = {
       students: 'My Students',
       calendar: 'Calendar',
       messages: 'Messages',
+      settings: 'Settings',
+      settingsDesc: 'Manage your preferences',
+      language: 'Language',
+      languageDesc: 'Choose your preferred display language',
       viewPublicProfile: 'View Public Profile',
       unavailableTitle: 'Dashboard Unavailable',
       unavailableMsg: "We couldn't load your trainer profile. Please try logging in again.",
@@ -364,7 +368,7 @@ export const translations = {
       fallbackError: 'Failed to send. Please try again.',
     },
     footer: {
-      desc: 'The marketplace for elite personal training. Find a coach who matches your goals, your schedule, and your ambition.',
+      desc: 'The marketplace for elite coaching across sports, wellness, academics and tech. Find a coach who matches your goals, your schedule, and your ambition.',
       exploreTitle: 'Explore',
       home: 'Home',
       findTrainer: 'Find a Trainer',
@@ -397,7 +401,7 @@ export const translations = {
       heroLine1: 'Mükemmel',
       rotating: ['ANTRENÖRÜNÜZÜ', 'KOÇUNUZU', 'MENTORUNUZU', 'PARTNERİNİZİ'],
       heroDesc:
-        'Güç, HIIT, yoga, boks, beslenme ve daha fazlasında elit koçlara göz atın. Gerçek yorumlar, gerçek sonuçlar, gerçek dönüşümler — hedeflerinize uygun.',
+        'Spor, sağlık, akademi, programlama ve daha fazlasında elit koçlara göz atın. Gerçek yorumlar, gerçek sonuçlar, gerçek dönüşümler — hedeflerinize uygun.',
       avgRatingLabel: 'Ortalama antrenör puanı',
       stats: [
         { value: '500+', label: 'Elit Antrenör' },
@@ -405,7 +409,7 @@ export const translations = {
         { value: '%98', label: 'Memnuniyet Oranı' },
         { value: '4.8', label: 'Ortalama Puan' },
       ],
-      heroShots: ['Güç & Kondisyon', 'Basketbol', 'Yüzme'],
+      heroShots: ['Spor & Kondisyon', 'Akademik Koçluk', 'Yaratıcı & Teknoloji'],
       featuredEyebrow: 'En Yüksek Puanlı',
       featuredTitle: 'Öne Çıkan Antrenörler',
       viewAll: 'Tüm Antrenörleri Gör',
@@ -520,7 +524,7 @@ export const translations = {
     filters: {
       title: 'Filtreler',
       clearAll: 'Tümünü Temizle',
-      specialty: 'Uzmanlık',
+      specialty: 'Kategori',
       pricePerSession: 'Fiyat / Seans',
       location: 'Konum',
       all: 'Tümü',
@@ -564,6 +568,10 @@ export const translations = {
       students: 'Öğrencilerim',
       calendar: 'Takvim',
       messages: 'Mesajlar',
+      settings: 'Ayarlar',
+      settingsDesc: 'Tercihlerinizi yönetin',
+      language: 'Dil',
+      languageDesc: 'Tercih ettiğiniz görüntüleme dilini seçin',
       viewPublicProfile: 'Herkese Açık Profili Gör',
       unavailableTitle: 'Panel Kullanılamıyor',
       unavailableMsg: 'Antrenör profiliniz yüklenemedi. Lütfen tekrar giriş yapmayı deneyin.',
@@ -743,7 +751,7 @@ export const translations = {
       fallbackError: 'Gönderilemedi. Lütfen tekrar deneyin.',
     },
     footer: {
-      desc: 'Elit kişisel antrenman için platform. Hedeflerinize, programınıza ve hırsınıza uyan bir koç bulun.',
+      desc: 'Spor, sağlık, akademi ve teknoloji alanlarında elit koçluk için platform. Hedeflerinize, programınıza ve hırsınıza uyan bir koç bulun.',
       exploreTitle: 'Keşfet',
       home: 'Ana Sayfa',
       findTrainer: 'Antrenör Bul',

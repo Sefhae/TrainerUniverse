@@ -97,7 +97,7 @@ function DirectoryContent() {
                   {trainers.map((trainer, i) => (
                     <div
                       key={trainer.id}
-                      className="animate-fade-up"
+                      className="animate-fade-up h-full"
                       style={{ animationDelay: `${Math.min(i, 8) * 0.05}s` }}
                     >
                       <TrainerCard trainer={trainer} />

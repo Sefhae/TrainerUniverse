@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
       tp.id,
       tp.name,
       tp.is_published,
+      tp.is_verified,
       tp.created_at,
       u.email,
       (SELECT GROUP_CONCAT(s.name, ', ')

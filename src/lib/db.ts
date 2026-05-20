@@ -184,6 +184,11 @@ function createDb() {
     );
   `);
 
+  // Add columns introduced after initial schema — SQLite throws if column exists, so we swallow the error.
+  const addCol = (sql: string) => { try { db.exec(sql); } catch { /* already exists */ } };
+  addCol(`ALTER TABLE trainer_profiles ADD COLUMN is_verified INTEGER NOT NULL DEFAULT 0`);
+  addCol(`ALTER TABLE trainer_profiles ADD COLUMN response_time TEXT NOT NULL DEFAULT 'within 24 hours'`);
+
   return db;
 }
 

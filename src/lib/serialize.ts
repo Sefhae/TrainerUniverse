@@ -108,6 +108,8 @@ function mapProfileBase(r: Record<string, unknown>) {
     yearsExperience: r.years_experience,
     availability: parseAvailability(r.availability),
     isPublished: !!r.is_published,
+    isVerified: !!r.is_verified,
+    responseTime: (r.response_time as string) || 'within 24 hours',
     createdAt: r.created_at,
   };
 }

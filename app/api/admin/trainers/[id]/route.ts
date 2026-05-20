@@ -11,7 +11,8 @@ export async function GET(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const profile = db.prepare(`
     SELECT tp.id, tp.name, tp.tagline, tp.bio, tp.location, tp.is_remote,
-           tp.years_experience, tp.is_published, tp.profile_photo, tp.cover_photo, u.email
+           tp.years_experience, tp.is_published, tp.is_verified, tp.response_time,
+           tp.profile_photo, tp.cover_photo, u.email
     FROM trainer_profiles tp
     JOIN users u ON u.id = tp.user_id
     WHERE tp.id = ?
@@ -37,7 +38,17 @@ export async function PUT(req: NextRequest, { params }: Params) {
   if (!p || p.role !== 'admin') return unauthorized();
 
   const { id } = await params;
-  const { isPublished } = await req.json();
-  db.prepare('UPDATE trainer_profiles SET is_published = ? WHERE id = ?').run(isPublished ? 1 : 0, Number(id));
+  const body = await req.json();
+  const { isPublished, isVerified, responseTime } = body;
+
+  if (isPublished !== undefined) {
+    db.prepare('UPDATE trainer_profiles SET is_published = ? WHERE id = ?').run(isPublished ? 1 : 0, Number(id));
+  }
+  if (isVerified !== undefined) {
+    db.prepare('UPDATE trainer_profiles SET is_verified = ? WHERE id = ?').run(isVerified ? 1 : 0, Number(id));
+  }
+  if (responseTime !== undefined) {
+    db.prepare('UPDATE trainer_profiles SET response_time = ? WHERE id = ?').run(String(responseTime), Number(id));
+  }
   return NextResponse.json({ ok: true });
 }

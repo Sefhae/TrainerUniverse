@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, type FormEvent, type ReactNode } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { useState, type FormEvent, type ReactNode, useRef } from 'react';
+import { Eye, EyeOff, Search, X } from 'lucide-react';
 import api from '../../api/client';
 import type { Trainer } from '../../types';
-import { AVAILABILITY_OPTIONS, SPECIALTY_OPTIONS } from '../../lib/constants';
+import { AVAILABILITY_OPTIONS, SPECIALTY_GROUPS } from '../../lib/constants';
 import { cn, getApiError } from '../../lib/format';
 import { useToast } from '../../hooks/useToast';
 import ImageUpload from '../ImageUpload';
@@ -45,6 +45,8 @@ export default function ProfileEditor({ trainer, refresh }: Props) {
   const [availability, setAvailability] = useState<string[]>(trainer.availability);
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [specFilter, setSpecFilter] = useState('');
+  const specFilterRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
@@ -202,24 +204,114 @@ export default function ProfileEditor({ trainer, refresh }: Props) {
         </Card>
 
         <Card title="Specialties" description="Select every area you coach in.">
-          <div className="flex flex-wrap gap-2">
-            {SPECIALTY_OPTIONS.map((s) => {
-              const active = specialties.includes(s);
-              return (
-                <button
+          {/* Search */}
+          <div className="relative mb-5">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/35 pointer-events-none" />
+            <input
+              ref={specFilterRef}
+              type="text"
+              value={specFilter}
+              onChange={(e) => setSpecFilter(e.target.value)}
+              placeholder="Search specialties…"
+              className="field-input pl-9 pr-9"
+            />
+            {specFilter && (
+              <button
+                type="button"
+                onClick={() => { setSpecFilter(''); specFilterRef.current?.focus(); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/35 hover:text-ink transition-colors"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Selected summary */}
+          {specialties.length > 0 && (
+            <div className="mb-5 flex flex-wrap gap-1.5">
+              {specialties.map((s) => (
+                <span
                   key={s}
-                  type="button"
-                  onClick={() => setSpecialties((list) => toggleInList(list, s))}
-                  className={cn(
-                    'chip border transition-colors duration-200',
-                    active ? 'border-ink bg-ink text-volt' : 'border-ink/20 text-ink/60 hover:border-ink/50'
-                  )}
+                  className="flex items-center gap-1.5 bg-ink px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-volt"
                 >
                   {s}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setSpecialties((list) => list.filter((x) => x !== s))}
+                    className="ml-0.5 text-volt/60 hover:text-volt leading-none"
+                    aria-label={`Remove ${s}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              <button
+                type="button"
+                onClick={() => setSpecialties([])}
+                className="px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink/40 hover:text-ink border border-ink/15 hover:border-ink/40 transition-colors"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+
+          {/* Grouped categories */}
+          {(() => {
+            const q = specFilter.trim().toLowerCase();
+            const filtered = SPECIALTY_GROUPS.map((group) => ({
+              ...group,
+              options: q ? group.options.filter((o) => o.toLowerCase().includes(q)) : group.options,
+            })).filter((group) => group.options.length > 0);
+
+            if (filtered.length === 0) {
+              return (
+                <p className="py-4 text-sm text-ink/45">No specialties match &ldquo;{specFilter}&rdquo;</p>
               );
-            })}
-          </div>
+            }
+
+            return (
+              <div className="space-y-5">
+                {filtered.map((group) => {
+                  const selectedInGroup = group.options.filter((o) => specialties.includes(o)).length;
+                  return (
+                    <div key={group.label}>
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink/45">
+                          {group.label}
+                        </span>
+                        {selectedInGroup > 0 && (
+                          <span className="rounded-full bg-volt px-1.5 py-0.5 text-[10px] font-bold text-ink">
+                            {selectedInGroup}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {group.options.map((s) => {
+                          const active = specialties.includes(s);
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => setSpecialties((list) => toggleInList(list, s))}
+                              className={cn(
+                                'chip border transition-colors duration-200',
+                                active
+                                  ? 'border-ink bg-ink text-volt'
+                                  : 'border-ink/20 text-ink/60 hover:border-ink/50 hover:text-ink'
+                              )}
+                            >
+                              {s}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </Card>
 
         <Card title="Location & Availability">

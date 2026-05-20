@@ -12,17 +12,19 @@ import { useT } from '../src/hooks/useLanguage';
 
 const TESTIMONIALS = [
   { quote: 'I found a strength coach in minutes. Six months later I deadlift double what I used to.', name: 'Rachel M.', role: 'Strength client', rating: 5 },
-  { quote: 'The reviews and transformation photos made choosing a trainer genuinely easy.', name: 'Daniel R.', role: 'Weight-loss client', rating: 5 },
+  { quote: 'My maths tutor took me from failing to top of my class in one term. Genuinely life-changing.', name: 'Amir K.', role: 'Mathematics student', rating: 5 },
   { quote: 'My boxing coach is incredible — TrainerUniverse matched me perfectly on the first try.', name: 'Natalie S.', role: 'Boxing client', rating: 5 },
   { quote: 'Remote yoga that actually fits my schedule. I have never been this mobile.', name: 'Olivia T.', role: 'Yoga client', rating: 5 },
-  { quote: 'Down 30 pounds and my energy is through the roof. Worth every single session.', name: 'James O.', role: 'Nutrition client', rating: 5 },
+  { quote: 'Zero coding knowledge to landing a junior dev role — my programming coach made it happen.', name: 'Sam L.', role: 'Programming student', rating: 5 },
   { quote: 'Came back from an ACL injury stronger than before thanks to my rehab coach.', name: 'Chris B.', role: 'Rehab client', rating: 5 },
+  { quote: 'My graphic design mentor helped me build a portfolio that got me freelance clients within weeks.', name: 'Maya R.', role: 'Design student', rating: 5 },
+  { quote: 'Down 30 pounds and my energy is through the roof. Worth every single session.', name: 'James O.', role: 'Nutrition client', rating: 5 },
 ];
 
 const HERO_SRCS = [
-  'https://loremflickr.com/820/1080/gym,workout?lock=31',
-  'https://loremflickr.com/720/680/basketball,sport?lock=47',
-  'https://loremflickr.com/720/680/swimming,pool?lock=58',
+  'https://loremflickr.com/820/1080/sport,athlete?lock=100',
+  'https://loremflickr.com/720/680/yoga,wellness?lock=101',
+  'https://loremflickr.com/720/680/computer,coding?lock=61',
 ];
 
 function HeroImage({ src, label }: { src: string; label: string }) {

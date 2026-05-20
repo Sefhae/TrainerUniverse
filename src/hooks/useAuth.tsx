@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import api, { TOKEN_KEY } from '../api/client';
 import type { AuthResponse, User } from '../types';
 
@@ -21,13 +21,16 @@ export interface RegisterPayload {
 
 interface AuthContextValue extends AuthState {
   isAuthenticated: boolean;
+  hydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithData: (data: { token: string; user: User; trainerId: number | null }) => void;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => void;
 }
 
 function readStoredAuth(): AuthState {
   try {
+    if (typeof window === 'undefined') return { user: null, token: null, trainerId: null };
     const token = localStorage.getItem(TOKEN_KEY);
     const raw = localStorage.getItem(AUTH_KEY);
     if (token && raw) {
@@ -43,7 +46,13 @@ function readStoredAuth(): AuthState {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>(readStoredAuth);
+  const [state, setState] = useState<AuthState>({ user: null, token: null, trainerId: null });
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setState(readStoredAuth());
+    setHydrated(true);
+  }, []);
 
   const persist = useCallback((next: AuthState) => {
     if (next.token && next.user) {
@@ -64,6 +73,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist]
   );
 
+  const loginWithData = useCallback(
+    (data: { token: string; user: User; trainerId: number | null }) => {
+      persist({ user: data.user, token: data.token, trainerId: data.trainerId });
+    },
+    [persist]
+  );
+
   const register = useCallback(
     async (payload: RegisterPayload) => {
       const { data } = await api.post<AuthResponse>('/auth/register', payload);
@@ -79,7 +95,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = {
     ...state,
     isAuthenticated: Boolean(state.token),
+    hydrated,
     login,
+    loginWithData,
     register,
     logout,
   };

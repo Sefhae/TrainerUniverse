@@ -62,6 +62,8 @@ export interface TrainerSummary {
   yearsExperience: number;
   availability: string[];
   isPublished: boolean;
+  isVerified: boolean;
+  responseTime: string;
   createdAt: string;
   specialties: Specialty[];
   rating: number;

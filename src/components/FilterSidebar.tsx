@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Search } from 'lucide-react';
 import type { TrainerFilters } from '../hooks/useTrainers';
 import {
   AVAILABILITY_OPTIONS,
@@ -10,7 +10,7 @@ import {
   PRICE_MIN,
   PRICE_STEP,
   RATING_OPTIONS,
-  SPECIALTY_OPTIONS,
+  SPECIALTY_GROUPS,
 } from '../lib/constants';
 import { useT } from '../hooks/useLanguage';
 import { cn, formatPrice } from '../lib/format';
@@ -205,6 +205,7 @@ export default function FilterSidebar({
   activeFilterCount,
 }: FilterSidebarProps) {
   const t = useT();
+  const [specialtySearch, setSpecialtySearch] = useState('');
   const [cities, setCities] = useState<string[]>([]);
   const [states, setStates] = useState<string[]>([]);
 
@@ -258,15 +259,39 @@ export default function FilterSidebar({
 
       <div className="px-5 py-2">
         <FilterGroup title={t.filters.specialty}>
-          <div className="space-y-0.5">
-            {SPECIALTY_OPTIONS.map((name) => (
-              <CheckRow
-                key={name}
-                label={name}
-                checked={filters.specialty.includes(name)}
-                onToggle={() => setFilters({ specialty: toggleInList(filters.specialty, name) })}
-              />
-            ))}
+          <div className="relative mb-3">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-bone/35" />
+            <input
+              type="text"
+              value={specialtySearch}
+              onChange={(e) => setSpecialtySearch(e.target.value)}
+              placeholder="Search categories…"
+              className="w-full bg-white/5 border border-white/15 pl-8 pr-3 py-2 text-sm text-bone placeholder:text-bone/35 focus:outline-none focus:border-volt/60 transition-colors duration-200"
+            />
+          </div>
+          <div className="space-y-3">
+            {SPECIALTY_GROUPS.map((group) => {
+              const q = specialtySearch.toLowerCase();
+              const visible = group.options.filter((o) => o.toLowerCase().includes(q));
+              if (visible.length === 0) return null;
+              return (
+                <div key={group.label}>
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-bone/30">
+                    {group.label}
+                  </p>
+                  <div className="space-y-0.5">
+                    {visible.map((name) => (
+                      <CheckRow
+                        key={name}
+                        label={name}
+                        checked={filters.specialty.includes(name)}
+                        onToggle={() => setFilters({ specialty: toggleInList(filters.specialty, name) })}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </FilterGroup>
 
