@@ -7,16 +7,19 @@ declare global {
 }
 
 function resolveDbPath(): string {
-  const sourcePath = process.env.DB_PATH || path.join(process.cwd(), 'server', 'db', 'fitconnect.db');
-  // Vercel's deployed filesystem is read-only; copy the db to /tmp (writable) once per instance.
+  // Vercel's deployed filesystem is read-only; use /tmp (writable) once per instance.
   if (process.env.VERCEL) {
     const tmpPath = '/tmp/fitconnect.db';
     if (!fs.existsSync(tmpPath)) {
-      fs.copyFileSync(sourcePath, tmpPath);
+      const sourcePath = process.env.DB_PATH || path.join(process.cwd(), 'server', 'db', 'fitconnect.db');
+      if (fs.existsSync(sourcePath)) {
+        fs.copyFileSync(sourcePath, tmpPath);
+      }
+      // No source DB → create fresh; instrumentation.ts will seed it.
     }
     return tmpPath;
   }
-  return sourcePath;
+  return process.env.DB_PATH || path.join(process.cwd(), 'server', 'db', 'fitconnect.db');
 }
 
 function createDb() {
@@ -195,13 +198,6 @@ function createDb() {
 const db = globalThis.__traineruniverse_db ?? createDb();
 if (process.env.NODE_ENV !== 'production') {
   globalThis.__traineruniverse_db = db;
-}
-
-// Auto-seed on first boot (empty DB in deployed environments)
-const trainerCount = (db.prepare('SELECT COUNT(*) as n FROM trainer_profiles').get() as { n: number }).n;
-if (trainerCount === 0) {
-  const { seed } = require('./seed') as { seed: () => void };
-  seed();
 }
 
 export default db;
