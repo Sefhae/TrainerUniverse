@@ -8,6 +8,7 @@ import type { TrainerSummary, TrainersResponse } from '../src/types';
 import TrainerCard from '../src/components/TrainerCard';
 import TrainerCardSkeleton from '../src/components/TrainerCardSkeleton';
 import StarRating from '../src/components/StarRating';
+import HeroSearch from '../src/components/HeroSearch';
 import { useT } from '../src/hooks/useLanguage';
 
 const TESTIMONIALS = [
@@ -110,8 +111,11 @@ export default function Home() {
 
   return (
     <div>
+      {/* Search-first landing */}
+      <HeroSearch />
+
       {/* Hero */}
-      <section className="relative overflow-hidden bg-ink text-bone">
+      <section id="discover" className="relative overflow-hidden bg-ink text-bone scroll-mt-[72px]">
         <div className="grain-layer" />
         <div
           className="pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full opacity-20 blur-3xl"

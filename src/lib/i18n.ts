@@ -59,6 +59,15 @@ export const translations = {
       becomeTrainer: 'Become a Trainer',
       scrollLeft: 'Scroll left',
       scrollRight: 'Scroll right',
+      searchTitle1: 'Find the right',
+      searchTitle2: 'trainer for you',
+      searchSubtitle:
+        'Search thousands of vetted coaches by skill and city — then scroll to explore TrainerUniverse.',
+      searchSpecialtyPlaceholder: 'What do you want to train? (e.g. Boxing, Yoga, Maths)',
+      searchCityPlaceholder: 'City (optional)',
+      searchButton: 'Search',
+      popularLabel: 'Popular',
+      scrollHint: 'Scroll to explore',
     },
     login: {
       eyebrow: 'Trainer Login',
@@ -442,6 +451,15 @@ export const translations = {
       becomeTrainer: 'Antrenör Ol',
       scrollLeft: 'Sola kaydır',
       scrollRight: 'Sağa kaydır',
+      searchTitle1: 'Sana uygun',
+      searchTitle2: 'antrenörü bul',
+      searchSubtitle:
+        'Binlerce onaylı koçu yeteneğe ve şehre göre ara — sonra TrainerUniverse’i keşfetmek için aşağı kaydır.',
+      searchSpecialtyPlaceholder: 'Ne antrenmanı? (örn. Boks, Yoga, Matematik)',
+      searchCityPlaceholder: 'Şehir (opsiyonel)',
+      searchButton: 'Ara',
+      popularLabel: 'Popüler',
+      scrollHint: 'Keşfetmek için kaydır',
     },
     login: {
       eyebrow: 'Antrenör Girişi',
