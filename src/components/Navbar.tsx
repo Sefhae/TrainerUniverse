@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, ChevronDown, Cpu, HeartPulse, LogOut, Menu, Trophy, X } from 'lucide-react';
+import { BookOpen, ChevronDown, Cpu, Globe, HeartPulse, LogOut, Menu, Trophy, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useStudentAuth } from '../hooks/useStudentAuth';
 import { useLanguage, useT } from '../hooks/useLanguage';
@@ -195,10 +195,14 @@ export default function Navbar() {
             )}
           </div>
 
-          <span className="mx-6 h-4 w-px bg-white/20" />
-          <Link href="/register" className={navLinkClass('/register')}>
-            {t.nav.becomeTrainer}
-          </Link>
+          {!showAuthed && (
+            <>
+              <span className="mx-6 h-4 w-px bg-white/20" />
+              <Link href="/register" className={navLinkClass('/register')}>
+                {t.nav.becomeTrainer}
+              </Link>
+            </>
+          )}
           <span className="mx-6 h-4 w-px bg-white/20" />
           <Link href="/faq" className={navLinkClass('/faq')}>
             {t.nav.faq}
@@ -258,9 +262,11 @@ export default function Navbar() {
             <Link href="/trainers" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
               {t.nav.findTrainer}
             </Link>
-            <Link href="/register" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
-              {t.nav.becomeTrainer}
-            </Link>
+            {!showAuthed && (
+              <Link href="/register" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
+                {t.nav.becomeTrainer}
+              </Link>
+            )}
             <Link href="/faq" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-bone/80">
               {t.nav.faq}
             </Link>
@@ -268,6 +274,13 @@ export default function Navbar() {
               {t.nav.contact}
             </Link>
             <div className="mt-3 flex flex-col gap-2.5 border-t border-white/10 pt-4">
+              <div className="flex items-center justify-between pb-1">
+                <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-bone/40">
+                  <Globe className="h-4 w-4" />
+                  {t.nav.language}
+                </span>
+                <LangToggle />
+              </div>
               {showAuthed ? (
                 <>
                   <Link href={dashboardHref} className="btn btn-volt w-full">

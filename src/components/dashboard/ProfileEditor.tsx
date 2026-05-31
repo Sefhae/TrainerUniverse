@@ -380,11 +380,11 @@ export default function ProfileEditor({ trainer, refresh }: Props) {
           </div>
         </Card>
 
-        <div className="flex items-center justify-end gap-3 border border-ink/10 bg-white p-4">
+        <div className="sticky bottom-0 z-20 flex items-center justify-end gap-3 border border-ink/10 bg-white/95 p-4 shadow-[0_-10px_30px_-12px_rgba(0,0,0,0.3)] backdrop-blur">
           <p className="mr-auto text-sm text-ink/50">Changes are saved to your public profile.</p>
-          <button type="submit" disabled={saving} className="btn btn-dark">
+          <button type="submit" disabled={saving} className="btn btn-volt">
             {saving ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-bone border-t-transparent" />
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink border-t-transparent" />
             ) : (
               'Save Changes'
             )}

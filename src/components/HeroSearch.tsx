@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ChevronDown, MapPin, Search } from 'lucide-react';
+import { ArrowRight, ChevronDown, MapPin, Search, Video } from 'lucide-react';
 import CitySearch from './CitySearch';
 import { SPECIALTY_OPTIONS } from '../lib/constants';
 import { useT } from '../hooks/useLanguage';
@@ -15,6 +15,7 @@ export default function HeroSearch() {
   const router = useRouter();
   const [specialty, setSpecialty] = useState('');
   const [city, setCity] = useState('');
+  const [mode, setMode] = useState<'all' | 'remote' | 'in-person'>('all');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
@@ -22,6 +23,9 @@ export default function HeroSearch() {
 
   const rotating = t.home.searchRotating;
   const wordIndex = useSyncedRotation(rotating.length);
+  // Reserve the widest word's width so the suffix ("for you") never shifts as
+  // the rotating word changes length.
+  const longestWord = rotating.reduce((a, b) => (b.length >= a.length ? b : a), rotating[0] ?? '');
 
   useEffect(() => {
     const q = specialty.trim().toLowerCase();
@@ -52,6 +56,7 @@ export default function HeroSearch() {
       params.set('specialty', match ?? s);
     }
     if (c.trim()) params.set('city', c.trim());
+    if (mode !== 'all') params.set('mode', mode);
     router.push('/trainers' + (params.toString() ? '?' + params.toString() : ''));
   }
 
@@ -106,18 +111,25 @@ export default function HeroSearch() {
         >
           <span className="block">{t.home.searchTitle1}</span>
           <span className="mt-2 flex flex-wrap items-baseline justify-center gap-x-3 gap-y-2 sm:mt-3">
-            <span className="relative inline-block">
-              <span
-                key={`highlight-${wordIndex}`}
-                aria-hidden
-                className="animate-highlight-swipe absolute inset-x-0 inset-y-[0.04em] origin-left rounded-[4px] bg-volt"
-                style={{ animationDelay: '0.1s' }}
-              />
-              <span
-                key={`${wordIndex}-${rotating[wordIndex % rotating.length]}`}
-                className="animate-word-slide relative inline-block px-[0.12em] text-ink"
-              >
-                {rotating[wordIndex % rotating.length]}
+            {/* Fixed-width slot: invisible sizer holds the widest word so the
+                suffix stays put; the live word + highlight are centered over it. */}
+            <span className="relative inline-block text-center">
+              <span aria-hidden className="invisible px-[0.12em]">{longestWord}</span>
+              <span className="absolute inset-0">
+                <span className="relative inline-block px-[0.12em]">
+                  <span
+                    key={`highlight-${wordIndex}`}
+                    aria-hidden
+                    className="animate-highlight-swipe absolute inset-x-0 inset-y-[0.04em] origin-left rounded-[4px] bg-volt"
+                    style={{ animationDelay: '0.1s' }}
+                  />
+                  <span
+                    key={`${wordIndex}-${rotating[wordIndex % rotating.length]}`}
+                    className="animate-word-slide relative inline-block text-ink"
+                  >
+                    {rotating[wordIndex % rotating.length]}
+                  </span>
+                </span>
               </span>
             </span>
             <span className="text-bone">{t.home.searchTitleSuffix}</span>
@@ -178,6 +190,28 @@ export default function HeroSearch() {
                 placeholder={t.home.searchCityPlaceholder}
                 className="w-full bg-transparent py-4 pl-12 pr-4 text-base text-bone placeholder:text-bone/40 focus:outline-none"
               />
+            </div>
+
+            <div className="hidden w-px self-stretch bg-white/10 sm:block" />
+
+            <div className="grid grid-cols-3 gap-1 border-t border-white/10 pt-2 sm:flex sm:shrink-0 sm:items-center sm:justify-center sm:border-0 sm:pt-0">
+              {([
+                { id: 'all', label: t.home.searchModeAny, icon: null },
+                { id: 'remote', label: t.home.searchModeOnline, icon: Video },
+                { id: 'in-person', label: t.home.searchModeInPerson, icon: MapPin },
+              ] as const).map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setMode(id)}
+                  className={`flex items-center justify-center gap-1.5 whitespace-nowrap px-2 py-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors duration-200 sm:px-3 sm:text-[11px] ${
+                    mode === id ? 'bg-volt text-ink' : 'text-bone/55 hover:text-bone'
+                  }`}
+                >
+                  {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
+                  {label}
+                </button>
+              ))}
             </div>
 
             <button
