@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '../../../../../src/lib/db';
 import { verifyToken, unauthorized, forbidden } from '../../../../../src/lib/auth';
+import { checkProfanity } from '../../../../../src/lib/profanity';
 
 type Params = { params: Promise<{ trainerId: string; studentId: string }> };
 
@@ -57,6 +58,8 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const { content } = await req.json();
   if (!content?.trim()) return NextResponse.json({ error: 'Message content is required.' }, { status: 400 });
+  const profanity = checkProfanity(content);
+  if (profanity) return NextResponse.json({ error: profanity }, { status: 400 });
 
   const result = db.prepare(`
     INSERT INTO messages (trainer_id, student_id, sender, content)

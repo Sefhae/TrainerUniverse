@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '../../../../../src/lib/db';
 import { mapReview } from '../../../../../src/lib/serialize';
+import { checkProfanity } from '../../../../../src/lib/profanity';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -26,6 +27,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Please choose a rating between 1 and 5 stars.' }, { status: 400 });
   if (!comment || !String(comment).trim())
     return NextResponse.json({ error: 'Please write a short comment.' }, { status: 400 });
+  const profanity = checkProfanity(reviewerName, comment);
+  if (profanity) return NextResponse.json({ error: profanity }, { status: 400 });
 
   const info = db
     .prepare('INSERT INTO reviews (trainer_id, reviewer_name, rating, comment) VALUES (?, ?, ?, ?)')

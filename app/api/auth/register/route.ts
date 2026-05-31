@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import db from '../../../../src/lib/db';
 import { signToken } from '../../../../src/lib/auth';
 import { validatePassword } from '../../../../src/lib/password';
+import { checkProfanity } from '../../../../src/lib/profanity';
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
@@ -18,6 +19,10 @@ export async function POST(req: NextRequest) {
   const pwError = validatePassword(String(password ?? ''));
   if (pwError)
     return NextResponse.json({ error: pwError }, { status: 400 });
+
+  const profanity = checkProfanity(name);
+  if (profanity)
+    return NextResponse.json({ error: profanity }, { status: 400 });
 
   const normalizedEmail = String(email).trim().toLowerCase();
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(normalizedEmail);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '../../../../src/lib/db';
 import { verifyToken, unauthorized, forbidden } from '../../../../src/lib/auth';
 import { serializeTrainerDetail } from '../../../../src/lib/serialize';
+import { checkProfanity } from '../../../../src/lib/profanity';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -29,6 +30,9 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
   const body = await req.json().catch(() => ({}));
   const { name, tagline, bio, location, isRemote, yearsExperience, availability, isPublished, specialties } = body || {};
+
+  const profanity = checkProfanity(name, tagline, bio, location);
+  if (profanity) return NextResponse.json({ error: profanity }, { status: 400 });
 
   db.prepare(`
     UPDATE trainer_profiles SET

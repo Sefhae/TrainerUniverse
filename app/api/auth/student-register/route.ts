@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import db from '../../../../src/lib/db';
 import { signToken } from '../../../../src/lib/auth';
 import { validatePassword } from '../../../../src/lib/password';
+import { checkProfanity } from '../../../../src/lib/profanity';
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,6 +13,8 @@ export async function POST(req: NextRequest) {
     if (!email?.includes('@')) return NextResponse.json({ error: 'Valid email is required.' }, { status: 400 });
     const pwError = validatePassword(String(password ?? ''));
     if (pwError) return NextResponse.json({ error: pwError }, { status: 400 });
+    const profanity = checkProfanity(name);
+    if (profanity) return NextResponse.json({ error: profanity }, { status: 400 });
 
     const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase().trim());
     if (existing) return NextResponse.json({ error: 'Email already registered.' }, { status: 409 });
