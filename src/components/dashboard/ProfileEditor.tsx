@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, type FormEvent, type ReactNode, useRef } from 'react';
-import { Eye, EyeOff, Search, X } from 'lucide-react';
+import { useEffect, useState, type FormEvent, type ReactNode, useRef } from 'react';
+import { Check, ChevronDown, Eye, EyeOff, Search, X } from 'lucide-react';
 import api from '../../api/client';
 import type { Trainer } from '../../types';
 import { AVAILABILITY_OPTIONS, SPECIALTY_GROUPS } from '../../lib/constants';
@@ -47,8 +47,20 @@ export default function ProfileEditor({ trainer, refresh }: Props) {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [specFilter, setSpecFilter] = useState('');
   const specFilterRef = useRef<HTMLInputElement>(null);
+  const [specOpen, setSpecOpen] = useState(false);
+  const specRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+
+  // Close the specialties dropdown when clicking outside it.
+  useEffect(() => {
+    if (!specOpen) return;
+    function onDown(e: MouseEvent) {
+      if (specRef.current && !specRef.current.contains(e.target as Node)) setSpecOpen(false);
+    }
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [specOpen]);
 
   const toggleInList = (list: string[], value: string) =>
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -204,32 +216,9 @@ export default function ProfileEditor({ trainer, refresh }: Props) {
         </Card>
 
         <Card title="Specialties" description="Select every area you coach in.">
-          {/* Search */}
-          <div className="relative mb-5">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/35 pointer-events-none" />
-            <input
-              ref={specFilterRef}
-              type="text"
-              value={specFilter}
-              onChange={(e) => setSpecFilter(e.target.value)}
-              placeholder="Search specialties…"
-              className="field-input pl-9 pr-9"
-            />
-            {specFilter && (
-              <button
-                type="button"
-                onClick={() => { setSpecFilter(''); specFilterRef.current?.focus(); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/35 hover:text-ink transition-colors"
-                aria-label="Clear search"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Selected summary */}
+          {/* Selected tags */}
           {specialties.length > 0 && (
-            <div className="mb-5 flex flex-wrap gap-1.5">
+            <div className="mb-3 flex flex-wrap gap-1.5">
               {specialties.map((s) => (
                 <span
                   key={s}
@@ -256,62 +245,109 @@ export default function ProfileEditor({ trainer, refresh }: Props) {
             </div>
           )}
 
-          {/* Grouped categories */}
-          {(() => {
-            const q = specFilter.trim().toLowerCase();
-            const filtered = SPECIALTY_GROUPS.map((group) => ({
-              ...group,
-              options: q ? group.options.filter((o) => o.toLowerCase().includes(q)) : group.options,
-            })).filter((group) => group.options.length > 0);
+          {/* Dropdown multi-select */}
+          <div ref={specRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setSpecOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-2 border border-ink/20 bg-white px-4 py-3 text-left text-sm transition-colors duration-200 hover:border-ink/40"
+            >
+              <span className={specialties.length ? 'text-ink' : 'text-ink/45'}>
+                {specialties.length
+                  ? `${specialties.length} ${specialties.length === 1 ? 'specialty' : 'specialties'} selected`
+                  : 'Select specialties…'}
+              </span>
+              <ChevronDown
+                className={cn('h-4 w-4 shrink-0 text-ink/40 transition-transform duration-200', specOpen && 'rotate-180')}
+              />
+            </button>
 
-            if (filtered.length === 0) {
-              return (
-                <p className="py-4 text-sm text-ink/45">No specialties match &ldquo;{specFilter}&rdquo;</p>
-              );
-            }
+            {specOpen && (
+              <div className="absolute left-0 right-0 top-full z-30 mt-2 border border-ink/15 bg-white shadow-xl">
+                {/* Search */}
+                <div className="relative border-b border-ink/10 p-3">
+                  <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/35" />
+                  <input
+                    ref={specFilterRef}
+                    type="text"
+                    value={specFilter}
+                    onChange={(e) => setSpecFilter(e.target.value)}
+                    placeholder="Search specialties…"
+                    className="field-input pl-9 pr-9"
+                  />
+                  {specFilter && (
+                    <button
+                      type="button"
+                      onClick={() => { setSpecFilter(''); specFilterRef.current?.focus(); }}
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-ink/35 hover:text-ink transition-colors"
+                      aria-label="Clear search"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
 
-            return (
-              <div className="space-y-5">
-                {filtered.map((group) => {
-                  const selectedInGroup = group.options.filter((o) => specialties.includes(o)).length;
-                  return (
-                    <div key={group.label}>
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink/45">
-                          {group.label}
-                        </span>
-                        {selectedInGroup > 0 && (
-                          <span className="rounded-full bg-volt px-1.5 py-0.5 text-[10px] font-bold text-ink">
-                            {selectedInGroup}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {group.options.map((s) => {
-                          const active = specialties.includes(s);
-                          return (
-                            <button
-                              key={s}
-                              type="button"
-                              onClick={() => setSpecialties((list) => toggleInList(list, s))}
-                              className={cn(
-                                'chip border transition-colors duration-200',
-                                active
-                                  ? 'border-ink bg-ink text-volt'
-                                  : 'border-ink/20 text-ink/60 hover:border-ink/50 hover:text-ink'
-                              )}
-                            >
-                              {s}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
+                {/* Grouped options */}
+                <div className="max-h-72 overflow-y-auto p-3">
+                  {(() => {
+                    const q = specFilter.trim().toLowerCase();
+                    const filtered = SPECIALTY_GROUPS.map((group) => ({
+                      ...group,
+                      options: q ? group.options.filter((o) => o.toLowerCase().includes(q)) : group.options,
+                    })).filter((group) => group.options.length > 0);
+
+                    if (filtered.length === 0) {
+                      return <p className="py-4 text-center text-sm text-ink/45">No specialties match &ldquo;{specFilter}&rdquo;</p>;
+                    }
+
+                    return filtered.map((group) => {
+                      const selectedInGroup = group.options.filter((o) => specialties.includes(o)).length;
+                      return (
+                        <div key={group.label} className="mb-3 last:mb-0">
+                          <div className="mb-1 flex items-center gap-2">
+                            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink/40">
+                              {group.label}
+                            </span>
+                            {selectedInGroup > 0 && (
+                              <span className="rounded-full bg-volt px-1.5 py-0.5 text-[10px] font-bold text-ink">
+                                {selectedInGroup}
+                              </span>
+                            )}
+                          </div>
+                          <div className="space-y-0.5">
+                            {group.options.map((s) => {
+                              const active = specialties.includes(s);
+                              return (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  onClick={() => setSpecialties((list) => toggleInList(list, s))}
+                                  className={cn(
+                                    'flex w-full items-center gap-2.5 px-2 py-1.5 text-left text-sm transition-colors duration-150',
+                                    active ? 'text-ink' : 'text-ink/65 hover:bg-ink/5'
+                                  )}
+                                >
+                                  <span
+                                    className={cn(
+                                      'flex h-4 w-4 shrink-0 items-center justify-center border',
+                                      active ? 'border-ink bg-ink text-volt' : 'border-ink/30'
+                                    )}
+                                  >
+                                    {active && <Check className="h-3 w-3" strokeWidth={3} />}
+                                  </span>
+                                  {s}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
               </div>
-            );
-          })()}
+            )}
+          </div>
         </Card>
 
         <Card title="Location & Availability">
