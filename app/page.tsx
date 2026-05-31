@@ -10,6 +10,7 @@ import TrainerCardSkeleton from '../src/components/TrainerCardSkeleton';
 import StarRating from '../src/components/StarRating';
 import HeroSearch from '../src/components/HeroSearch';
 import { useT } from '../src/hooks/useLanguage';
+import { useSyncedRotation } from '../src/hooks/useSyncedRotation';
 
 const TESTIMONIALS = [
   { quote: 'I found a strength coach in minutes. Six months later I deadlift double what I used to.', name: 'Rachel M.', role: 'Strength client', rating: 5 },
@@ -82,18 +83,10 @@ function HeroCollage({ avgRatingLabel, shots }: { avgRatingLabel: string; shots:
 
 export default function Home() {
   const t = useT();
-  const [wordIndex, setWordIndex] = useState(0);
+  const wordIndex = useSyncedRotation(t.home.rotating.length);
   const [featured, setFeatured] = useState<TrainerSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const carouselRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const timer = window.setInterval(
-      () => setWordIndex((i) => (i + 1) % t.home.rotating.length),
-      2600
-    );
-    return () => window.clearInterval(timer);
-  }, [t.home.rotating.length]);
 
   useEffect(() => {
     let cancelled = false;

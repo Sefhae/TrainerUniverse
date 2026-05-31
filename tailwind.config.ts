@@ -35,6 +35,15 @@ const config: Config = {
           '0%': { opacity: '0', transform: 'translateX(40px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
+        'word-slide': {
+          '0%': { opacity: '0', transform: 'translateY(100%)' },
+          '60%': { opacity: '1' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'highlight-swipe': {
+          '0%': { opacity: '0', transform: 'rotate(-1.5deg) scaleX(0)' },
+          '100%': { opacity: '0.92', transform: 'rotate(-1.5deg) scaleX(1)' },
+        },
         marquee: {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
@@ -46,6 +55,8 @@ const config: Config = {
         'scale-in': 'scale-in 0.22s ease-out both',
         'slide-down': 'slide-down 0.2s ease-out both',
         'slide-in-right': 'slide-in-right 0.3s cubic-bezier(0.16,1,0.3,1) both',
+        'word-slide': 'word-slide 0.55s cubic-bezier(0.16,1,0.3,1) both',
+        'highlight-swipe': 'highlight-swipe 0.45s cubic-bezier(0.16,1,0.3,1) both',
         marquee: 'marquee 38s linear infinite',
       },
     },

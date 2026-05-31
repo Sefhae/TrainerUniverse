@@ -6,6 +6,7 @@ import { ArrowRight, ChevronDown, MapPin, Search } from 'lucide-react';
 import CitySearch from './CitySearch';
 import { SPECIALTY_OPTIONS } from '../lib/constants';
 import { useT } from '../hooks/useLanguage';
+import { useSyncedRotation } from '../hooks/useSyncedRotation';
 
 const POPULAR = ['Gym Training', 'Boxing', 'Yoga', 'Nutrition', 'Mathematics', 'Programming'];
 
@@ -18,6 +19,9 @@ export default function HeroSearch() {
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const specRef = useRef<HTMLDivElement>(null);
+
+  const rotating = t.home.searchRotating;
+  const wordIndex = useSyncedRotation(rotating.length);
 
   useEffect(() => {
     const q = specialty.trim().toLowerCase();
@@ -100,9 +104,24 @@ export default function HeroSearch() {
           className="animate-fade-up mt-6 font-display text-5xl leading-[0.95] tracking-wide sm:text-7xl xl:text-8xl"
           style={{ animationDelay: '0.08s' }}
         >
-          {t.home.searchTitle1}
-          <br />
-          <span className="text-volt">{t.home.searchTitle2}</span>
+          <span className="block">{t.home.searchTitle1}</span>
+          <span className="mt-2 flex flex-wrap items-baseline justify-center gap-x-3 gap-y-2 sm:mt-3">
+            <span className="relative inline-block">
+              <span
+                key={`highlight-${wordIndex}`}
+                aria-hidden
+                className="animate-highlight-swipe absolute inset-x-0 inset-y-[0.04em] origin-left rounded-[4px] bg-volt"
+                style={{ animationDelay: '0.1s' }}
+              />
+              <span
+                key={`${wordIndex}-${rotating[wordIndex % rotating.length]}`}
+                className="animate-word-slide relative inline-block px-[0.12em] text-ink"
+              >
+                {rotating[wordIndex % rotating.length]}
+              </span>
+            </span>
+            <span className="text-bone">{t.home.searchTitleSuffix}</span>
+          </span>
         </h1>
 
         <p

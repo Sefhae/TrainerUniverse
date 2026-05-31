@@ -60,7 +60,8 @@ export const translations = {
       scrollLeft: 'Scroll left',
       scrollRight: 'Scroll right',
       searchTitle1: 'Find the right',
-      searchTitle2: 'trainer for you',
+      searchRotating: ['teacher', 'trainer', 'mentor', 'coach'],
+      searchTitleSuffix: 'for you',
       searchSubtitle:
         'Search thousands of vetted coaches by skill and city — then scroll to explore TrainerUniverse.',
       searchSpecialtyPlaceholder: 'What do you want to train? (e.g. Boxing, Yoga, Maths)',
@@ -452,7 +453,8 @@ export const translations = {
       scrollLeft: 'Sola kaydır',
       scrollRight: 'Sağa kaydır',
       searchTitle1: 'Sana uygun',
-      searchTitle2: 'antrenörü bul',
+      searchRotating: ['öğretmeni', 'antrenörü', 'mentoru', 'koçu'],
+      searchTitleSuffix: 'bul',
       searchSubtitle:
         'Binlerce onaylı koçu yeteneğe ve şehre göre ara — sonra TrainerUniverse’i keşfetmek için aşağı kaydır.',
       searchSpecialtyPlaceholder: 'Ne antrenmanı? (örn. Boks, Yoga, Matematik)',
