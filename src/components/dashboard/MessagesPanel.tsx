@@ -33,7 +33,8 @@ export default function MessagesPanel({ role, myTrainerId, myStudentId }: Props)
   const [messages, setMessages] = useState<Message[]>([]);
   const [content, setContent] = useState('');
   const [sending, setSending] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const prevCount = useRef(0);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load list of peers (students for trainer, trainers for student)
@@ -75,9 +76,17 @@ export default function MessagesPanel({ role, myTrainerId, myStudentId }: Props)
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [selected, loadMessages]);
 
+  // Auto-scroll the message list to the bottom only when a NEW message arrives,
+  // and only the list element itself — never the page. (scrollIntoView on a
+  // marker scrolls every ancestor, which yanked the whole page on each poll.)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = listRef.current;
+    if (el && messages.length > prevCount.current) el.scrollTop = el.scrollHeight;
+    prevCount.current = messages.length;
   }, [messages]);
+
+  // Reset the counter when switching threads so the new thread opens at bottom.
+  useEffect(() => { prevCount.current = 0; }, [selected]);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -142,7 +151,7 @@ export default function MessagesPanel({ role, myTrainerId, myStudentId }: Props)
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3" style={{ maxHeight: '380px' }}>
+            <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3" style={{ maxHeight: '380px' }}>
               {messages.length === 0 ? (
                 <p className="text-center text-sm text-ink/40 py-8">{t.chat.noMessages}</p>
               ) : (
@@ -165,7 +174,6 @@ export default function MessagesPanel({ role, myTrainerId, myStudentId }: Props)
                   );
                 })
               )}
-              <div ref={bottomRef} />
             </div>
 
             {/* Input */}
