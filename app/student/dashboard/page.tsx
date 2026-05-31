@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   CalendarDays, MessageSquare, LogOut, LayoutDashboard,
-  Clock, CheckCircle2, AlertCircle,
+  Clock, CheckCircle2, AlertCircle, Inbox, XCircle,
 } from 'lucide-react';
 import { useStudentAuth } from '../../../src/hooks/useStudentAuth';
 import { useT } from '../../../src/hooks/useLanguage';
@@ -15,7 +15,7 @@ import TrainingCalendar from '../../../src/components/dashboard/TrainingCalendar
 import MessagesPanel from '../../../src/components/dashboard/MessagesPanel';
 import type { TrainingSession } from '../../../src/types';
 
-type Section = 'overview' | 'calendar' | 'messages';
+type Section = 'overview' | 'requests' | 'calendar' | 'messages';
 
 interface TrainerInfo {
   id: number;
@@ -23,6 +23,17 @@ interface TrainerInfo {
   tagline: string;
   profilePhoto: string;
   specialties: { id: number; name: string }[];
+}
+
+interface StudentRequest {
+  id: number;
+  trainerId: number;
+  trainerName: string;
+  trainerPhoto: string;
+  packageName: string | null;
+  message: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
 }
 
 export default function StudentDashboardPage() {
@@ -33,6 +44,7 @@ export default function StudentDashboardPage() {
   const [section, setSection] = useState<Section>('overview');
   const [trainer, setTrainer] = useState<TrainerInfo | null>(null);
   const [sessions, setSessions] = useState<TrainingSession[]>([]);
+  const [requests, setRequests] = useState<StudentRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,11 +57,26 @@ export default function StudentDashboardPage() {
     try {
       const { data } = await api.get<TrainingSession[]>('/sessions');
       setSessions(data);
-      if (data.length > 0) {
-        const tId = data[0].trainerId;
-        const { data: td } = await api.get<TrainerInfo>(`/trainers/${tId}`);
+
+      // Prefer the trainer the student is enrolled with (an approved request),
+      // so "My Trainer" + messaging appear as soon as the trainer accepts —
+      // before any session is scheduled. Fall back to the trainer from sessions.
+      let trainerId: number | undefined;
+      try {
+        const { data: enrolled } = await api.get<{ id: number }[]>('/student/trainers');
+        if (enrolled.length > 0) trainerId = enrolled[0].id;
+      } catch { /* ignore */ }
+      if (!trainerId && data.length > 0) trainerId = data[0].trainerId;
+
+      if (trainerId) {
+        const { data: td } = await api.get<TrainerInfo>(`/trainers/${trainerId}`);
         setTrainer(td);
       }
+
+      try {
+        const { data: reqs } = await api.get<StudentRequest[]>('/session-requests');
+        setRequests(reqs);
+      } catch { /* ignore */ }
     } catch { /* silent */ } finally {
       setLoading(false);
     }
@@ -64,6 +91,17 @@ export default function StudentDashboardPage() {
     router.push('/student/login');
   }
 
+  const [cancelling, setCancelling] = useState<number | null>(null);
+  async function cancelRequest(id: number) {
+    setCancelling(id);
+    try {
+      await api.delete(`/session-requests/${id}`);
+      setRequests((prev) => prev.filter((r) => r.id !== id));
+    } catch { /* silent */ } finally {
+      setCancelling(null);
+    }
+  }
+
   const now = new Date();
   const upcoming = sessions.filter(
     (s) => new Date(s.scheduledAt) >= now && s.status !== 'cancelled'
@@ -75,6 +113,7 @@ export default function StudentDashboardPage() {
 
   const navItems: { id: Section; label: string; icon: typeof LayoutDashboard }[] = [
     { id: 'overview', label: sp.overview, icon: LayoutDashboard },
+    { id: 'requests', label: sp.myRequests, icon: Inbox },
     { id: 'calendar', label: t.sessionCalendar.title, icon: CalendarDays },
     { id: 'messages', label: t.chat.title, icon: MessageSquare },
   ];
@@ -283,6 +322,85 @@ export default function StudentDashboardPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* ── Requests ── */}
+            {section === 'requests' && (
+              <div className="border border-ink/10 bg-white">
+                <div className="border-b border-ink/10 px-5 py-3">
+                  <p className="text-xs font-bold uppercase tracking-widest text-ink/40">{sp.myRequests}</p>
+                </div>
+                {loading ? (
+                  <div className="flex justify-center py-10">
+                    <span className="h-6 w-6 animate-spin rounded-full border-2 border-ink/20 border-t-ink" />
+                  </div>
+                ) : requests.length === 0 ? (
+                  <div className="flex flex-col items-start gap-4 px-5 py-8">
+                    <p className="text-sm text-ink/50">{sp.noRequests}</p>
+                    <Link href="/trainers" className="btn btn-dark text-sm">{sp.browseTrainers}</Link>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-ink/8">
+                    {requests.map((r) => {
+                      const statusLabel =
+                        r.status === 'approved' ? sp.statusApproved :
+                        r.status === 'rejected' ? sp.statusRejected : sp.statusPending;
+                      return (
+                        <div key={r.id} className="flex items-start justify-between gap-4 px-5 py-4">
+                          <div className="flex min-w-0 items-start gap-3">
+                            {r.trainerPhoto ? (
+                              <img
+                                src={resolveImage(r.trainerPhoto) || r.trainerPhoto}
+                                alt={r.trainerName}
+                                className="h-10 w-10 shrink-0 object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-volt font-display text-ink">
+                                {r.trainerName.charAt(0)}
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <Link href={`/trainers/${r.trainerId}`} className="font-semibold hover:underline">
+                                {r.trainerName}
+                              </Link>
+                              {r.packageName && <p className="text-sm text-ink/55">{r.packageName}</p>}
+                              {r.message && <p className="mt-1 text-sm italic text-ink/60">&ldquo;{r.message}&rdquo;</p>}
+                              <p className="mt-1 text-[11px] text-ink/35">
+                                {new Date(r.createdAt).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' })}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 flex-col items-end gap-2">
+                            <span className={cn(
+                              'px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide',
+                              r.status === 'approved' ? 'bg-volt text-ink' :
+                              r.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                              'bg-yellow-100 text-yellow-700'
+                            )}>
+                              {statusLabel}
+                            </span>
+                            {r.status === 'pending' && (
+                              <button
+                                type="button"
+                                onClick={() => cancelRequest(r.id)}
+                                disabled={cancelling === r.id}
+                                className="flex items-center gap-1 text-[11px] font-semibold text-ink/50 transition-colors hover:text-red-600 disabled:opacity-40"
+                              >
+                                {cancelling === r.id ? (
+                                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-ink/30 border-t-ink" />
+                                ) : (
+                                  <XCircle className="h-3.5 w-3.5" />
+                                )}
+                                {sp.cancelRequest}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 

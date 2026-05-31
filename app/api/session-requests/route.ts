@@ -45,10 +45,37 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET /api/session-requests — trainer sees incoming requests
+// GET /api/session-requests — trainer sees incoming requests; a student sees
+// the requests they've sent (with the trainer + status).
 export async function GET(req: NextRequest) {
   const payload = verifyToken(req);
   if (!payload) return unauthorized();
+
+  if (payload.role === 'student' && payload.studentId) {
+    const rows = db.prepare(`
+      SELECT sr.id, sr.trainer_id, sr.package_id, sr.message, sr.status, sr.created_at,
+             tp.name AS trainer_name, tp.profile_photo AS trainer_photo,
+             pp.name AS package_name
+      FROM session_requests sr
+      JOIN trainer_profiles tp ON tp.id = sr.trainer_id
+      LEFT JOIN pricing_packages pp ON pp.id = sr.package_id
+      WHERE sr.student_id = ?
+      ORDER BY sr.created_at DESC
+    `).all(payload.studentId) as Record<string, unknown>[];
+
+    return NextResponse.json(rows.map((r) => ({
+      id: r.id,
+      trainerId: r.trainer_id,
+      trainerName: r.trainer_name,
+      trainerPhoto: r.trainer_photo,
+      packageId: r.package_id,
+      packageName: r.package_name,
+      message: r.message,
+      status: r.status,
+      createdAt: r.created_at,
+    })));
+  }
+
   if (payload.role !== 'trainer' || !payload.trainerId) return forbidden();
 
   const rows = db.prepare(`

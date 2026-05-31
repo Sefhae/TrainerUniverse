@@ -43,23 +43,20 @@ export default function MessagesPanel({ role, myTrainerId, myStudentId }: Props)
         .then(({ data }) => setPeers(data))
         .catch(() => {});
     }
-    // For student, the peer list is just the single trainer — loaded via sessions
+    // For a student, peers are the trainers they're enrolled with (approved
+    // requests) — available for messaging even before any session is scheduled.
     if (role === 'student') {
-      api.get<{ trainerId: number; studentName: string; trainerName?: string }[]>('/sessions')
-        .then(({ data }) => {
-          const seen = new Set<number>();
-          const trainers: Peer[] = [];
-          for (const s of data) {
-            if (s.trainerId && !seen.has(s.trainerId)) {
-              seen.add(s.trainerId);
-              trainers.push({ id: s.trainerId, name: (s as Record<string, unknown>).trainerName as string || 'Trainer' });
-            }
-          }
-          setPeers(trainers);
-        })
+      api.get<{ id: number; name: string }[]>('/student/trainers')
+        .then(({ data }) => setPeers(data.map((t) => ({ id: t.id, name: t.name || 'Trainer' }))))
         .catch(() => {});
     }
   }, [role]);
+
+  // Open the first conversation automatically so incoming messages are visible
+  // immediately (otherwise the thread stays hidden until a peer is clicked).
+  useEffect(() => {
+    if (!selected && peers.length > 0) setSelected(peers[0]);
+  }, [peers, selected]);
 
   const loadMessages = useCallback(async (peer: Peer) => {
     const trainerId = role === 'trainer' ? myTrainerId : peer.id;

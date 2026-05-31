@@ -41,3 +41,26 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   return NextResponse.json({ ok: true });
 }
+
+// DELETE /api/session-requests/[id] — student cancels (withdraws) their own
+// still-pending request.
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const payload = verifyToken(req);
+  if (!payload) return unauthorized();
+  if (payload.role !== 'student' || !payload.studentId) return forbidden();
+
+  const { id } = await params;
+  const requestId = Number(id);
+
+  const row = db.prepare(
+    `SELECT status FROM session_requests WHERE id = ? AND student_id = ?`
+  ).get(requestId, payload.studentId) as { status: string } | undefined;
+
+  if (!row) return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
+  if (row.status !== 'pending') {
+    return NextResponse.json({ error: 'Only pending requests can be cancelled.' }, { status: 409 });
+  }
+
+  db.prepare(`DELETE FROM session_requests WHERE id = ?`).run(requestId);
+  return NextResponse.json({ ok: true });
+}
