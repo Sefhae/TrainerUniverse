@@ -4,28 +4,45 @@ import { verifyToken, unauthorized, forbidden } from '../../../src/lib/auth';
 
 // POST /api/session-requests — student submits a booking request
 export async function POST(req: NextRequest) {
-  const payload = verifyToken(req);
-  if (!payload) return unauthorized();
-  if (payload.role !== 'student' || !payload.studentId) return forbidden();
+  try {
+    const payload = verifyToken(req);
+    if (!payload) return unauthorized();
+    if (payload.role !== 'student' || !payload.studentId) return forbidden();
 
-  const { trainerId, packageId, message } = await req.json();
-  if (!trainerId) {
-    return NextResponse.json({ error: 'trainerId is required.' }, { status: 400 });
+    const { trainerId, packageId, message } = await req.json();
+    if (!trainerId) {
+      return NextResponse.json({ error: 'trainerId is required.' }, { status: 400 });
+    }
+
+    // The trainer (and our own student profile) must still exist — on a fresh/
+    // reset database the JWT can reference rows that are gone, which would
+    // otherwise surface as an opaque 500.
+    const trainerExists = db.prepare('SELECT id FROM trainer_profiles WHERE id = ?').get(trainerId);
+    if (!trainerExists) {
+      return NextResponse.json({ error: 'That trainer is no longer available.' }, { status: 404 });
+    }
+    const meExists = db.prepare('SELECT id FROM student_profiles WHERE id = ?').get(payload.studentId);
+    if (!meExists) {
+      return NextResponse.json({ error: 'Your session has expired. Please log in again.' }, { status: 401 });
+    }
+
+    // Prevent duplicate pending request
+    const existing = db.prepare(
+      `SELECT id FROM session_requests WHERE trainer_id = ? AND student_id = ? AND status = 'pending'`
+    ).get(trainerId, payload.studentId);
+    if (existing) {
+      return NextResponse.json({ error: 'You already have a pending request with this trainer.' }, { status: 409 });
+    }
+
+    const result = db.prepare(
+      `INSERT INTO session_requests (trainer_id, student_id, package_id, message) VALUES (?, ?, ?, ?)`
+    ).run(trainerId, payload.studentId, packageId ?? null, message?.trim() ?? '');
+
+    return NextResponse.json({ id: result.lastInsertRowid }, { status: 201 });
+  } catch (err) {
+    console.error('[session-requests POST]', err);
+    return NextResponse.json({ error: 'Could not send your request. Please try again.' }, { status: 500 });
   }
-
-  // Prevent duplicate pending request
-  const existing = db.prepare(
-    `SELECT id FROM session_requests WHERE trainer_id = ? AND student_id = ? AND status = 'pending'`
-  ).get(trainerId, payload.studentId);
-  if (existing) {
-    return NextResponse.json({ error: 'You already have a pending request with this trainer.' }, { status: 409 });
-  }
-
-  const result = db.prepare(
-    `INSERT INTO session_requests (trainer_id, student_id, package_id, message) VALUES (?, ?, ?, ?)`
-  ).run(trainerId, payload.studentId, packageId ?? null, message?.trim() ?? '');
-
-  return NextResponse.json({ id: result.lastInsertRowid }, { status: 201 });
 }
 
 // GET /api/session-requests — trainer sees incoming requests
