@@ -7,6 +7,7 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { useStudentAuth } from '../../src/hooks/useStudentAuth';
 import { useToast } from '../../src/hooks/useToast';
 import { cn, getApiError } from '../../src/lib/format';
+import { PASSWORD_RULES, validatePassword } from '../../src/lib/password';
 import api from '../../src/api/client';
 
 type Mode = 'login' | 'register';
@@ -90,7 +91,8 @@ function AuthForm() {
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = 'Name is required.';
     if (!EMAIL_RE.test(email.trim())) errs.email = 'Enter a valid email.';
-    if (password.length < 6) errs.password = 'Password must be at least 6 characters.';
+    const pwError = validatePassword(password);
+    if (pwError) errs.password = pwError;
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
     setFormError('');
@@ -344,7 +346,7 @@ function AuthForm() {
                       className={cn('field-input pr-12', errors.password && 'field-input-invalid')}
                       value={password}
                       onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: '' })); }}
-                      placeholder="At least 6 characters"
+                      placeholder="Create a strong password"
                     />
                     <button
                       type="button"
@@ -355,6 +357,29 @@ function AuthForm() {
                     </button>
                   </div>
                   {errors.password && <p className="field-error">{errors.password}</p>}
+                  <ul className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1">
+                    {PASSWORD_RULES.map((rule) => {
+                      const ok = rule.test(password);
+                      return (
+                        <li
+                          key={rule.id}
+                          className={cn(
+                            'flex items-center gap-1.5 text-[11px] transition-colors',
+                            ok ? 'text-green-600' : 'text-ink/40'
+                          )}
+                        >
+                          <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
+                            {ok ? (
+                              <Check className="h-3 w-3" strokeWidth={3} />
+                            ) : (
+                              <span className="h-1 w-1 rounded-full bg-ink/30" />
+                            )}
+                          </span>
+                          {rule.label}
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
 
                 <button type="submit" className="btn btn-dark w-full">
