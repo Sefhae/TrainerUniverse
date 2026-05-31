@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import api from '../api/client';
 import type { User } from '../types';
 
@@ -15,6 +15,7 @@ interface StudentAuthState {
 
 interface StudentAuthContextValue extends StudentAuthState {
   isAuthenticated: boolean;
+  hydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithData: (data: { token: string; user: User; studentId: number | null }) => void;
   register: (name: string, email: string, password: string) => Promise<void>;
@@ -37,7 +38,15 @@ function readStoredAuth(): StudentAuthState {
 const StudentAuthContext = createContext<StudentAuthContextValue | undefined>(undefined);
 
 export function StudentAuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<StudentAuthState>(readStoredAuth);
+  // Initialise logged-out so SSR and the first client render agree; read
+  // storage in an effect to avoid a hydration mismatch.
+  const [state, setState] = useState<StudentAuthState>({ user: null, token: null, studentId: null });
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setState(readStoredAuth());
+    setHydrated(true);
+  }, []);
 
   const persist = useCallback((next: StudentAuthState) => {
     if (next.token && next.user) {
@@ -84,6 +93,7 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
     <StudentAuthContext.Provider value={{
       ...state,
       isAuthenticated: Boolean(state.token),
+      hydrated,
       login,
       loginWithData,
       register,

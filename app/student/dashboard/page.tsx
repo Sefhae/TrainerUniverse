@@ -26,7 +26,7 @@ interface TrainerInfo {
 }
 
 export default function StudentDashboardPage() {
-  const { user, studentId, isAuthenticated, logout } = useStudentAuth();
+  const { user, studentId, isAuthenticated, hydrated, logout } = useStudentAuth();
   const t = useT();
   const sp = t.studentPortal;
   const router = useRouter();
@@ -36,10 +36,10 @@ export default function StudentDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (hydrated && !isAuthenticated) {
       router.replace('/student/login');
     }
-  }, [isAuthenticated, router]);
+  }, [hydrated, isAuthenticated, router]);
 
   const load = useCallback(async () => {
     try {
@@ -79,6 +79,7 @@ export default function StudentDashboardPage() {
     { id: 'messages', label: t.chat.title, icon: MessageSquare },
   ];
 
+  if (!hydrated) return null;
   if (!isAuthenticated) return null;
 
   return (

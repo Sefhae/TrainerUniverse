@@ -55,9 +55,15 @@ function LangToggle() {
 }
 
 export default function Navbar() {
-  const { isAuthenticated: isTrainerAuth, logout: trainerLogout } = useAuth();
-  const { isAuthenticated: isStudentAuth, logout: studentLogout } = useStudentAuth();
+  const { isAuthenticated: isTrainerAuth, hydrated: trainerHydrated, logout: trainerLogout } = useAuth();
+  const { isAuthenticated: isStudentAuth, hydrated: studentHydrated, logout: studentLogout } = useStudentAuth();
   const isAuthenticated = isTrainerAuth || isStudentAuth;
+  // Only reflect auth state once both providers have read storage, so the first
+  // client render matches the (always logged-out) server render.
+  const showAuthed = trainerHydrated && studentHydrated && isAuthenticated;
+  // Send each role to its own dashboard — students don't have a trainer token,
+  // so /dashboard's ProtectedRoute would bounce them to /login.
+  const dashboardHref = isTrainerAuth ? '/dashboard' : '/student/dashboard';
   const router = useRouter();
   const pathname = usePathname();
   const t = useT();
@@ -204,9 +210,11 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
-          {isAuthenticated ? (
+          <LangToggle />
+          <span className="h-4 w-px bg-white/20" />
+          {showAuthed ? (
             <>
-              <Link href="/dashboard" className="btn btn-sm btn-volt">
+              <Link href={dashboardHref} className="btn btn-sm btn-volt">
                 {t.nav.dashboard}
               </Link>
               <button
@@ -260,9 +268,9 @@ export default function Navbar() {
               {t.nav.contact}
             </Link>
             <div className="mt-3 flex flex-col gap-2.5 border-t border-white/10 pt-4">
-              {isAuthenticated ? (
+              {showAuthed ? (
                 <>
-                  <Link href="/dashboard" className="btn btn-volt w-full">
+                  <Link href={dashboardHref} className="btn btn-volt w-full">
                     {t.nav.dashboard}
                   </Link>
                   <button onClick={handleLogout} className="btn btn-outline-light w-full">
