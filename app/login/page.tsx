@@ -1,7 +1,7 @@
 'use client';
 
-import { Suspense, useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState, type FormEvent } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, TriangleAlert } from 'lucide-react';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useStudentAuth } from '../../src/hooks/useStudentAuth';
@@ -34,9 +34,23 @@ function AuthForm() {
   const { loginWithData: studentLoginWithData, register: studentRegister } = useStudentAuth();
   const router = useRouter();
   const toast = useToast();
+  const searchParams = useSearchParams();
 
-  const [mode, setMode] = useState<Mode>('login');
+  // Arriving via "Get Started" (/register → /login?mode=register) opens the
+  // Create Account view; everything else defaults to Log In.
+  const modeParam = searchParams.get('mode');
+  const [mode, setMode] = useState<Mode>(modeParam === 'register' ? 'register' : 'login');
   const [step, setStep] = useState<Step>('credentials');
+
+  // Keep the view in sync with the URL: clicking "Log In" in the navbar (→ /login)
+  // while on the Create Account view (/login?mode=register) is a soft navigation
+  // that doesn't remount this form, so react to the param change here too.
+  useEffect(() => {
+    setMode(modeParam === 'register' ? 'register' : 'login');
+    setStep('credentials');
+    setErrors({});
+    setFormError('');
+  }, [modeParam]);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
