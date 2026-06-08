@@ -36,8 +36,11 @@ export async function POST(req: NextRequest) {
       .prepare('INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)')
       .run(normalizedEmail, passwordHash, 'trainer').lastInsertRowid as number;
 
+    // Publish new trainers immediately so students can find and request them
+    // right after signup (matches admin-created trainers and the schema default).
+    // A trainer can still hide their profile from the dashboard afterwards.
     const trainerId = db
-      .prepare('INSERT INTO trainer_profiles (user_id, name, is_published) VALUES (?, ?, 0)')
+      .prepare('INSERT INTO trainer_profiles (user_id, name, is_published) VALUES (?, ?, 1)')
       .run(userId, String(name).trim()).lastInsertRowid as number;
 
     if (Array.isArray(specialties)) {
