@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ChevronDown, MapPin, Search, Video } from 'lucide-react';
+import { ArrowRight, ChevronDown, Globe, MapPin, Search, Video } from 'lucide-react';
 import CitySearch from './CitySearch';
 import { SPECIALTY_OPTIONS } from '../lib/constants';
 import { useT } from '../hooks/useLanguage';
@@ -19,7 +19,9 @@ export default function HeroSearch() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
+  const [modeOpen, setModeOpen] = useState(false);
   const specRef = useRef<HTMLDivElement>(null);
+  const modeRef = useRef<HTMLDivElement>(null);
 
   const rotating = t.home.searchRotating;
   const wordIndex = useSyncedRotation(rotating.length);
@@ -43,10 +45,19 @@ export default function HeroSearch() {
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (specRef.current && !specRef.current.contains(e.target as Node)) setOpen(false);
+      if (modeRef.current && !modeRef.current.contains(e.target as Node)) setModeOpen(false);
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  const MODES = [
+    { id: 'all', label: t.home.searchModeAny, icon: Globe },
+    { id: 'remote', label: t.home.searchModeOnline, icon: Video },
+    { id: 'in-person', label: t.home.searchModeInPerson, icon: MapPin },
+  ] as const;
+  const currentMode = MODES.find((m) => m.id === mode) ?? MODES[0];
+  const CurrentModeIcon = currentMode.icon;
 
   function go(spec: string, c = city) {
     const params = new URLSearchParams();
@@ -145,7 +156,7 @@ export default function HeroSearch() {
 
         <div className="animate-fade-up mx-auto mt-10 max-w-3xl" style={{ animationDelay: '0.24s' }}>
           <div className="flex flex-col gap-2 border border-white/15 bg-charcoal/60 p-2 backdrop-blur sm:flex-row sm:items-stretch">
-            <div ref={specRef} className="relative flex-1">
+            <div ref={specRef} className="relative flex-[1.7]">
               <Search className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-bone/35" />
               <input
                 type="text"
@@ -194,24 +205,48 @@ export default function HeroSearch() {
 
             <div className="hidden w-px self-stretch bg-white/10 sm:block" />
 
-            <div className="grid grid-cols-3 gap-1 border-t border-white/10 pt-2 sm:flex sm:shrink-0 sm:items-center sm:justify-center sm:border-0 sm:pt-0">
-              {([
-                { id: 'all', label: t.home.searchModeAny, icon: null },
-                { id: 'remote', label: t.home.searchModeOnline, icon: Video },
-                { id: 'in-person', label: t.home.searchModeInPerson, icon: MapPin },
-              ] as const).map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setMode(id)}
-                  className={`flex items-center justify-center gap-1.5 whitespace-nowrap px-2 py-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors duration-200 sm:px-3 sm:text-[11px] ${
-                    mode === id ? 'bg-volt text-ink' : 'text-bone/55 hover:text-bone'
-                  }`}
+            <div ref={modeRef} className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => setModeOpen((o) => !o)}
+                aria-haspopup="listbox"
+                aria-expanded={modeOpen}
+                className="flex h-full w-full items-center justify-center gap-2 whitespace-nowrap px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-bone/70 transition-colors hover:text-bone sm:py-0"
+              >
+                <CurrentModeIcon className="h-4 w-4 shrink-0 text-bone/45" />
+                <span className="text-bone/40">{t.home.searchModeLabel}:</span>
+                <span>{currentMode.label}</span>
+                <ChevronDown
+                  className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${modeOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {modeOpen && (
+                <ul
+                  role="listbox"
+                  className="absolute right-0 top-full z-50 mt-2 min-w-[13rem] border border-white/15 bg-[#1a1a1a] py-1 text-left shadow-2xl"
                 >
-                  {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
-                  {label}
-                </button>
-              ))}
+                  <li className="px-4 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-bone/35">
+                    {t.home.searchModeHelp}
+                  </li>
+                  {MODES.map(({ id, label, icon: Icon }) => (
+                    <li
+                      key={id}
+                      role="option"
+                      aria-selected={mode === id}
+                      onMouseDown={() => {
+                        setMode(id);
+                        setModeOpen(false);
+                      }}
+                      className={`flex cursor-pointer items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${
+                        mode === id ? 'bg-volt/20 text-volt' : 'text-bone/80 hover:bg-white/5'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 shrink-0 opacity-70" />
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <button
