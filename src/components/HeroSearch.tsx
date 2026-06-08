@@ -98,7 +98,7 @@ export default function HeroSearch() {
   }
 
   return (
-    <section className="relative flex min-h-[calc(100vh-72px)] flex-col justify-center overflow-hidden border-b border-white/10 bg-ink text-bone">
+    <section className="relative flex min-h-[calc(100vh-72px)] flex-col justify-center overflow-hidden border-b border-content/10 bg-surface text-content">
       <div className="grain-layer" />
       <div
         className="pointer-events-none absolute -left-40 top-1/4 h-[520px] w-[520px] rounded-full opacity-[0.18] blur-3xl"
@@ -110,10 +110,10 @@ export default function HeroSearch() {
       />
 
       <div className="relative mx-auto w-full max-w-4xl px-5 py-20 text-center lg:px-8">
-        <p className="eyebrow animate-fade-up justify-center text-volt">
-          <span className="h-px w-8 bg-volt" />
+        <p className="eyebrow animate-fade-up justify-center text-accent">
+          <span className="h-px w-8 bg-accent" />
           {t.home.eyebrow}
-          <span className="h-px w-8 bg-volt" />
+          <span className="h-px w-8 bg-accent" />
         </p>
 
         <h1
@@ -143,21 +143,21 @@ export default function HeroSearch() {
                 </span>
               </span>
             </span>
-            <span className="text-bone">{t.home.searchTitleSuffix}</span>
+            <span className="text-content">{t.home.searchTitleSuffix}</span>
           </span>
         </h1>
 
         <p
-          className="animate-fade-up mx-auto mt-6 max-w-xl text-base text-bone/60 sm:text-lg"
+          className="animate-fade-up mx-auto mt-6 max-w-xl text-base text-content/60 sm:text-lg"
           style={{ animationDelay: '0.16s' }}
         >
           {t.home.searchSubtitle}
         </p>
 
         <div className="animate-fade-up mx-auto mt-10 max-w-3xl" style={{ animationDelay: '0.24s' }}>
-          <div className="flex flex-col gap-2 border border-white/15 bg-charcoal/60 p-2 backdrop-blur sm:flex-row sm:items-stretch">
+          <div className="flex flex-col gap-1.5 border border-content/15 bg-surface-2/60 p-1.5 backdrop-blur sm:flex-row sm:items-stretch sm:gap-2 sm:p-2">
             <div ref={specRef} className="relative flex-[1.7]">
-              <Search className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-bone/35" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-content/35 sm:left-4 sm:h-5 sm:w-5" />
               <input
                 type="text"
                 value={specialty}
@@ -166,10 +166,10 @@ export default function HeroSearch() {
                 onFocus={() => specialty.trim() && suggestions.length > 0 && setOpen(true)}
                 placeholder={t.home.searchSpecialtyPlaceholder}
                 autoComplete="off"
-                className="w-full bg-transparent py-4 pl-12 pr-4 text-base text-bone placeholder:text-bone/40 focus:outline-none"
+                className="w-full bg-transparent py-3 pl-10 pr-3 text-sm text-content placeholder:text-content/40 focus:outline-none sm:py-4 sm:pl-12 sm:pr-4 sm:text-base"
               />
               {open && (
-                <ul className="absolute left-0 right-0 top-full z-50 mt-2 max-h-64 overflow-y-auto border border-white/15 bg-[#1a1a1a] text-left shadow-2xl">
+                <ul className="absolute left-0 right-0 top-full z-50 mt-2 max-h-64 overflow-y-auto border border-content/15 bg-surface-2 text-left shadow-2xl">
                   {suggestions.map((s, i) => (
                     <li
                       key={s}
@@ -180,7 +180,7 @@ export default function HeroSearch() {
                       }}
                       onMouseEnter={() => setHighlighted(i)}
                       className={`flex cursor-pointer items-center gap-2 px-4 py-2.5 text-sm transition-colors ${
-                        i === highlighted ? 'bg-volt/20 text-volt' : 'text-bone/80 hover:bg-white/5'
+                        i === highlighted ? 'bg-volt/20 text-accent' : 'text-content/80 hover:bg-content/5'
                       }`}
                     >
                       <Search className="h-3.5 w-3.5 shrink-0 opacity-50" />
@@ -191,19 +191,19 @@ export default function HeroSearch() {
               )}
             </div>
 
-            <div className="hidden w-px self-stretch bg-white/10 sm:block" />
+            <div className="hidden w-px self-stretch bg-content/10 sm:block" />
 
             <div className="relative flex-1">
-              <MapPin className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-bone/35" />
+              <MapPin className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-content/35 sm:left-4 sm:h-5 sm:w-5" />
               <CitySearch
                 value={city}
                 onChange={setCity}
                 placeholder={t.home.searchCityPlaceholder}
-                className="w-full bg-transparent py-4 pl-12 pr-4 text-base text-bone placeholder:text-bone/40 focus:outline-none"
+                className="w-full bg-transparent py-3 pl-10 pr-3 text-sm text-content placeholder:text-content/40 focus:outline-none sm:py-4 sm:pl-12 sm:pr-4 sm:text-base"
               />
             </div>
 
-            <div className="hidden w-px self-stretch bg-white/10 sm:block" />
+            <div className="hidden w-px self-stretch bg-content/10 sm:block" />
 
             <div ref={modeRef} className="relative shrink-0">
               <button
@@ -211,10 +211,10 @@ export default function HeroSearch() {
                 onClick={() => setModeOpen((o) => !o)}
                 aria-haspopup="listbox"
                 aria-expanded={modeOpen}
-                className="flex h-full w-full items-center justify-center gap-2 whitespace-nowrap px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-bone/70 transition-colors hover:text-bone sm:py-0"
+                className="flex h-full w-full items-center justify-center gap-2 whitespace-nowrap px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-content/70 transition-colors hover:text-content sm:py-0"
               >
-                <CurrentModeIcon className="h-4 w-4 shrink-0 text-bone/45" />
-                <span className="text-bone/40">{t.home.searchModeLabel}:</span>
+                <CurrentModeIcon className="h-4 w-4 shrink-0 text-content/45" />
+                <span className="text-content/40">{t.home.searchModeLabel}:</span>
                 <span>{currentMode.label}</span>
                 <ChevronDown
                   className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${modeOpen ? 'rotate-180' : ''}`}
@@ -223,9 +223,9 @@ export default function HeroSearch() {
               {modeOpen && (
                 <ul
                   role="listbox"
-                  className="absolute right-0 top-full z-50 mt-2 min-w-[13rem] border border-white/15 bg-[#1a1a1a] py-1 text-left shadow-2xl"
+                  className="absolute right-0 top-full z-50 mt-2 min-w-[13rem] border border-content/15 bg-surface-2 py-1 text-left shadow-2xl"
                 >
-                  <li className="px-4 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-bone/35">
+                  <li className="px-4 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-content/35">
                     {t.home.searchModeHelp}
                   </li>
                   {MODES.map(({ id, label, icon: Icon }) => (
@@ -238,7 +238,7 @@ export default function HeroSearch() {
                         setModeOpen(false);
                       }}
                       className={`flex cursor-pointer items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${
-                        mode === id ? 'bg-volt/20 text-volt' : 'text-bone/80 hover:bg-white/5'
+                        mode === id ? 'bg-volt/20 text-accent' : 'text-content/80 hover:bg-content/5'
                       }`}
                     >
                       <Icon className="h-4 w-4 shrink-0 opacity-70" />
@@ -251,7 +251,7 @@ export default function HeroSearch() {
 
             <button
               onClick={() => go(specialty)}
-              className="btn btn-volt shrink-0 justify-center sm:px-8"
+              className="btn btn-volt shrink-0 justify-center py-3 text-[11px] sm:py-3.5 sm:text-[13px] sm:px-8"
             >
               {t.home.searchButton}
               <ArrowRight className="h-4 w-4" />
@@ -259,14 +259,14 @@ export default function HeroSearch() {
           </div>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-bone/40">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-content/40">
               {t.home.popularLabel}
             </span>
             {POPULAR.map((p) => (
               <button
                 key={p}
                 onClick={() => go(p, city)}
-                className="border border-white/15 px-3 py-1.5 text-xs text-bone/70 transition-colors duration-200 hover:border-volt hover:text-volt"
+                className="border border-content/15 px-3 py-1.5 text-xs text-content/70 transition-colors duration-200 hover:border-accent hover:text-accent"
               >
                 {p}
               </button>
@@ -277,7 +277,7 @@ export default function HeroSearch() {
 
       <a
         href="#discover"
-        className="group absolute inset-x-0 bottom-6 mx-auto flex w-fit flex-col items-center gap-1 text-bone/40 transition-colors duration-200 hover:text-volt"
+        className="group absolute inset-x-0 bottom-6 mx-auto flex w-fit flex-col items-center gap-1 text-content/40 transition-colors duration-200 hover:text-accent"
       >
         <span className="text-[10px] font-semibold uppercase tracking-[0.2em]">{t.home.scrollHint}</span>
         <ChevronDown className="h-5 w-5 animate-bounce" />

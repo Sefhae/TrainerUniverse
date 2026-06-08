@@ -19,8 +19,8 @@ export default function PricingCard({ pkg, onSelect }: PricingCardProps) {
   return (
     <div
       className={cn(
-        'relative flex flex-col border bg-charcoal p-7 transition-all duration-200',
-        popular ? 'border-volt' : 'border-white/10 hover:border-white/30'
+        'relative flex flex-col border bg-surface-2 p-7 transition-all duration-200',
+        popular ? 'border-accent' : 'border-content/10 hover:border-content/30'
       )}
     >
       {popular && (
@@ -29,19 +29,19 @@ export default function PricingCard({ pkg, onSelect }: PricingCardProps) {
         </span>
       )}
 
-      <h3 className="font-display text-2xl tracking-wide text-bone">{pkg.name}</h3>
-      <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-bone/40">
+      <h3 className="font-display text-2xl tracking-wide text-content">{pkg.name}</h3>
+      <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-content/40">
         {sessionsLabel}
       </p>
 
       <div className="mt-6 flex items-baseline gap-1.5">
-        <span className="font-display text-6xl leading-none text-volt">{formatPrice(pkg.price)}</span>
+        <span className="font-display text-6xl leading-none text-accent">{formatPrice(pkg.price)}</span>
       </div>
       {pkg.sessions > 1 && (
-        <p className="mt-2 text-sm text-bone/50">{formatPrice(perSession)} per session</p>
+        <p className="mt-2 text-sm text-content/50">{formatPrice(perSession)} per session</p>
       )}
 
-      <p className="mt-5 flex-1 text-sm leading-relaxed text-bone/60">{pkg.description}</p>
+      <p className="mt-5 flex-1 text-sm leading-relaxed text-content/60">{pkg.description}</p>
 
       <button
         onClick={onSelect}

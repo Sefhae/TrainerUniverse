@@ -34,20 +34,20 @@ export default function EmptyState({ title, message, tone = 'light', action }: E
       <div
         className={cn(
           'flex h-24 w-24 items-center justify-center border',
-          dark ? 'border-white/10 bg-white/[0.03]' : 'border-ink/10 bg-ink/[0.03]'
+          dark ? 'border-content/10 bg-content/[0.03]' : 'border-ink/10 bg-ink/[0.03]'
         )}
       >
-        <DumbbellArt className={cn('h-11 w-11', dark ? 'text-white/25' : 'text-ink/25')} />
+        <DumbbellArt className={cn('h-11 w-11', dark ? 'text-content/25' : 'text-ink/25')} />
       </div>
       <h3
         className={cn(
           'mt-7 font-display text-3xl tracking-wide',
-          dark ? 'text-bone' : 'text-ink'
+          dark ? 'text-content' : 'text-ink'
         )}
       >
         {title}
       </h3>
-      <p className={cn('mt-2 max-w-sm text-sm leading-relaxed', dark ? 'text-bone/50' : 'text-ink/55')}>
+      <p className={cn('mt-2 max-w-sm text-sm leading-relaxed', dark ? 'text-content/50' : 'text-ink/55')}>
         {message}
       </p>
       {action && <div className="mt-6">{action}</div>}

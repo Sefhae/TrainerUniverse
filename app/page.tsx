@@ -32,10 +32,10 @@ const HERO_SRCS = [
 function HeroImage({ src, label }: { src: string; label: string }) {
   const [failed, setFailed] = useState(false);
   return (
-    <div className="relative h-full w-full overflow-hidden bg-charcoal">
+    <div className="relative h-full w-full overflow-hidden bg-surface-2">
       {failed ? (
         <div className="flex h-full w-full items-center justify-center">
-          <span className="font-display text-3xl text-white/10">TrainerUniverse</span>
+          <span className="font-display text-3xl text-content/10">TrainerUniverse</span>
         </div>
       ) : (
         <img
@@ -45,8 +45,8 @@ function HeroImage({ src, label }: { src: string; label: string }) {
           className="h-full w-full object-cover grayscale transition-all duration-500 hover:grayscale-0"
         />
       )}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink/90 to-transparent" />
-      <span className="absolute bottom-3 left-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-volt">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-surface/90 to-transparent" />
+      <span className="absolute bottom-3 left-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
         {label}
       </span>
     </div>
@@ -58,21 +58,21 @@ function HeroCollage({ avgRatingLabel, shots }: { avgRatingLabel: string; shots:
     <div className="relative">
       <div className="absolute -right-4 -top-4 hidden h-24 w-24 bg-volt sm:block" />
       <div className="relative grid aspect-[5/6] grid-cols-2 grid-rows-2 gap-3">
-        <div className="row-span-2 border border-white/10">
+        <div className="row-span-2 border border-content/10">
           <HeroImage src={HERO_SRCS[0]} label={shots[0]} />
         </div>
-        <div className="border border-white/10">
+        <div className="border border-content/10">
           <HeroImage src={HERO_SRCS[1]} label={shots[1]} />
         </div>
         <div className="border border-volt">
           <HeroImage src={HERO_SRCS[2]} label={shots[2]} />
         </div>
       </div>
-      <div className="absolute -bottom-5 -left-5 hidden items-center gap-3 border border-white/15 bg-ink px-4 py-3 shadow-2xl shadow-black/40 sm:flex">
-        <Star className="h-7 w-7 text-volt" fill="#C8FF00" strokeWidth={0} />
+      <div className="absolute -bottom-5 -left-5 hidden items-center gap-3 border border-content/15 bg-surface px-4 py-3 shadow-2xl shadow-black/40 sm:flex">
+        <Star className="h-7 w-7 text-accent" fill="#C8FF00" strokeWidth={0} />
         <div>
-          <p className="font-display text-2xl leading-none text-bone">4.8 / 5</p>
-          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-bone/45">
+          <p className="font-display text-2xl leading-none text-content">4.8 / 5</p>
+          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-content/45">
             {avgRatingLabel}
           </p>
         </div>
@@ -108,7 +108,7 @@ export default function Home() {
       <HeroSearch />
 
       {/* Hero */}
-      <section id="discover" className="relative overflow-hidden bg-ink text-bone scroll-mt-[72px]">
+      <section id="discover" className="relative overflow-hidden bg-surface text-content scroll-mt-[72px]">
         <div className="grain-layer" />
         <div
           className="pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full opacity-20 blur-3xl"
@@ -116,7 +116,7 @@ export default function Home() {
         />
         <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-5 pb-20 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:px-8 lg:pb-28 lg:pt-24">
           <div>
-            <p className="eyebrow animate-fade-up text-volt">
+            <p className="eyebrow animate-fade-up text-accent">
               <span className="h-px w-8 bg-volt" />
               {t.home.eyebrow}
             </p>
@@ -124,11 +124,14 @@ export default function Home() {
               <span className="animate-fade-up block text-6xl sm:text-7xl xl:text-8xl" style={{ animationDelay: '0.08s' }}>
                 {t.home.heroLine1}
               </span>
-              <span key={`${wordIndex}-${t.home.rotating[wordIndex]}`} className="animate-fade-up mt-1 block text-7xl text-volt sm:text-8xl xl:text-9xl">
+              <span
+                key={`${wordIndex}-${t.home.rotating[wordIndex]}`}
+                className="animate-fade-up mt-1 inline-block text-7xl text-accent sm:text-8xl xl:text-9xl theme-light:bg-volt theme-light:px-3 theme-light:text-ink"
+              >
                 {t.home.rotating[wordIndex]}
               </span>
             </h1>
-            <p className="animate-fade-up mt-6 max-w-xl text-base leading-relaxed text-bone/60 sm:text-lg" style={{ animationDelay: '0.16s' }}>
+            <p className="animate-fade-up mt-6 max-w-xl text-base leading-relaxed text-content/60 sm:text-lg" style={{ animationDelay: '0.16s' }}>
               {t.home.heroDesc}
             </p>
             <div className="animate-fade-up mt-8 flex flex-col gap-3 sm:flex-row" style={{ animationDelay: '0.24s' }}>
@@ -162,11 +165,11 @@ export default function Home() {
       </section>
 
       {/* Featured trainers */}
-      <section className="bg-ink text-bone">
+      <section className="bg-surface text-content">
         <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28">
           <div className="flex items-end justify-between gap-6">
             <div>
-              <p className="eyebrow text-volt">
+              <p className="eyebrow text-accent">
                 <span className="h-px w-8 bg-volt" />
                 {t.home.featuredEyebrow}
               </p>
@@ -178,14 +181,14 @@ export default function Home() {
               <button
                 onClick={() => scrollCarousel(-1)}
                 aria-label={t.home.scrollLeft}
-                className="border border-white/15 p-3 transition-colors duration-200 hover:border-volt hover:text-volt"
+                className="border border-content/15 p-3 transition-colors duration-200 hover:border-volt hover:text-accent"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 onClick={() => scrollCarousel(1)}
                 aria-label={t.home.scrollRight}
-                className="border border-white/15 p-3 transition-colors duration-200 hover:border-volt hover:text-volt"
+                className="border border-content/15 p-3 transition-colors duration-200 hover:border-volt hover:text-accent"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
@@ -232,7 +235,7 @@ export default function Home() {
             {t.home.steps.map((step) => (
               <div key={step.n} className="group bg-bone p-8 transition-colors duration-200 lg:p-10">
                 <div className="flex items-baseline gap-4">
-                  <span className="font-display text-7xl leading-none text-ink/10 transition-colors duration-200 group-hover:text-volt">
+                  <span className="font-display text-7xl leading-none text-ink/10 transition-colors duration-200 group-hover:text-accent">
                     {step.n}
                   </span>
                   <span className="h-px flex-1 bg-ink/15" />
@@ -246,9 +249,9 @@ export default function Home() {
       </section>
 
       {/* Testimonials */}
-      <section className="overflow-hidden bg-ink text-bone">
+      <section className="overflow-hidden bg-surface text-content">
         <div className="mx-auto max-w-7xl px-5 pt-20 lg:px-8 lg:pt-28">
-          <p className="eyebrow text-volt">
+          <p className="eyebrow text-accent">
             <span className="h-px w-8 bg-volt" />
             {t.home.testimonialsEyebrow}
           </p>
@@ -259,15 +262,15 @@ export default function Home() {
         <div className="marquee-wrap mt-12 pb-20 lg:pb-28">
           <div className="marquee-track flex w-max gap-5 animate-marquee">
             {[...TESTIMONIALS, ...TESTIMONIALS].map((testimonial, i) => (
-              <figure key={i} className="flex w-[340px] shrink-0 flex-col border border-white/10 bg-charcoal p-7">
-                <Quote className="h-7 w-7 text-volt" />
-                <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-bone/75">
+              <figure key={i} className="flex w-[340px] shrink-0 flex-col border border-content/10 bg-surface-2 p-7">
+                <Quote className="h-7 w-7 text-accent" />
+                <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-content/75">
                   &ldquo;{testimonial.quote}&rdquo;
                 </blockquote>
-                <figcaption className="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
+                <figcaption className="mt-5 flex items-center justify-between border-t border-content/10 pt-4">
                   <div>
-                    <p className="font-semibold text-bone">{testimonial.name}</p>
-                    <p className="text-xs text-bone/45">{testimonial.role}</p>
+                    <p className="font-semibold text-content">{testimonial.name}</p>
+                    <p className="text-xs text-content/45">{testimonial.role}</p>
                   </div>
                   <StarRating value={testimonial.rating} size={13} tone="dark" />
                 </figcaption>

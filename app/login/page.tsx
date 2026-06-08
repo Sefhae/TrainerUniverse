@@ -136,31 +136,31 @@ function AuthForm() {
   return (
     <div className="grid min-h-[calc(100vh-72px)] lg:grid-cols-2">
       {/* Brand panel */}
-      <div className="relative hidden overflow-hidden bg-ink text-bone lg:flex lg:flex-col lg:justify-between lg:p-12">
+      <div className="relative hidden overflow-hidden bg-surface text-content lg:flex lg:flex-col lg:justify-between lg:p-12">
         <div className="grain-layer" />
         <div
           className="pointer-events-none absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full opacity-20 blur-3xl"
           style={{ background: 'radial-gradient(circle, #C8FF00 0%, transparent 70%)' }}
         />
-        <p className="eyebrow relative text-volt">
-          <span className="h-px w-8 bg-volt" />
+        <p className="eyebrow relative text-accent">
+          <span className="h-px w-8 bg-accent" />
           TrainerUniverse
         </p>
         <div className="relative space-y-10">
           <h1 className="font-display text-6xl leading-[0.92] tracking-wide xl:text-7xl">
             Train smarter.
             <br />
-            <span className="text-volt">Go further.</span>
+            <span className="text-accent">Go further.</span>
           </h1>
 
           <div className="grid grid-cols-2 gap-8">
             <div>
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-volt/70">
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-accent/70">
                 For Trainers
               </p>
               <ul className="space-y-3">
                 {TRAINER_BENEFITS.map((b) => (
-                  <li key={b} className="flex items-start gap-2.5 text-sm text-bone/70">
+                  <li key={b} className="flex items-start gap-2.5 text-sm text-content/70">
                     <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center bg-volt text-ink">
                       <Check className="h-2.5 w-2.5" strokeWidth={4} />
                     </span>
@@ -170,13 +170,13 @@ function AuthForm() {
               </ul>
             </div>
             <div>
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-volt/70">
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-accent/70">
                 For Students
               </p>
               <ul className="space-y-3">
                 {STUDENT_BENEFITS.map((b) => (
-                  <li key={b} className="flex items-start gap-2.5 text-sm text-bone/70">
-                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center bg-volt/20 text-volt">
+                  <li key={b} className="flex items-start gap-2.5 text-sm text-content/70">
+                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center bg-volt/20 text-accent">
                       <Check className="h-2.5 w-2.5" strokeWidth={4} />
                     </span>
                     {b}
@@ -186,7 +186,7 @@ function AuthForm() {
             </div>
           </div>
         </div>
-        <p className="relative text-[12px] uppercase tracking-[0.18em] text-bone/35">
+        <p className="relative text-[12px] uppercase tracking-[0.18em] text-content/35">
           TrainerUniverse — Train smarter. Go further.
         </p>
       </div>
@@ -439,7 +439,7 @@ function AuthForm() {
                   <ul className="mt-auto space-y-1.5">
                     {TRAINER_BENEFITS.slice(0, 3).map((b) => (
                       <li key={b} className="flex items-start gap-2 text-xs text-ink/50">
-                        <Check className="mt-0.5 h-3 w-3 shrink-0 text-volt" strokeWidth={3} />
+                        <Check className="mt-0.5 h-3 w-3 shrink-0 text-accent" strokeWidth={3} />
                         {b}
                       </li>
                     ))}

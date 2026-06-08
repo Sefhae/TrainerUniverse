@@ -3,12 +3,12 @@ import { ArrowRight } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="relative flex min-h-[78vh] items-center justify-center overflow-hidden bg-ink px-5 text-center text-bone">
+    <div className="relative flex min-h-[78vh] items-center justify-center overflow-hidden bg-surface px-5 text-center text-content">
       <div className="grain-layer" />
       <div className="relative">
-        <p className="font-display text-[8rem] leading-none text-volt sm:text-[12rem]">404</p>
+        <p className="font-display text-[8rem] leading-none text-accent sm:text-[12rem]">404</p>
         <h1 className="font-display text-4xl tracking-wide sm:text-5xl">Page Not Found</h1>
-        <p className="mx-auto mt-3 max-w-sm text-sm text-bone/55">
+        <p className="mx-auto mt-3 max-w-sm text-sm text-content/55">
           The page you are looking for has moved, or never existed in the first place.
         </p>
         <Link href="/" className="btn btn-volt mt-8">

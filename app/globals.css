@@ -3,11 +3,28 @@
 @tailwind utilities;
 
 @layer base {
+  /* Theme tokens as "R G B" triplets so Tailwind alpha utilities work.
+     Default (no class) = dark, matching the site's original design. */
+  :root,
+  .theme-dark {
+    --surface: 10 10 10; /* ink */
+    --surface-2: 28 28 28; /* charcoal */
+    --content: 245 245 240; /* bone */
+    --accent: 200 255 0; /* volt */
+  }
+  .theme-light {
+    --surface: 255 255 255; /* white panels */
+    --surface-2: 240 240 235; /* soft off-white cards */
+    --content: 10 10 10; /* ink text */
+    --accent: 74 102 0; /* deep volt — legible on light surfaces */
+  }
+
   html {
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-bone text-ink font-sans antialiased;
+    @apply bg-surface text-content font-sans antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
   ::selection {
     background-color: #c8ff00;
@@ -35,8 +52,10 @@
   .btn-dark {
     @apply bg-ink text-bone hover:bg-charcoal;
   }
+  /* Outline button that lives on a flipping panel — tracks the theme so it
+     stays legible on both dark (ink) and light (white) surfaces. */
   .btn-outline-light {
-    @apply border border-white/25 text-bone hover:border-volt hover:text-volt;
+    @apply border border-content/25 text-content hover:border-accent hover:text-accent;
   }
   .btn-outline-dark {
     @apply border border-ink/25 text-ink hover:bg-ink hover:text-bone hover:border-ink;

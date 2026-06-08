@@ -1,14 +1,25 @@
 import type { Config } from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
 
 const config: Config = {
   content: ['./app/**/*.{ts,tsx}', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
+        // Fixed brand colors (never flip): buttons, volt/accent sections, the
+        // intentionally-light "island" sections, and anywhere a literal value
+        // is required regardless of theme.
         ink: '#0A0A0A',
         bone: '#F5F5F0',
         volt: '#C8FF00',
         charcoal: '#1C1C1C',
+        // Theme-aware semantic tokens (flip between .theme-dark / .theme-light).
+        // Backed by CSS variables as "R G B" triplets so Tailwind opacity
+        // utilities (e.g. text-content/60, border-content/10) keep working.
+        surface: 'rgb(var(--surface) / <alpha-value>)',
+        'surface-2': 'rgb(var(--surface-2) / <alpha-value>)',
+        content: 'rgb(var(--content) / <alpha-value>)',
+        accent: 'rgb(var(--accent) / <alpha-value>)',
       },
       fontFamily: {
         display: ['"Bebas Neue"', '"Arial Narrow"', 'sans-serif'],
@@ -61,7 +72,14 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // CSS-driven theme variants (no JS state → no hydration flash). Lets a single
+    // element style itself per theme, e.g. `text-accent theme-light:bg-volt`.
+    plugin(({ addVariant }) => {
+      addVariant('theme-light', '.theme-light &');
+      addVariant('theme-dark', '.theme-dark &');
+    }),
+  ],
 };
 
 export default config;

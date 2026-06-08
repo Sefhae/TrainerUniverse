@@ -29,14 +29,14 @@ function SectionHeading({
 }) {
   return (
     <div>
-      <p className={cn('eyebrow', tone === 'dark' ? 'text-volt' : 'text-ink/50')}>
-        <span className={cn('h-px w-8', tone === 'dark' ? 'bg-volt' : 'bg-ink/40')} />
+      <p className={cn('eyebrow', tone === 'dark' ? 'text-accent' : 'text-ink/50')}>
+        <span className={cn('h-px w-8', tone === 'dark' ? 'bg-accent' : 'bg-ink/40')} />
         {eyebrow}
       </p>
       <h2
         className={cn(
           'mt-3 font-display text-4xl leading-none tracking-wide sm:text-5xl',
-          tone === 'dark' ? 'text-bone' : 'text-ink'
+          tone === 'dark' ? 'text-content' : 'text-ink'
         )}
       >
         {title}
@@ -89,15 +89,15 @@ export default function TrainerProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-[80vh] bg-ink">
+      <div className="min-h-[80vh] bg-surface">
         <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
-          <div className="h-6 w-32 animate-pulse bg-white/10" />
+          <div className="h-6 w-32 animate-pulse bg-content/10" />
           <div className="mt-10 flex flex-col gap-8 sm:flex-row">
-            <div className="h-56 w-56 shrink-0 animate-pulse bg-white/10" />
+            <div className="h-56 w-56 shrink-0 animate-pulse bg-content/10" />
             <div className="flex-1 space-y-4 pt-4">
-              <div className="h-14 w-2/3 animate-pulse bg-white/10" />
-              <div className="h-5 w-1/2 animate-pulse bg-white/5" />
-              <div className="h-5 w-40 animate-pulse bg-white/5" />
+              <div className="h-14 w-2/3 animate-pulse bg-content/10" />
+              <div className="h-5 w-1/2 animate-pulse bg-content/5" />
+              <div className="h-5 w-40 animate-pulse bg-content/5" />
             </div>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function TrainerProfilePage() {
 
   if (notFound || !trainer) {
     return (
-      <div className="min-h-[78vh] bg-ink">
+      <div className="min-h-[78vh] bg-surface">
         <EmptyState
           tone="dark"
           title="Trainer Not Found"
@@ -129,11 +129,11 @@ export default function TrainerProfilePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-ink text-bone">
+      <section className="relative overflow-hidden bg-surface text-content">
         {cover && (
           <div className="absolute inset-0">
             <img src={cover} alt="" className="h-full w-full object-cover opacity-30" />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/85 to-ink/60" />
+            <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/85 to-surface/60" />
           </div>
         )}
         <div className="grain-layer" />
@@ -141,14 +141,14 @@ export default function TrainerProfilePage() {
         <div className="relative mx-auto max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
           <Link
             href="/trainers"
-            className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-bone/55 transition-colors duration-200 hover:text-volt"
+            className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-content/55 transition-colors duration-200 hover:text-accent"
           >
             <ArrowLeft className="h-4 w-4" />
             All Trainers
           </Link>
 
           <div className="mt-8 flex flex-col gap-7 sm:flex-row sm:items-end">
-            <div className="h-48 w-48 shrink-0 overflow-hidden border-2 border-volt bg-charcoal lg:h-56 lg:w-56">
+            <div className="h-48 w-48 shrink-0 overflow-hidden border-2 border-accent bg-surface-2 lg:h-56 lg:w-56">
               {photo ? (
                 <img src={photo} alt={trainer.name} className="h-full w-full object-cover" />
               ) : (
@@ -166,7 +166,7 @@ export default function TrainerProfilePage() {
               )}
               <div className="flex flex-wrap gap-1.5">
                 {trainer.specialties.map((s) => (
-                  <span key={s.id} className="chip border border-white/20 text-bone/80">
+                  <span key={s.id} className="chip border border-content/20 text-content/80">
                     {s.name}
                   </span>
                 ))}
@@ -179,43 +179,43 @@ export default function TrainerProfilePage() {
                   </span>
                 )}
               </h1>
-              <p className="mt-2 max-w-2xl text-base text-bone/65 sm:text-lg">{trainer.tagline}</p>
+              <p className="mt-2 max-w-2xl text-base text-content/65 sm:text-lg">{trainer.tagline}</p>
 
               <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
                 <span className="flex items-center gap-1.5">
                   <StarRating value={trainer.rating} size={16} tone="dark" />
-                  <span className="font-semibold text-bone">{trainer.rating.toFixed(1)}</span>
-                  <span className="text-bone/45">({trainer.reviewCount} reviews)</span>
+                  <span className="font-semibold text-content">{trainer.rating.toFixed(1)}</span>
+                  <span className="text-content/45">({trainer.reviewCount} reviews)</span>
                 </span>
                 {trainer.isRemote && (
-                  <span className="flex items-center gap-1.5 text-bone/65">
-                    <Globe className="h-4 w-4 text-volt" /> Remote Available
+                  <span className="flex items-center gap-1.5 text-content/65">
+                    <Globe className="h-4 w-4 text-accent" /> Remote Available
                   </span>
                 )}
                 {trainer.location && (
-                  <span className="flex items-center gap-1.5 text-bone/65">
-                    <MapPin className="h-4 w-4 text-volt" /> {trainer.location}
+                  <span className="flex items-center gap-1.5 text-content/65">
+                    <MapPin className="h-4 w-4 text-accent" /> {trainer.location}
                   </span>
                 )}
                 {!trainer.isRemote && !trainer.location && (
-                  <span className="flex items-center gap-1.5 text-bone/65">
-                    <MapPin className="h-4 w-4 text-volt" /> In-Person
+                  <span className="flex items-center gap-1.5 text-content/65">
+                    <MapPin className="h-4 w-4 text-accent" /> In-Person
                   </span>
                 )}
-                <span className="text-bone/65">{trainer.yearsExperience} years experience</span>
+                <span className="text-content/65">{trainer.yearsExperience} years experience</span>
               </div>
             </div>
 
             <div className="sm:pb-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-bone/40">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-content/40">
                 Starting from
               </p>
-              <p className="font-display text-5xl leading-none text-volt">
+              <p className="font-display text-5xl leading-none text-accent">
                 {formatPrice(trainer.startingPrice)}
-                <span className="ml-1 font-sans text-sm font-medium text-bone/50">/ session</span>
+                <span className="ml-1 font-sans text-sm font-medium text-content/50">/ session</span>
               </p>
-              <p className="mt-2 flex items-center gap-1.5 text-[12px] text-bone/55">
-                <Clock className="h-3.5 w-3.5 text-volt" />
+              <p className="mt-2 flex items-center gap-1.5 text-[12px] text-content/55">
+                <Clock className="h-3.5 w-3.5 text-accent" />
                 Responds {trainer.responseTime}
               </p>
               <button onClick={() => setContactOpen(true)} className="btn btn-volt mt-4 w-full">
@@ -260,7 +260,7 @@ export default function TrainerProfilePage() {
       </section>
 
       {/* Pricing */}
-      <section className="bg-ink text-bone">
+      <section className="bg-ink text-content">
         <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
           <SectionHeading eyebrow="Pricing" title="Training Packages" tone="dark" />
           {trainer.packages.length > 0 ? (
@@ -303,7 +303,7 @@ export default function TrainerProfilePage() {
       </section>
 
       {/* Reviews */}
-      <section className="bg-ink text-bone">
+      <section className="bg-ink text-content">
         <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <SectionHeading eyebrow="Reviews" title="Client Reviews" tone="dark" />
@@ -313,13 +313,13 @@ export default function TrainerProfilePage() {
             </button>
           </div>
 
-          <div className="mt-8 flex items-center gap-5 border-y border-white/10 py-6">
-            <p className="font-display text-7xl leading-none text-volt">
+          <div className="mt-8 flex items-center gap-5 border-y border-content/10 py-6">
+            <p className="font-display text-7xl leading-none text-accent">
               {trainer.rating.toFixed(1)}
             </p>
             <div>
               <StarRating value={trainer.rating} size={20} tone="dark" />
-              <p className="mt-1.5 text-sm text-bone/55">
+              <p className="mt-1.5 text-sm text-content/55">
                 Based on {trainer.reviewCount} {trainer.reviewCount === 1 ? 'review' : 'reviews'}
               </p>
             </div>

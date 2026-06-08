@@ -31,14 +31,14 @@ function SelectRow({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className={cn(
-        'w-full bg-white/5 border border-white/15 px-3 py-2 text-sm appearance-none cursor-pointer',
+        'w-full bg-content/5 border border-content/15 px-3 py-2 text-sm appearance-none cursor-pointer',
         'focus:outline-none focus:border-volt/60 transition-colors duration-200',
-        value ? 'text-bone' : 'text-bone/45'
+        value ? 'text-content' : 'text-content/45'
       )}
     >
       <option value="">{placeholder}</option>
       {options.map((opt) => (
-        <option key={opt} value={opt} className="bg-charcoal text-bone">
+        <option key={opt} value={opt} className="bg-surface-2 text-content">
           {opt}
         </option>
       ))}
@@ -55,8 +55,8 @@ interface FilterSidebarProps {
 
 function FilterGroup({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="border-t border-white/10 py-5 first:border-t-0 first:pt-0">
-      <h4 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-bone/45">{title}</h4>
+    <div className="border-t border-content/10 py-5 first:border-t-0 first:pt-0">
+      <h4 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-content/45">{title}</h4>
       {children}
     </div>
   );
@@ -76,7 +76,7 @@ function CheckRow({
       <span
         className={cn(
           'flex h-4 w-4 shrink-0 items-center justify-center border transition-colors duration-200',
-          checked ? 'border-volt bg-volt' : 'border-white/25 group-hover:border-white/50'
+          checked ? 'border-volt bg-volt' : 'border-content/25 group-hover:border-content/50'
         )}
       >
         {checked && <Check className="h-3 w-3 text-ink" strokeWidth={4} />}
@@ -84,7 +84,7 @@ function CheckRow({
       <span
         className={cn(
           'text-sm transition-colors duration-200',
-          checked ? 'text-bone' : 'text-bone/65 group-hover:text-bone'
+          checked ? 'text-content' : 'text-content/65 group-hover:text-content'
         )}
       >
         {label}
@@ -107,7 +107,7 @@ function RadioRow({
       <span
         className={cn(
           'flex h-4 w-4 shrink-0 items-center justify-center border transition-colors duration-200',
-          selected ? 'border-volt' : 'border-white/25 group-hover:border-white/50'
+          selected ? 'border-volt' : 'border-content/25 group-hover:border-content/50'
         )}
       >
         {selected && <span className="h-2 w-2 bg-volt" />}
@@ -115,7 +115,7 @@ function RadioRow({
       <span
         className={cn(
           'text-sm transition-colors duration-200',
-          selected ? 'text-bone' : 'text-bone/65 group-hover:text-bone'
+          selected ? 'text-content' : 'text-content/65 group-hover:text-content'
         )}
       >
         {label}
@@ -157,14 +157,14 @@ function PriceRange({
   return (
     <div>
       <div className="mb-4 flex items-center justify-between text-sm">
-        <span className="bg-ink px-2.5 py-1 font-semibold text-bone">{formatPrice(localMin)}</span>
-        <span className="text-bone/30">—</span>
-        <span className="bg-ink px-2.5 py-1 font-semibold text-bone">
+        <span className="bg-surface px-2.5 py-1 font-semibold text-content">{formatPrice(localMin)}</span>
+        <span className="text-content/30">—</span>
+        <span className="bg-surface px-2.5 py-1 font-semibold text-content">
           {formatPrice(localMax)}
           {localMax >= PRICE_MAX ? '+' : ''}
         </span>
       </div>
-      <div className="relative mb-1 h-1 bg-white/15">
+      <div className="relative mb-1 h-1 bg-content/15">
         <div
           className="absolute h-1 bg-volt"
           style={{ left: `${pct(localMin)}%`, right: `${100 - pct(localMax)}%` }}
@@ -190,7 +190,7 @@ function PriceRange({
           onChange={(e) => setLocalMax(Math.max(Number(e.target.value), localMin + PRICE_STEP))}
         />
       </div>
-      <div className="flex justify-between text-[11px] text-bone/35">
+      <div className="flex justify-between text-[11px] text-content/35">
         <span>{formatPrice(PRICE_MIN)}</span>
         <span>{formatPrice(PRICE_MAX)}+</span>
       </div>
@@ -244,13 +244,13 @@ export default function FilterSidebar({
   }));
 
   return (
-    <div className="bg-charcoal">
-      <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-        <h3 className="font-display text-xl tracking-wide text-bone">{t.filters.title}</h3>
+    <div className="bg-surface-2">
+      <div className="flex items-center justify-between border-b border-content/10 px-5 py-4">
+        <h3 className="font-display text-xl tracking-wide text-content">{t.filters.title}</h3>
         {activeFilterCount > 0 && (
           <button
             onClick={clearFilters}
-            className="text-[11px] font-semibold uppercase tracking-[0.12em] text-volt transition-colors duration-200 hover:text-bone"
+            className="text-[11px] font-semibold uppercase tracking-[0.12em] text-accent transition-colors duration-200 hover:text-content"
           >
             {t.filters.clearAll} ({activeFilterCount})
           </button>
@@ -260,13 +260,13 @@ export default function FilterSidebar({
       <div className="px-5 py-2">
         <FilterGroup title={t.filters.specialty}>
           <div className="relative mb-3">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-bone/35" />
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-content/35" />
             <input
               type="text"
               value={specialtySearch}
               onChange={(e) => setSpecialtySearch(e.target.value)}
               placeholder="Search categories…"
-              className="w-full bg-white/5 border border-white/15 pl-8 pr-3 py-2 text-sm text-bone placeholder:text-bone/35 focus:outline-none focus:border-volt/60 transition-colors duration-200"
+              className="w-full bg-content/5 border border-content/15 pl-8 pr-3 py-2 text-sm text-content placeholder:text-content/35 focus:outline-none focus:border-volt/60 transition-colors duration-200"
             />
           </div>
           <div className="space-y-3">
@@ -276,7 +276,7 @@ export default function FilterSidebar({
               if (visible.length === 0) return null;
               return (
                 <div key={group.label}>
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-bone/30">
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-content/30">
                     {group.label}
                   </p>
                   <div className="space-y-0.5">
@@ -315,7 +315,7 @@ export default function FilterSidebar({
                   'py-2 text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors duration-200',
                   filters.mode === m.value
                     ? 'bg-volt text-ink'
-                    : 'bg-white/5 text-bone/60 hover:bg-white/10 hover:text-bone'
+                    : 'bg-content/5 text-content/60 hover:bg-content/10 hover:text-content'
                 )}
               >
                 {m.label}

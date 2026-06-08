@@ -101,19 +101,19 @@ export default function CitySearch({ value, onChange, className, placeholder = '
         autoComplete="off"
       />
       {open && (
-        <ul className="absolute left-0 right-0 top-full z-50 mt-1 max-h-52 overflow-y-auto rounded border border-white/15 bg-[#1a1a1a] shadow-xl">
+        <ul className="absolute left-0 right-0 top-full z-50 mt-1 max-h-52 overflow-y-auto rounded border border-content/15 bg-surface-2 shadow-xl">
           {results.map((city, i) => (
             <li
               key={`${city.name}-${city.country}-${i}`}
               onMouseDown={() => select(city)}
               onMouseEnter={() => setHighlighted(i)}
               className={`flex cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors ${
-                i === highlighted ? 'bg-volt/20 text-volt' : 'text-bone/80 hover:bg-white/5'
+                i === highlighted ? 'bg-volt/20 text-accent' : 'text-content/80 hover:bg-content/5'
               }`}
             >
               <MapPin className="h-3 w-3 shrink-0 opacity-50" />
               <span className="truncate">{city.name}</span>
-              <span className="ml-auto shrink-0 pl-2 text-xs text-bone/40">{city.country}</span>
+              <span className="ml-auto shrink-0 pl-2 text-xs text-content/40">{city.country}</span>
             </li>
           ))}
         </ul>

@@ -7,7 +7,7 @@ import { cn } from '../../src/lib/format';
 import api from '../../src/api/client';
 
 const inputCls =
-  'w-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-bone placeholder-bone/30 transition-colors focus:border-volt/50 focus:outline-none';
+  'w-full border border-content/10 bg-content/5 px-4 py-3 text-sm text-content placeholder-content/30 transition-colors focus:border-volt/50 focus:outline-none';
 
 export default function ContactPage() {
   const t = useT();
@@ -42,13 +42,13 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-ink text-bone">
+    <div className="min-h-screen bg-surface text-content">
       {/* Hero */}
-      <section className="border-b border-white/8 px-5 py-20 lg:px-8">
+      <section className="border-b border-content/8 px-5 py-20 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-volt">{c.eyebrow}</p>
+          <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-accent">{c.eyebrow}</p>
           <h1 className="font-display text-5xl tracking-wide md:text-6xl">{c.title}</h1>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-bone/55">{c.desc}</p>
+          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-content/55">{c.desc}</p>
         </div>
       </section>
 
@@ -60,12 +60,12 @@ export default function ContactPage() {
           <div>
             {sent ? (
               <div className="flex flex-col items-center gap-5 py-16 text-center">
-                <CheckCircle className="h-14 w-14 text-volt" />
+                <CheckCircle className="h-14 w-14 text-accent" />
                 <h2 className="font-display text-3xl tracking-wide">{c.successTitle}</h2>
-                <p className="max-w-sm text-bone/55">{c.successDesc}</p>
+                <p className="max-w-sm text-content/55">{c.successDesc}</p>
                 <button
                   onClick={() => { setSent(false); setForm({ name: '', email: '', subject: '', message: '' }); }}
-                  className="mt-2 text-sm font-semibold text-volt hover:underline"
+                  className="mt-2 text-sm font-semibold text-accent hover:underline"
                 >
                   {c.sendAnother}
                 </button>
@@ -74,7 +74,7 @@ export default function ContactPage() {
               <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-bone/40">
+                    <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-content/40">
                       {c.nameLabel}
                     </label>
                     <input
@@ -85,7 +85,7 @@ export default function ContactPage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-bone/40">
+                    <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-content/40">
                       {c.emailLabel}
                     </label>
                     <input
@@ -99,7 +99,7 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-bone/40">
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-content/40">
                     {c.subjectLabel}
                   </label>
                   <input
@@ -111,7 +111,7 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-bone/40">
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-content/40">
                     {c.messageLabel}
                   </label>
                   <textarea
@@ -143,18 +143,18 @@ export default function ContactPage() {
 
           {/* Info sidebar */}
           <div className="space-y-6">
-            <div className="border border-white/10 bg-white/[0.03] p-6">
-              <p className="mb-5 text-xs font-bold uppercase tracking-widest text-bone/40">{c.infoTitle}</p>
+            <div className="border border-content/10 bg-content/[0.03] p-6">
+              <p className="mb-5 text-xs font-bold uppercase tracking-widest text-content/40">{c.infoTitle}</p>
               <div className="space-y-5">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center bg-volt/10">
-                    <Mail className="h-4 w-4 text-volt" />
+                    <Mail className="h-4 w-4 text-accent" />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-bone/35">Email</p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-content/35">Email</p>
                     <a
                       href="mailto:support@traineruniverse.com"
-                      className="mt-0.5 block text-sm text-bone/80 hover:text-volt"
+                      className="mt-0.5 block text-sm text-content/80 hover:text-accent"
                     >
                       {c.emailInfo}
                     </a>
@@ -163,18 +163,18 @@ export default function ContactPage() {
 
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center bg-volt/10">
-                    <Clock className="h-4 w-4 text-volt" />
+                    <Clock className="h-4 w-4 text-accent" />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-bone/35">{c.hoursTitle}</p>
-                    <p className="mt-0.5 text-sm text-bone/80">{c.hoursInfo}</p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-content/35">{c.hoursTitle}</p>
+                    <p className="mt-0.5 text-sm text-content/80">{c.hoursInfo}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="border border-white/10 bg-white/[0.03] p-6">
-              <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-bone/40">Quick links</p>
+            <div className="border border-content/10 bg-content/[0.03] p-6">
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-content/40">Quick links</p>
               <div className="space-y-2">
                 {[
                   { label: 'FAQ', href: '/faq' },
@@ -184,10 +184,10 @@ export default function ContactPage() {
                   <a
                     key={href}
                     href={href}
-                    className="flex items-center justify-between text-sm text-bone/60 hover:text-volt"
+                    className="flex items-center justify-between text-sm text-content/60 hover:text-accent"
                   >
                     {label}
-                    <span className="text-bone/30">→</span>
+                    <span className="text-content/30">→</span>
                   </a>
                 ))}
               </div>

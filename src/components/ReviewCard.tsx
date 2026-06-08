@@ -13,7 +13,7 @@ export default function ReviewCard({ review, tone = 'light' }: ReviewCardProps) 
     <div
       className={cn(
         'flex flex-col border p-6 transition-colors duration-200',
-        dark ? 'border-white/10 bg-charcoal hover:border-white/25' : 'border-ink/10 bg-white'
+        dark ? 'border-content/10 bg-surface-2 hover:border-content/25' : 'border-ink/10 bg-white'
       )}
     >
       <div className="flex items-center gap-3">
@@ -26,10 +26,10 @@ export default function ReviewCard({ review, tone = 'light' }: ReviewCardProps) 
           {initials(review.reviewerName)}
         </div>
         <div className="min-w-0">
-          <p className={cn('truncate font-semibold leading-tight', dark ? 'text-bone' : 'text-ink')}>
+          <p className={cn('truncate font-semibold leading-tight', dark ? 'text-content' : 'text-ink')}>
             {review.reviewerName}
           </p>
-          <p className={cn('text-xs', dark ? 'text-bone/40' : 'text-ink/45')}>
+          <p className={cn('text-xs', dark ? 'text-content/40' : 'text-ink/45')}>
             {timeAgo(review.createdAt)}
           </p>
         </div>
@@ -39,7 +39,7 @@ export default function ReviewCard({ review, tone = 'light' }: ReviewCardProps) 
         <StarRating value={review.rating} size={15} tone={tone} />
       </div>
 
-      <p className={cn('mt-3 text-sm leading-relaxed', dark ? 'text-bone/70' : 'text-ink/70')}>
+      <p className={cn('mt-3 text-sm leading-relaxed', dark ? 'text-content/70' : 'text-ink/70')}>
         &ldquo;{review.comment}&rdquo;
       </p>
     </div>

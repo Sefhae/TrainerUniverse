@@ -13,6 +13,9 @@ export const translations = {
       toggleMenu: 'Toggle menu',
       studentLogin: 'Student Login',
       language: 'Language',
+      theme: 'Theme',
+      lightMode: 'Light mode',
+      darkMode: 'Dark mode',
     },
     home: {
       eyebrow: 'The Personal Training Marketplace',
@@ -418,6 +421,9 @@ export const translations = {
       toggleMenu: 'Menüyü aç/kapat',
       studentLogin: 'Öğrenci Girişi',
       language: 'Dil',
+      theme: 'Tema',
+      lightMode: 'Açık tema',
+      darkMode: 'Koyu tema',
     },
     home: {
       eyebrow: 'Kişisel Antrenman Platformu',

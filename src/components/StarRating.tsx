@@ -26,7 +26,7 @@ export default function StarRating({
   className,
 }: StarRatingProps) {
   const [hover, setHover] = useState(0);
-  const emptyColor = tone === 'dark' ? 'text-white/20' : 'text-ink/15';
+  const emptyColor = tone === 'dark' ? 'text-content/20' : 'text-ink/15';
   const display = interactive && hover > 0 ? hover : value;
 
   return (
@@ -83,7 +83,7 @@ export default function StarRating({
       </div>
       {showValue && (
         <span
-          className={cn('font-semibold tabular-nums', tone === 'dark' ? 'text-bone' : 'text-ink')}
+          className={cn('font-semibold tabular-nums', tone === 'dark' ? 'text-content' : 'text-ink')}
           style={{ fontSize: Math.round(size * 0.82) }}
         >
           {value.toFixed(1)}
