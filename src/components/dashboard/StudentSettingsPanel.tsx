@@ -6,6 +6,7 @@ import { useLanguage, useT } from '../../hooks/useLanguage';
 import { useToast } from '../../hooks/useToast';
 import { cn, getApiError, resolveImage } from '../../lib/format';
 import api from '../../api/client';
+import ImageCropModal from '../ImageCropModal';
 
 export default function StudentSettingsPanel({ onPhotoChange }: { onPhotoChange?: (url: string) => void }) {
   const t = useT();
@@ -21,6 +22,7 @@ export default function StudentSettingsPanel({ onPhotoChange }: { onPhotoChange?
   const [confirm, setConfirm] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   useEffect(() => {
     api
@@ -29,15 +31,15 @@ export default function StudentSettingsPanel({ onPhotoChange }: { onPhotoChange?
       .catch(() => {});
   }, []);
 
-  async function uploadPhoto(file?: File) {
-    if (!file) return;
+  async function uploadBlob(blob: Blob) {
     setUploading(true);
     try {
       const fd = new FormData();
-      fd.append('profilePhoto', file);
+      fd.append('profilePhoto', blob, 'avatar.jpg');
       const { data } = await api.post<{ profilePhoto: string }>('/student/profile', fd);
       setPhoto(data.profilePhoto);
       onPhotoChange?.(data.profilePhoto);
+      setPendingFile(null);
     } catch (err) {
       toast.error(getApiError(err));
     } finally {
@@ -95,7 +97,11 @@ export default function StudentSettingsPanel({ onPhotoChange }: { onPhotoChange?
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={(e) => uploadPhoto(e.target.files?.[0])}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) setPendingFile(f);
+              e.target.value = '';
+            }}
           />
           <button
             onClick={() => fileRef.current?.click()}
@@ -194,6 +200,18 @@ export default function StudentSettingsPanel({ onPhotoChange }: { onPhotoChange?
           ))}
         </div>
       </div>
+
+      {pendingFile && (
+        <ImageCropModal
+          file={pendingFile}
+          title={td.adjustPhoto}
+          zoomLabel={td.zoom}
+          saveLabel={td.apply}
+          cancelLabel={td.cancel}
+          onCancel={() => setPendingFile(null)}
+          onSave={uploadBlob}
+        />
+      )}
     </div>
   );
 }
