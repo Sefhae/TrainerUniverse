@@ -5,13 +5,15 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, ChevronDown, Globe, MapPin, Search, Video } from 'lucide-react';
 import CitySearch from './CitySearch';
 import { SPECIALTY_OPTIONS } from '../lib/constants';
-import { useT } from '../hooks/useLanguage';
+import { localizeSpecialty } from '../lib/specialtyLabel';
+import { useT, useLanguage } from '../hooks/useLanguage';
 import { useSyncedRotation } from '../hooks/useSyncedRotation';
 
 const POPULAR = ['Gym Training', 'Boxing', 'Yoga', 'Nutrition', 'Mathematics', 'Programming'];
 
 export default function HeroSearch() {
   const t = useT();
+  const { lang } = useLanguage();
   const router = useRouter();
   const [specialty, setSpecialty] = useState('');
   const [city, setCity] = useState('');
@@ -36,11 +38,13 @@ export default function HeroSearch() {
       setOpen(false);
       return;
     }
-    const filtered = SPECIALTY_OPTIONS.filter((o) => o.toLowerCase().includes(q)).slice(0, 8);
+    const filtered = SPECIALTY_OPTIONS.filter(
+      (o) => o.toLowerCase().includes(q) || localizeSpecialty(o, lang).toLowerCase().includes(q)
+    ).slice(0, 8);
     setSuggestions(filtered);
     setOpen(filtered.length > 0);
     setHighlighted(0);
-  }, [specialty]);
+  }, [specialty, lang]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -190,7 +194,7 @@ export default function HeroSearch() {
                       }`}
                     >
                       <Search className="h-3.5 w-3.5 shrink-0 opacity-50" />
-                      {s}
+                      {localizeSpecialty(s, lang)}
                     </li>
                   ))}
                 </ul>
@@ -274,7 +278,7 @@ export default function HeroSearch() {
                 onClick={() => go(p, city)}
                 className="border border-content/15 px-3 py-1.5 text-xs text-content/70 transition-colors duration-200 hover:border-accent hover:text-accent"
               >
-                {p}
+                {localizeSpecialty(p, lang)}
               </button>
             ))}
           </div>

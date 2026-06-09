@@ -12,7 +12,8 @@ import {
   RATING_OPTIONS,
   SPECIALTY_GROUPS,
 } from '../lib/constants';
-import { useT } from '../hooks/useLanguage';
+import { useT, useLanguage } from '../hooks/useLanguage';
+import { localizeSpecialty } from '../lib/specialtyLabel';
 import { cn, formatPrice } from '../lib/format';
 
 function SelectRow({
@@ -205,6 +206,7 @@ export default function FilterSidebar({
   activeFilterCount,
 }: FilterSidebarProps) {
   const t = useT();
+  const { lang } = useLanguage();
   const [specialtySearch, setSpecialtySearch] = useState('');
   const [cities, setCities] = useState<string[]>([]);
   const [states, setStates] = useState<string[]>([]);
@@ -272,18 +274,20 @@ export default function FilterSidebar({
           <div className="max-h-64 space-y-3 overflow-y-auto pr-1">
             {SPECIALTY_GROUPS.map((group) => {
               const q = specialtySearch.toLowerCase();
-              const visible = group.options.filter((o) => o.toLowerCase().includes(q));
+              const visible = group.options.filter(
+                (o) => o.toLowerCase().includes(q) || localizeSpecialty(o, lang).toLowerCase().includes(q)
+              );
               if (visible.length === 0) return null;
               return (
                 <div key={group.label}>
                   <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-content/30">
-                    {group.label}
+                    {localizeSpecialty(group.label, lang)}
                   </p>
                   <div className="space-y-0.5">
                     {visible.map((name) => (
                       <CheckRow
                         key={name}
-                        label={name}
+                        label={localizeSpecialty(name, lang)}
                         checked={filters.specialty.includes(name)}
                         onToggle={() => setFilters({ specialty: toggleInList(filters.specialty, name) })}
                       />

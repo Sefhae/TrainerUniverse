@@ -8,6 +8,8 @@ import VerifiedBadge from '../../../src/components/VerifiedBadge';
 import api from '../../../src/api/client';
 import type { Review, Trainer } from '../../../src/types';
 import { cn, formatPrice, initials, resolveImage } from '../../../src/lib/format';
+import { useLanguage } from '../../../src/hooks/useLanguage';
+import { localizeSpecialty } from '../../../src/lib/specialtyLabel';
 import StarRating from '../../../src/components/StarRating';
 import PricingCard from '../../../src/components/PricingCard';
 import WorkGallery from '../../../src/components/WorkGallery';
@@ -46,6 +48,7 @@ function SectionHeading({
 }
 
 export default function TrainerProfilePage() {
+  const { lang } = useLanguage();
   const params = useParams();
   const id = params.id as string;
 
@@ -167,7 +170,7 @@ export default function TrainerProfilePage() {
               <div className="flex flex-wrap gap-1.5">
                 {trainer.specialties.map((s) => (
                   <span key={s.id} className="chip border border-content/20 text-content/80">
-                    {s.name}
+                    {localizeSpecialty(s.name, lang)}
                   </span>
                 ))}
               </div>

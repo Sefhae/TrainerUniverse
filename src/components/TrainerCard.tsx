@@ -6,10 +6,12 @@ import type { TrainerSummary } from '../types';
 import { formatPrice, initials, resolveImage } from '../lib/format';
 import StarRating from './StarRating';
 import VerifiedBadge from './VerifiedBadge';
-import { useT } from '../hooks/useLanguage';
+import { useT, useLanguage } from '../hooks/useLanguage';
+import { localizeSpecialty } from '../lib/specialtyLabel';
 
 export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
   const t = useT();
+  const { lang } = useLanguage();
   const photo = resolveImage(trainer.profilePhoto);
   const visibleSpecs = trainer.specialties.slice(0, 3);
   const extra = trainer.specialties.length - visibleSpecs.length;
@@ -62,7 +64,7 @@ export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
         <div className="mt-2 hidden flex-wrap gap-1.5 sm:flex">
           {visibleSpecs.map((s) => (
             <span key={s.id} className="chip border border-content/15 text-content/70">
-              {s.name}
+              {localizeSpecialty(s.name, lang)}
             </span>
           ))}
           {extra > 0 && <span className="chip text-accent">+{extra}</span>}

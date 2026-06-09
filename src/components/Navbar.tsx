@@ -10,6 +10,7 @@ import { useLanguage, useT } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
 import { cn } from '../lib/format';
 import { SPECIALTY_GROUPS } from '../lib/constants';
+import { localizeSpecialty } from '../lib/specialtyLabel';
 import BrandMark from './BrandMark';
 
 function Logo() {
@@ -114,6 +115,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const t = useT();
+  const { lang } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [activeGroup, setActiveGroup] = useState(SPECIALTY_GROUPS[0].label);
@@ -198,7 +200,7 @@ export default function Navbar() {
                       >
                         <span className="flex items-center gap-2.5">
                           {groupIcons[group.label]}
-                          {group.label}
+                          {localizeSpecialty(group.label, lang)}
                         </span>
                         <ChevronDown className="-rotate-90 h-3 w-3 opacity-50 shrink-0" />
                       </Link>
@@ -219,7 +221,7 @@ export default function Navbar() {
                     {SPECIALTY_GROUPS.filter((g) => g.label === activeGroup).map((group) => (
                       <div key={group.label}>
                         <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.2em] text-accent/70">
-                          {group.label}
+                          {localizeSpecialty(group.label, lang)}
                         </p>
                         <ul className="grid grid-cols-2 gap-x-3 gap-y-1">
                           {group.options.map((name) => (
@@ -229,7 +231,7 @@ export default function Navbar() {
                                 className="block py-1 text-[12px] text-content/65 transition-colors duration-150 hover:text-accent"
                                 onClick={() => setCategoriesOpen(false)}
                               >
-                                {name}
+                                {localizeSpecialty(name, lang)}
                               </Link>
                             </li>
                           ))}
