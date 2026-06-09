@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CalendarDays, DollarSign, ExternalLink, Image as ImageIcon, Inbox, MessageSquare, Settings, Star, User, Users } from 'lucide-react';
+import { CalendarDays, ChevronDown, DollarSign, ExternalLink, Image as ImageIcon, Inbox, MessageSquare, Settings, Star, User, Users } from 'lucide-react';
 import api from '../../src/api/client';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useT } from '../../src/hooks/useLanguage';
@@ -28,6 +28,7 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [section, setSection] = useState<SectionId>('profile');
+  const [navOpen, setNavOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!trainerId) {
@@ -83,6 +84,8 @@ function DashboardContent() {
   ];
 
   const photo = resolveImage(trainer.profilePhoto);
+  const activeSection = sections.find((s) => s.id === section) ?? sections[0];
+  const ActiveIcon = activeSection.icon;
 
   return (
     <div className="min-h-[calc(100vh-72px)] bg-bone">
@@ -114,7 +117,54 @@ function DashboardContent() {
                 </div>
               </div>
 
-              <nav className="flex gap-1 overflow-x-auto p-2 lg:flex-col">
+              {/* Mobile: roll-down section picker */}
+              <div className="p-2 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setNavOpen((o) => !o)}
+                  aria-haspopup="listbox"
+                  aria-expanded={navOpen}
+                  className="flex w-full items-center gap-3 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-bone"
+                >
+                  <ActiveIcon className="h-4 w-4 shrink-0" />
+                  <span className="flex-1 whitespace-nowrap">{activeSection.label}</span>
+                  <ChevronDown
+                    className={cn('h-4 w-4 shrink-0 transition-transform duration-200', navOpen ? 'rotate-180' : '')}
+                  />
+                </button>
+                {navOpen && (
+                  <div className="mt-1 flex flex-col">
+                    {sections.map((s) => {
+                      const Icon = s.icon;
+                      const active = section === s.id;
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => {
+                            setSection(s.id);
+                            setNavOpen(false);
+                          }}
+                          className={cn(
+                            'flex items-center gap-3 px-4 py-3 text-left text-sm font-semibold transition-colors duration-200',
+                            active ? 'bg-volt text-ink' : 'text-bone/65 hover:bg-white/5 hover:text-bone'
+                          )}
+                        >
+                          <Icon className="h-4 w-4 shrink-0" />
+                          <span className="flex-1 whitespace-nowrap">{s.label}</span>
+                          {s.count !== undefined && (
+                            <span className={cn('text-xs tabular-nums', active ? 'text-ink/60' : 'text-bone/35')}>
+                              {s.count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop: vertical nav */}
+              <nav className="hidden p-2 lg:flex lg:flex-col lg:gap-1">
                 {sections.map((s) => {
                   const Icon = s.icon;
                   const active = section === s.id;
@@ -123,19 +173,14 @@ function DashboardContent() {
                       key={s.id}
                       onClick={() => setSection(s.id)}
                       className={cn(
-                        'flex shrink-0 items-center gap-3 px-4 py-3 text-left text-sm font-semibold transition-colors duration-200 lg:shrink',
+                        'flex items-center gap-3 px-4 py-3 text-left text-sm font-semibold transition-colors duration-200',
                         active ? 'bg-volt text-ink' : 'text-bone/65 hover:bg-white/5 hover:text-bone'
                       )}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-4 w-4 shrink-0" />
                       <span className="flex-1 whitespace-nowrap">{s.label}</span>
                       {s.count !== undefined && (
-                        <span
-                          className={cn(
-                            'text-xs tabular-nums',
-                            active ? 'text-ink/60' : 'text-bone/35'
-                          )}
-                        >
+                        <span className={cn('text-xs tabular-nums', active ? 'text-ink/60' : 'text-bone/35')}>
                           {s.count}
                         </span>
                       )}

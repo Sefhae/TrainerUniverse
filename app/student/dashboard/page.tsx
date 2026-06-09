@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   CalendarDays, MessageSquare, LogOut, LayoutDashboard,
-  Clock, CheckCircle2, AlertCircle, Inbox, XCircle,
+  Clock, CheckCircle2, AlertCircle, Inbox, XCircle, ChevronDown,
 } from 'lucide-react';
 import { useStudentAuth } from '../../../src/hooks/useStudentAuth';
 import { useT } from '../../../src/hooks/useLanguage';
@@ -42,6 +42,7 @@ export default function StudentDashboardPage() {
   const sp = t.studentPortal;
   const router = useRouter();
   const [section, setSection] = useState<Section>('overview');
+  const [navOpen, setNavOpen] = useState(false);
   const [trainer, setTrainer] = useState<TrainerInfo | null>(null);
   const [sessions, setSessions] = useState<TrainingSession[]>([]);
   const [requests, setRequests] = useState<StudentRequest[]>([]);
@@ -121,6 +122,9 @@ export default function StudentDashboardPage() {
   if (!hydrated) return null;
   if (!isAuthenticated) return null;
 
+  const activeItem = navItems.find((i) => i.id === section) ?? navItems[0];
+  const ActiveIcon = activeItem.icon;
+
   return (
     <div className="min-h-[calc(100vh-72px)] bg-bone">
       <div className="mx-auto max-w-7xl px-5 py-8 lg:px-8 lg:py-10">
@@ -142,8 +146,49 @@ export default function StudentDashboardPage() {
                 </div>
               </div>
 
-              {/* Navigation */}
-              <nav className="flex gap-1 overflow-x-auto p-2 lg:flex-col">
+              {/* Navigation — mobile: roll-down picker */}
+              <div className="p-2 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setNavOpen((o) => !o)}
+                  aria-haspopup="listbox"
+                  aria-expanded={navOpen}
+                  className="flex w-full items-center gap-3 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-bone"
+                >
+                  <ActiveIcon className="h-4 w-4 shrink-0" />
+                  <span className="flex-1 whitespace-nowrap">{activeItem.label}</span>
+                  <ChevronDown
+                    className={cn('h-4 w-4 shrink-0 transition-transform duration-200', navOpen ? 'rotate-180' : '')}
+                  />
+                </button>
+                {navOpen && (
+                  <div className="mt-1 flex flex-col">
+                    {navItems.map((item) => {
+                      const Icon = item.icon;
+                      const active = section === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setSection(item.id);
+                            setNavOpen(false);
+                          }}
+                          className={cn(
+                            'flex items-center gap-3 px-4 py-3 text-left text-sm font-semibold transition-colors duration-200',
+                            active ? 'bg-volt text-ink' : 'text-bone/65 hover:bg-white/5 hover:text-bone'
+                          )}
+                        >
+                          <Icon className="h-4 w-4 shrink-0" />
+                          <span className="whitespace-nowrap">{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Navigation — desktop: vertical nav */}
+              <nav className="hidden p-2 lg:flex lg:flex-col lg:gap-1">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const active = section === item.id;
@@ -152,13 +197,11 @@ export default function StudentDashboardPage() {
                       key={item.id}
                       onClick={() => setSection(item.id)}
                       className={cn(
-                        'flex shrink-0 items-center gap-3 px-4 py-3 text-left text-sm font-semibold transition-colors duration-200 lg:shrink',
-                        active
-                          ? 'bg-volt text-ink'
-                          : 'text-bone/65 hover:bg-white/5 hover:text-bone'
+                        'flex items-center gap-3 px-4 py-3 text-left text-sm font-semibold transition-colors duration-200',
+                        active ? 'bg-volt text-ink' : 'text-bone/65 hover:bg-white/5 hover:text-bone'
                       )}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-4 w-4 shrink-0" />
                       <span className="whitespace-nowrap">{item.label}</span>
                     </button>
                   );
