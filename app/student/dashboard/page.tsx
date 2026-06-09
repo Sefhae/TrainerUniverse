@@ -179,7 +179,7 @@ export default function StudentDashboardPage() {
           </aside>
 
           {/* Main content */}
-          <div>
+          <div className="min-w-0">
             {/* Page heading */}
             <div className="mb-7">
               <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/45">

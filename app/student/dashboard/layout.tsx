@@ -2,5 +2,5 @@
 // in app/dashboard/layout.tsx. Scoping to `theme-light` keeps it readable when
 // the site is in dark mode.
 export default function StudentDashboardLayout({ children }: { children: React.ReactNode }) {
-  return <div className="theme-light text-content">{children}</div>;
+  return <div className="theme-light overflow-x-clip text-content">{children}</div>;
 }

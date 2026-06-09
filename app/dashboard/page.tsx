@@ -157,7 +157,7 @@ function DashboardContent() {
           </aside>
 
           {/* Content */}
-          <div>
+          <div className="min-w-0">
             <div className="mb-7">
               <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/45">
                 {t.dashboard.title}
