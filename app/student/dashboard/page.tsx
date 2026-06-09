@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   CalendarDays, MessageSquare, LogOut, LayoutDashboard,
-  Clock, CheckCircle2, AlertCircle, Inbox, XCircle, ChevronDown,
+  Clock, CheckCircle2, AlertCircle, Inbox, XCircle, ChevronDown, Settings,
 } from 'lucide-react';
 import { useStudentAuth } from '../../../src/hooks/useStudentAuth';
 import { useT } from '../../../src/hooks/useLanguage';
@@ -13,9 +13,10 @@ import { cn, resolveImage } from '../../../src/lib/format';
 import api from '../../../src/api/client';
 import TrainingCalendar from '../../../src/components/dashboard/TrainingCalendar';
 import MessagesPanel from '../../../src/components/dashboard/MessagesPanel';
+import StudentSettingsPanel from '../../../src/components/dashboard/StudentSettingsPanel';
 import type { TrainingSession } from '../../../src/types';
 
-type Section = 'overview' | 'requests' | 'calendar' | 'messages';
+type Section = 'overview' | 'requests' | 'calendar' | 'messages' | 'settings';
 
 interface TrainerInfo {
   id: number;
@@ -43,6 +44,7 @@ export default function StudentDashboardPage() {
   const router = useRouter();
   const [section, setSection] = useState<Section>('overview');
   const [navOpen, setNavOpen] = useState(false);
+  const [photo, setPhoto] = useState('');
   const [trainer, setTrainer] = useState<TrainerInfo | null>(null);
   const [sessions, setSessions] = useState<TrainingSession[]>([]);
   const [requests, setRequests] = useState<StudentRequest[]>([]);
@@ -77,6 +79,11 @@ export default function StudentDashboardPage() {
       try {
         const { data: reqs } = await api.get<StudentRequest[]>('/session-requests');
         setRequests(reqs);
+      } catch { /* ignore */ }
+
+      try {
+        const { data: prof } = await api.get<{ profilePhoto: string }>('/student/profile');
+        setPhoto(prof.profilePhoto);
       } catch { /* ignore */ }
     } catch { /* silent */ } finally {
       setLoading(false);
@@ -117,6 +124,7 @@ export default function StudentDashboardPage() {
     { id: 'requests', label: sp.myRequests, icon: Inbox },
     { id: 'calendar', label: t.sessionCalendar.title, icon: CalendarDays },
     { id: 'messages', label: t.chat.title, icon: MessageSquare },
+    { id: 'settings', label: t.dashboard.settings, icon: Settings },
   ];
 
   if (!hydrated) return null;
@@ -135,8 +143,13 @@ export default function StudentDashboardPage() {
             <div className="bg-ink text-bone">
               {/* Student identity */}
               <div className="flex items-center gap-3 border-b border-white/10 p-5">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-volt font-display text-lg text-ink">
-                  {(user?.email?.charAt(0) ?? 'S').toUpperCase()}
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden bg-volt font-display text-lg text-ink">
+                  {resolveImage(photo) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={resolveImage(photo)} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    (user?.email?.charAt(0) ?? 'S').toUpperCase()
+                  )}
                 </div>
                 <div className="min-w-0">
                   <p className="truncate font-semibold leading-tight">
@@ -467,6 +480,9 @@ export default function StudentDashboardPage() {
             {section === 'messages' && !loading && !trainer && (
               <p className="py-12 text-center text-sm text-ink/50">{sp.noTrainer}</p>
             )}
+
+            {/* ── Settings ── */}
+            {section === 'settings' && <StudentSettingsPanel onPhotoChange={setPhoto} />}
           </div>
         </div>
       </div>
