@@ -1,62 +1,115 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import db from '../../../../../lib/db';
-import { verifyToken, unauthorized } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { requireAdmin, unauthorized } from '@/lib/supabase-auth';
+import { getAdminSupabase } from '@/lib/supabase-admin';
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(req: NextRequest, { params }: Params) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
+function one<T>(v: T | T[] | null | undefined): T | undefined {
+  return Array.isArray(v) ? v[0] : v ?? undefined;
+}
+
+export async function GET(_req: NextRequest, { params }: Params) {
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
 
   const { id } = await params;
-  const row = await db.prepare(`
-    SELECT sp.id, sp.name, sp.created_at, u.id AS user_id, u.email
-    FROM student_profiles sp
-    JOIN users u ON u.id = sp.user_id
-    WHERE sp.id = ?
-  `).get(Number(id));
+  const { data: row } = await admin
+    .from('student_profiles')
+    .select('id, name, created_at, users(id, email)')
+    .eq('id', Number(id))
+    .maybeSingle();
   if (!row) return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
-  return NextResponse.json(row);
+
+  const u = one(row.users as { id?: number; email?: string } | { id?: number; email?: string }[] | null);
+  return NextResponse.json({
+    id: row.id,
+    name: row.name,
+    created_at: row.created_at,
+    user_id: u?.id,
+    email: u?.email,
+  });
 }
 
 export async function PUT(req: NextRequest, { params }: Params) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
 
   const { id } = await params;
   const { name, email, password } = await req.json();
 
-  const student = await db.prepare('SELECT user_id FROM student_profiles WHERE id = ?').get(Number(id)) as { user_id: number } | undefined;
+  const { data: student } = await admin
+    .from('student_profiles')
+    .select('user_id')
+    .eq('id', Number(id))
+    .maybeSingle();
   if (!student) return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
 
+  const { data: user } = await admin
+    .from('users')
+    .select('id, auth_id, email')
+    .eq('id', student.user_id)
+    .maybeSingle();
+  if (!user) return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
+
   if (name) {
-    await db.prepare('UPDATE student_profiles SET name = ? WHERE id = ?').run(name, Number(id));
+    await admin.from('student_profiles').update({ name }).eq('id', Number(id));
   }
 
-  if (email) {
-    const conflict = await db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email, student.user_id);
+  if (email && email !== user.email) {
+    const { data: conflict } = await admin
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .neq('id', user.id)
+      .maybeSingle();
     if (conflict) return NextResponse.json({ error: 'Email already in use.' }, { status: 409 });
-    await db.prepare('UPDATE users SET email = ? WHERE id = ?').run(email, student.user_id);
+    if (user.auth_id) {
+      const { error } = await admin.auth.admin.updateUserById(user.auth_id, { email });
+      if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    await admin.from('users').update({ email }).eq('id', user.id);
   }
 
   if (password) {
-    if (password.length < 6) return NextResponse.json({ error: 'Password must be at least 6 characters.' }, { status: 400 });
-    const hash = await bcrypt.hash(password, 10);
-    await db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, student.user_id);
+    if (password.length < 6)
+      return NextResponse.json({ error: 'Password must be at least 6 characters.' }, { status: 400 });
+    if (user.auth_id) {
+      const { error } = await admin.auth.admin.updateUserById(user.auth_id, { password });
+      if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    }
   }
 
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(req: NextRequest, { params }: Params) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
+export async function DELETE(_req: NextRequest, { params }: Params) {
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
 
   const { id } = await params;
-  const student = await db.prepare('SELECT user_id FROM student_profiles WHERE id = ?').get(Number(id)) as { user_id: number } | undefined;
+  const { data: student } = await admin
+    .from('student_profiles')
+    .select('user_id')
+    .eq('id', Number(id))
+    .maybeSingle();
   if (!student) return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
 
-  await db.prepare('DELETE FROM users WHERE id = ?').run(student.user_id);
+  const { data: user } = await admin
+    .from('users')
+    .select('id, auth_id')
+    .eq('id', student.user_id)
+    .maybeSingle();
+
+  // Deleting the auth user cascades to the app `users` row (auth_id FK) and its
+  // profiles. Fall back to deleting the users row directly if not linked.
+  if (user?.auth_id) {
+    await admin.auth.admin.deleteUser(user.auth_id);
+  } else if (user) {
+    await admin.from('users').delete().eq('id', user.id);
+  }
   return NextResponse.json({ ok: true });
 }

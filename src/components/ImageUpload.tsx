@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { Image as ImageIcon, Upload, X } from 'lucide-react';
-import { cn, resolveImage } from '../lib/format';
-import { useToast } from '../hooks/useToast';
+import { cn, resolveImage } from '@/lib/format';
+import { useToast } from '@/hooks/useToast';
 
 interface ImageUploadProps {
   label?: string;

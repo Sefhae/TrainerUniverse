@@ -1,6 +1,6 @@
 'use client';
 
-import { useLanguage } from '../../hooks/useLanguage';
+import { useLanguage } from '@/hooks/useLanguage';
 
 type Block = { p: string } | { ul: string[] };
 interface Section {

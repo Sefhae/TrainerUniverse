@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useT } from '../hooks/useLanguage';
+import { useT } from '@/hooks/useLanguage';
 import BrandMark from './BrandMark';
 
 export default function Footer() {

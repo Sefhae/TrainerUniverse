@@ -1,43 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import db from '../../../../lib/db';
-import { signToken } from '@/lib/auth';
+import { NextRequest } from 'next/server';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { getAuthContext, unauthorized } from '@/lib/supabase-auth';
+import { authResponse, authErrorResponse, normalizeEmail } from '@/lib/auth-helpers';
 
 export async function POST(req: NextRequest) {
-  try {
-    const { email, password } = await req.json();
-
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 });
-    }
-
-    const user = await db.prepare(`SELECT * FROM users WHERE email = ? AND role = 'student'`).get(
-      email.toLowerCase().trim()
-    ) as { id: number; email: string; password_hash: string; role: string } | undefined;
-
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
-    }
-
-    const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) {
-      return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
-    }
-
-    const profile = await db.prepare('SELECT id FROM student_profiles WHERE user_id = ?').get(user.id) as
-      | { id: number }
-      | undefined;
-
-    const studentId = profile?.id ?? null;
-    const token = signToken({ userId: user.id, role: 'student', trainerId: null, studentId });
-
-    return NextResponse.json({
-      token,
-      user: { id: user.id, email: user.email, role: 'student' },
-      studentId,
-    });
-  } catch (err) {
-    console.error('student-login error', err);
-    return NextResponse.json({ error: 'Login failed.' }, { status: 500 });
+  const body = await req.json().catch(() => ({}));
+  const { email, password } = body || {};
+  if (!email || !password) {
+    return unauthorized('Email and password are required.');
   }
+
+  const supabase = await getServerSupabase();
+  const { error } = await supabase.auth.signInWithPassword({
+    email: normalizeEmail(email),
+    password: String(password),
+  });
+  if (error) return authErrorResponse(error);
+
+  const ctx = await getAuthContext(supabase);
+  // This endpoint is only for student accounts.
+  if (!ctx || ctx.role !== 'student') {
+    await supabase.auth.signOut();
+    return unauthorized('Invalid email or password.');
+  }
+  return authResponse(ctx);
 }

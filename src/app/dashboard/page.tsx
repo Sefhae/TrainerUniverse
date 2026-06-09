@@ -3,21 +3,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CalendarDays, ChevronDown, DollarSign, ExternalLink, Image as ImageIcon, Inbox, MessageSquare, Settings, Star, User, Users } from 'lucide-react';
-import api from '../../lib/client';
-import { useAuth } from '../../hooks/useAuth';
-import { useT } from '../../hooks/useLanguage';
-import type { Trainer } from '../../types/index.d.ts';
-import { cn, initials, resolveImage } from '../../lib/format';
-import ProtectedRoute from '../../components/ProtectedRoute';
-import ProfileEditor from '../../components/dashboard/ProfileEditor';
-import PricingManager from '../../components/dashboard/PricingManager';
-import WorkManager from '../../components/dashboard/WorkManager';
-import ReviewsPanel from '../../components/dashboard/ReviewsPanel';
-import StudentsPanel from '../../components/dashboard/StudentsPanel';
-import TrainingCalendar from '../../components/dashboard/TrainingCalendar';
-import MessagesPanel from '../../components/dashboard/MessagesPanel';
-import SessionRequestsPanel from '../../components/dashboard/SessionRequestsPanel';
-import SettingsPanel from '../../components/dashboard/SettingsPanel';
+import api from '@/lib/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useT } from '@/hooks/useLanguage';
+import type { Trainer } from '@/types/index.d.ts';
+import { cn, initials, resolveImage } from '@/lib/format';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import ProfileEditor from '@/components/dashboard/ProfileEditor';
+import PricingManager from '@/components/dashboard/PricingManager';
+import WorkManager from '@/components/dashboard/WorkManager';
+import ReviewsPanel from '@/components/dashboard/ReviewsPanel';
+import StudentsPanel from '@/components/dashboard/StudentsPanel';
+import TrainingCalendar from '@/components/dashboard/TrainingCalendar';
+import MessagesPanel from '@/components/dashboard/MessagesPanel';
+import SessionRequestsPanel from '@/components/dashboard/SessionRequestsPanel';
+import SettingsPanel from '@/components/dashboard/SettingsPanel';
 
 type SectionId = 'profile' | 'pricing' | 'work' | 'reviews' | 'students' | 'calendar' | 'messages' | 'requests' | 'settings';
 

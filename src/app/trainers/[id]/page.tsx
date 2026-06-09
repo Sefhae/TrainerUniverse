@@ -4,21 +4,21 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, Award, CalendarCheck, Clock, Globe, MapPin, MessageCircle, Star } from 'lucide-react';
-import VerifiedBadge from '../../../components/VerifiedBadge';
+import VerifiedBadge from '@/components/VerifiedBadge';
 import api from '@/lib/client';
 import type { Review, Trainer } from '@/types/index.d.ts';
-import { cn, formatPrice, initials, resolveImage } from '../../../lib/format';
-import { useLanguage } from '../../../hooks/useLanguage';
+import { cn, formatPrice, initials, resolveImage } from '@/lib/format';
+import { useLanguage } from '@/hooks/useLanguage';
 import { localizeSpecialty } from '@/lib/specialtyLabel';
-import StarRating from '../../../components/StarRating';
-import PricingCard from '../../../components/PricingCard';
-import WorkGallery from '../../../components/WorkGallery';
-import ReviewCard from '../../../components/ReviewCard';
-import AvailabilityCalendar from '../../../components/AvailabilityCalendar';
-import EmptyState from '../../../components/EmptyState';
-import BookingModal from '../../../components/BookingModal';
-import MessageModal from '../../../components/MessageModal';
-import ReviewModal from '../../../components/ReviewModal';
+import StarRating from '@/components/StarRating';
+import PricingCard from '@/components/PricingCard';
+import WorkGallery from '@/components/WorkGallery';
+import ReviewCard from '@/components/ReviewCard';
+import AvailabilityCalendar from '@/components/AvailabilityCalendar';
+import EmptyState from '@/components/EmptyState';
+import BookingModal from '@/components/BookingModal';
+import MessageModal from '@/components/MessageModal';
+import ReviewModal from '@/components/ReviewModal';
 
 function SectionHeading({
   eyebrow,

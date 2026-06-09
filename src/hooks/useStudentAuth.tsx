@@ -1,15 +1,11 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import api from '../lib/client';
-import type { User } from '../lib/types';
-
-const STUDENT_TOKEN_KEY = 'traineruniverse_student_token';
-const STUDENT_AUTH_KEY = 'traineruniverse_student_auth';
+import api from '@/lib/client';
+import type { StudentAuthResponse, User } from '@/lib/types';
 
 interface StudentAuthState {
   user: User | null;
-  token: string | null;
   studentId: number | null;
 }
 
@@ -17,88 +13,74 @@ interface StudentAuthContextValue extends StudentAuthState {
   isAuthenticated: boolean;
   hydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  loginWithData: (data: { token: string; user: User; studentId: number | null }) => void;
+  loginWithData: (data: { user: User; studentId: number | null }) => void;
   register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
-function readStoredAuth(): StudentAuthState {
-  try {
-    if (typeof window === 'undefined') return { user: null, token: null, studentId: null };
-    const token = localStorage.getItem(STUDENT_TOKEN_KEY);
-    const raw = localStorage.getItem(STUDENT_AUTH_KEY);
-    if (token && raw) {
-      const parsed = JSON.parse(raw) as { user: User; studentId: number | null };
-      return { token, user: parsed.user, studentId: parsed.studentId };
-    }
-  } catch { /* corrupt */ }
-  return { user: null, token: null, studentId: null };
-}
+const EMPTY: StudentAuthState = { user: null, studentId: null };
 
 const StudentAuthContext = createContext<StudentAuthContextValue | undefined>(undefined);
 
 export function StudentAuthProvider({ children }: { children: ReactNode }) {
-  // Initialise logged-out so SSR and the first client render agree; read
-  // storage in an effect to avoid a hydration mismatch.
-  const [state, setState] = useState<StudentAuthState>({ user: null, token: null, studentId: null });
+  const [state, setState] = useState<StudentAuthState>(EMPTY);
   const [hydrated, setHydrated] = useState(false);
 
+  // Hydrate from the Supabase session cookie; only adopt it for student accounts.
   useEffect(() => {
-    setState(readStoredAuth());
-    setHydrated(true);
-  }, []);
-
-  const persist = useCallback((next: StudentAuthState) => {
-    if (next.token && next.user) {
-      localStorage.setItem(STUDENT_TOKEN_KEY, next.token);
-      localStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify({ user: next.user, studentId: next.studentId }));
-      // Also set the shared token key so the api client sends it
-      localStorage.setItem('traineruniverse_token', next.token);
-    } else {
-      localStorage.removeItem(STUDENT_TOKEN_KEY);
-      localStorage.removeItem(STUDENT_AUTH_KEY);
-      localStorage.removeItem('traineruniverse_token');
-    }
-    setState(next);
+    let active = true;
+    (async () => {
+      try {
+        const { data } = await api.get<{ user: User; studentId: number | null }>('/auth/me');
+        if (active && data.user && data.user.role === 'student') {
+          setState({ user: data.user, studentId: data.studentId });
+        }
+      } catch {
+        /* not logged in */
+      } finally {
+        if (active) setHydrated(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { data } = await api.post<{ token: string; user: User; studentId: number }>(
-      '/auth/student-login',
-      { email, password }
-    );
-    persist({ user: data.user, token: data.token, studentId: data.studentId });
-  }, [persist]);
+    const { data } = await api.post<StudentAuthResponse>('/auth/student-login', { email, password });
+    setState({ user: data.user, studentId: data.studentId });
+  }, []);
 
-  const loginWithData = useCallback(
-    (data: { token: string; user: User; studentId: number | null }) => {
-      persist({ user: data.user, token: data.token, studentId: data.studentId });
-    },
-    [persist]
-  );
+  const loginWithData = useCallback((data: { user: User; studentId: number | null }) => {
+    setState({ user: data.user, studentId: data.studentId });
+  }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
-    const { data } = await api.post<{ token: string; user: User; studentId: number }>(
-      '/auth/student-register',
-      { name, email, password }
-    );
-    persist({ user: data.user, token: data.token, studentId: data.studentId });
-  }, [persist]);
+    const { data } = await api.post<StudentAuthResponse>('/auth/student-register', { name, email, password });
+    setState({ user: data.user, studentId: data.studentId });
+  }, []);
 
-  const logout = useCallback(() => {
-    persist({ user: null, token: null, studentId: null });
-  }, [persist]);
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      /* ignore */
+    }
+    setState(EMPTY);
+  }, []);
 
   return (
-    <StudentAuthContext.Provider value={{
-      ...state,
-      isAuthenticated: Boolean(state.token),
-      hydrated,
-      login,
-      loginWithData,
-      register,
-      logout,
-    }}>
+    <StudentAuthContext.Provider
+      value={{
+        ...state,
+        isAuthenticated: Boolean(state.user),
+        hydrated,
+        login,
+        loginWithData,
+        register,
+        logout,
+      }}
+    >
       {children}
     </StudentAuthContext.Provider>
   );

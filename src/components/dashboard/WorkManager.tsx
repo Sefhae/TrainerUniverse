@@ -2,14 +2,14 @@
 
 import { useState, type FormEvent } from 'react';
 import { Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react';
-import api from '../../lib/client';
-import type { PreviousWork, Trainer } from '../../lib/types';
-import { cn, getApiError, resolveImage } from '../../lib/format';
-import { useToast } from '../../hooks/useToast';
-import Modal from '../Modal';
-import ConfirmDialog from '../ConfirmDialog';
-import ImageUpload from '../ImageUpload';
-import Toggle from '../Toggle';
+import api from '@/lib/client';
+import type { PreviousWork, Trainer } from '@/lib/types';
+import { cn, getApiError, resolveImage } from '@/lib/format';
+import { useToast } from '@/hooks/useToast';
+import Modal from '@/components/Modal';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import ImageUpload from '@/components/ImageUpload';
+import Toggle from '@/components/Toggle';
 
 interface Props {
   trainer: Trainer;

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Star } from 'lucide-react';
-import { cn } from '../lib/format';
+import { cn } from '@/lib/format';
 
 interface StarRatingProps {
   value: number;

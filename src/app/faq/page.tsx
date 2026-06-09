@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronDown } from 'lucide-react';
-import { useT } from '../../hooks/useLanguage';
-import { cn } from '../../lib/format';
+import { useT } from '@/hooks/useLanguage';
+import { cn } from '@/lib/format';
 
 function AccordionItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);

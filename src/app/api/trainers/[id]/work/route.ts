@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../../lib/db';
-import { verifyToken, unauthorized, forbidden } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { getAuthContext, unauthorized, forbidden } from '@/lib/supabase-auth';
 import { mapWork } from '@/lib/serialize';
 import { saveUploadedFile } from '@/lib/upload';
 
@@ -13,18 +13,23 @@ function parseBool(value: unknown, fallback = false): boolean {
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const rows = (await db
-    .prepare('SELECT * FROM previous_work WHERE trainer_id = ? ORDER BY display_order ASC, id ASC')
-    .all(Number(id)) as Record<string, unknown>[]).map(mapWork);
-  return NextResponse.json(rows);
+  const supabase = await getServerSupabase();
+  const { data } = await supabase
+    .from('previous_work')
+    .select('*')
+    .eq('trainer_id', Number(id))
+    .order('display_order', { ascending: true })
+    .order('id', { ascending: true });
+  return NextResponse.json((data ?? []).map(mapWork));
 }
 
 export async function POST(req: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
-    const payload = verifyToken(req);
-    if (!payload) return unauthorized();
-    if (payload.trainerId !== Number(id)) return forbidden();
+    const supabase = await getServerSupabase();
+    const ctx = await getAuthContext(supabase);
+    if (!ctx) return unauthorized();
+    if (ctx.trainerId !== Number(id)) return forbidden();
 
     const contentType = req.headers.get('content-type') || '';
     let studentName = '', goal = '', duration = '', description = '', isVisible = true;
@@ -49,17 +54,26 @@ export async function POST(req: NextRequest, { params }: Params) {
       if (body.photo) photoPath = String(body.photo);
     }
 
-    const orderRow = await db.prepare('SELECT COUNT(*) AS c FROM previous_work WHERE trainer_id = ?').get(Number(id)) as { c: number };
-    const order = orderRow.c;
+    const { count } = await supabase
+      .from('previous_work')
+      .select('id', { count: 'exact', head: true })
+      .eq('trainer_id', Number(id));
 
-    const info = await db
-      .prepare(`
-        INSERT INTO previous_work
-          (trainer_id, photo, student_name, goal, duration, description, display_order, is_visible)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `)
-      .run(Number(id), photoPath, studentName, goal, duration, description, order, isVisible ? 1 : 0);
-    const created = await db.prepare('SELECT * FROM previous_work WHERE id = ?').get(info.lastInsertRowid) as Record<string, unknown>;
+    const { data: created, error } = await supabase
+      .from('previous_work')
+      .insert({
+        trainer_id: Number(id),
+        photo: photoPath,
+        student_name: studentName,
+        goal,
+        duration,
+        description,
+        display_order: count ?? 0,
+        is_visible: isVisible ? 1 : 0,
+      })
+      .select('*')
+      .single();
+    if (error || !created) return NextResponse.json({ error: 'Could not save work entry.' }, { status: 500 });
     return NextResponse.json(mapWork(created), { status: 201 });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Could not save work entry.';

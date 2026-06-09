@@ -3,8 +3,8 @@
 import { useState, type FormEvent } from 'react';
 import { Send } from 'lucide-react';
 import Modal from './Modal';
-import { useToast } from '../hooks/useToast';
-import { cn } from '../lib/format';
+import { useToast } from '@/hooks/useToast';
+import { cn } from '@/lib/format';
 
 interface ContactModalProps {
   open: boolean;

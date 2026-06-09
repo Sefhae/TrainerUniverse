@@ -1,14 +1,11 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import api, { TOKEN_KEY } from '../lib/client';
-import type { AuthResponse, User } from '../lib/types';
-
-const AUTH_KEY = 'traineruniverse_auth';
+import api from '@/lib/client';
+import type { AuthResponse, User } from '@/lib/types';
 
 interface AuthState {
   user: User | null;
-  token: string | null;
   trainerId: number | null;
 }
 
@@ -23,78 +20,66 @@ interface AuthContextValue extends AuthState {
   isAuthenticated: boolean;
   hydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  loginWithData: (data: { token: string; user: User; trainerId: number | null }) => void;
+  loginWithData: (data: { user: User; trainerId: number | null }) => void;
   register: (payload: RegisterPayload) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
-function readStoredAuth(): AuthState {
-  try {
-    if (typeof window === 'undefined') return { user: null, token: null, trainerId: null };
-    const token = localStorage.getItem(TOKEN_KEY);
-    const raw = localStorage.getItem(AUTH_KEY);
-    if (token && raw) {
-      const parsed = JSON.parse(raw) as { user: User; trainerId: number | null };
-      return { token, user: parsed.user, trainerId: parsed.trainerId };
-    }
-  } catch {
-    /* corrupt storage */
-  }
-  return { user: null, token: null, trainerId: null };
-}
+const EMPTY: AuthState = { user: null, trainerId: null };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({ user: null, token: null, trainerId: null });
+  const [state, setState] = useState<AuthState>(EMPTY);
   const [hydrated, setHydrated] = useState(false);
 
+  // On load, ask the server who we are (reads the Supabase session cookie).
+  // Only adopt the session here if it belongs to a trainer/admin account.
   useEffect(() => {
-    setState(readStoredAuth());
-    setHydrated(true);
+    let active = true;
+    (async () => {
+      try {
+        const { data } = await api.get<AuthResponse>('/auth/me');
+        if (active && data.user && data.user.role !== 'student') {
+          setState({ user: data.user, trainerId: data.trainerId });
+        }
+      } catch {
+        /* not logged in */
+      } finally {
+        if (active) setHydrated(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const persist = useCallback((next: AuthState) => {
-    if (next.token && next.user) {
-      localStorage.setItem(TOKEN_KEY, next.token);
-      localStorage.setItem(AUTH_KEY, JSON.stringify({ user: next.user, trainerId: next.trainerId }));
-    } else {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(AUTH_KEY);
+  const login = useCallback(async (email: string, password: string) => {
+    const { data } = await api.post<AuthResponse>('/auth/login', { email, password });
+    setState({ user: data.user, trainerId: data.trainerId });
+  }, []);
+
+  const loginWithData = useCallback((data: { user: User; trainerId: number | null }) => {
+    setState({ user: data.user, trainerId: data.trainerId });
+  }, []);
+
+  const register = useCallback(async (payload: RegisterPayload) => {
+    const { data } = await api.post<AuthResponse>('/auth/register', payload);
+    setState({ user: data.user, trainerId: data.trainerId });
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      /* ignore */
     }
-    setState(next);
+    setState(EMPTY);
   }, []);
-
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const { data } = await api.post<AuthResponse>('/auth/login', { email, password });
-      persist({ user: data.user, token: data.token, trainerId: data.trainerId });
-    },
-    [persist]
-  );
-
-  const loginWithData = useCallback(
-    (data: { token: string; user: User; trainerId: number | null }) => {
-      persist({ user: data.user, token: data.token, trainerId: data.trainerId });
-    },
-    [persist]
-  );
-
-  const register = useCallback(
-    async (payload: RegisterPayload) => {
-      const { data } = await api.post<AuthResponse>('/auth/register', payload);
-      persist({ user: data.user, token: data.token, trainerId: data.trainerId });
-    },
-    [persist]
-  );
-
-  const logout = useCallback(() => {
-    persist({ user: null, token: null, trainerId: null });
-  }, [persist]);
 
   const value: AuthContextValue = {
     ...state,
-    isAuthenticated: Boolean(state.token),
+    isAuthenticated: Boolean(state.user),
     hydrated,
     login,
     loginWithData,

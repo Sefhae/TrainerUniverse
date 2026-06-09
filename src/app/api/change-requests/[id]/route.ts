@@ -1,28 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../lib/db';
-import { verifyToken, unauthorized, forbidden } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { getAuthContext, unauthorized, forbidden } from '@/lib/supabase-auth';
 
 type Params = { params: Promise<{ id: string }> };
 
+function one<T>(v: T | T[] | null | undefined): T | undefined {
+  return Array.isArray(v) ? v[0] : v ?? undefined;
+}
+
 // PUT /api/change-requests/[id] — approve or reject a change request
 export async function PUT(req: NextRequest, { params }: Params) {
-  const payload = verifyToken(req);
-  if (!payload) return unauthorized();
+  const supabase = await getServerSupabase();
+  const ctx = await getAuthContext(supabase);
+  if (!ctx) return unauthorized();
 
   const { id } = await params;
-  const cr = await db.prepare(`
-    SELECT cr.*, s.trainer_id, s.student_id
-    FROM session_change_requests cr
-    JOIN training_sessions s ON s.id = cr.session_id
-    WHERE cr.id = ?
-  `).get(Number(id)) as
-    | { id: number; session_id: number; proposed_at: string; trainer_id: number; student_id: number; requested_by: string }
-    | undefined;
-
+  const { data: cr } = await supabase
+    .from('session_change_requests')
+    .select('id, session_id, proposed_at, requested_by, training_sessions(trainer_id, student_id)')
+    .eq('id', Number(id))
+    .maybeSingle();
   if (!cr) return NextResponse.json({ error: 'Change request not found.' }, { status: 404 });
 
-  const isTrainer = payload.role === 'trainer' && payload.trainerId === cr.trainer_id;
-  const isStudent = payload.role === 'student' && payload.studentId === cr.student_id;
+  const session = one(cr.training_sessions as { trainer_id: number; student_id: number } | { trainer_id: number; student_id: number }[] | null);
+  const isTrainer = ctx.role === 'trainer' && ctx.trainerId === session?.trainer_id;
+  const isStudent = ctx.role === 'student' && ctx.studentId === session?.student_id;
   if (!isTrainer && !isStudent) return forbidden();
 
   const { action } = await req.json(); // 'approve' | 'reject'
@@ -31,14 +33,13 @@ export async function PUT(req: NextRequest, { params }: Params) {
   }
 
   const newStatus = action === 'approve' ? 'approved' : 'rejected';
-
-  await db.prepare('UPDATE session_change_requests SET status = ? WHERE id = ?').run(newStatus, cr.id);
+  await supabase.from('session_change_requests').update({ status: newStatus }).eq('id', cr.id);
 
   if (action === 'approve') {
-    await db.prepare('UPDATE training_sessions SET scheduled_at = ? WHERE id = ?').run(
-      cr.proposed_at,
-      cr.session_id
-    );
+    await supabase
+      .from('training_sessions')
+      .update({ scheduled_at: cr.proposed_at })
+      .eq('id', cr.session_id);
   }
 
   return NextResponse.json({ success: true });

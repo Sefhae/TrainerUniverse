@@ -7,8 +7,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "db:setup": "tsx scripts/db-setup.ts",
-    "seed": "tsx src/lib/seed.ts",
     "lint": "next lint"
   },
   "dependencies": {

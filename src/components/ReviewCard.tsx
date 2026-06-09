@@ -1,5 +1,5 @@
-import type { Review } from '../lib/types';
-import { cn, initials, timeAgo } from '../lib/format';
+import type { Review } from '@/lib/types';
+import { cn, initials, timeAgo } from '@/lib/format';
 import StarRating from './StarRating';
 
 interface ReviewCardProps {

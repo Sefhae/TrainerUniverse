@@ -86,7 +86,6 @@ export interface TrainersResponse {
 }
 
 export interface AuthResponse {
-  token: string;
   user: User;
   trainerId: number | null;
 }
@@ -146,7 +145,6 @@ export interface SessionRequest {
 }
 
 export interface StudentAuthResponse {
-  token: string;
   user: User;
   studentId: number;
 }

@@ -1,44 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../lib/db';
-import { verifyToken, unauthorized, forbidden } from '../../../lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { getAuthContext, unauthorized, forbidden } from '@/lib/supabase-auth';
+
+function one<T>(v: T | T[] | null | undefined): T | undefined {
+  return Array.isArray(v) ? v[0] : v ?? undefined;
+}
 
 // POST /api/session-requests — student submits a booking request
 export async function POST(req: NextRequest) {
   try {
-    const payload = verifyToken(req);
-    if (!payload) return unauthorized();
-    if (payload.role !== 'student' || !payload.studentId) return forbidden();
+    const supabase = await getServerSupabase();
+    const ctx = await getAuthContext(supabase);
+    if (!ctx) return unauthorized();
+    if (ctx.role !== 'student' || !ctx.studentId) return forbidden();
 
     const { trainerId, packageId, message } = await req.json();
     if (!trainerId) {
       return NextResponse.json({ error: 'trainerId is required.' }, { status: 400 });
     }
 
-    // The trainer (and our own student profile) must still exist — on a fresh/
-    // reset database the JWT can reference rows that are gone, which would
-    // otherwise surface as an opaque 500.
-    const trainerExists = await db.prepare('SELECT id FROM trainer_profiles WHERE id = ?').get(trainerId);
+    const { data: trainerExists } = await supabase
+      .from('trainer_profiles')
+      .select('id')
+      .eq('id', trainerId)
+      .maybeSingle();
     if (!trainerExists) {
       return NextResponse.json({ error: 'That trainer is no longer available.' }, { status: 404 });
     }
-    const meExists = await db.prepare('SELECT id FROM student_profiles WHERE id = ?').get(payload.studentId);
+    const { data: meExists } = await supabase
+      .from('student_profiles')
+      .select('id')
+      .eq('id', ctx.studentId)
+      .maybeSingle();
     if (!meExists) {
       return NextResponse.json({ error: 'Your session has expired. Please log in again.' }, { status: 401 });
     }
 
-    // Prevent duplicate pending request
-    const existing = await db.prepare(
-      `SELECT id FROM session_requests WHERE trainer_id = ? AND student_id = ? AND status = 'pending'`
-    ).get(trainerId, payload.studentId);
+    const { data: existing } = await supabase
+      .from('session_requests')
+      .select('id')
+      .eq('trainer_id', trainerId)
+      .eq('student_id', ctx.studentId)
+      .eq('status', 'pending')
+      .maybeSingle();
     if (existing) {
       return NextResponse.json({ error: 'You already have a pending request with this trainer.' }, { status: 409 });
     }
 
-    const result = await db.prepare(
-      `INSERT INTO session_requests (trainer_id, student_id, package_id, message) VALUES (?, ?, ?, ?)`
-    ).run(trainerId, payload.studentId, packageId ?? null, message?.trim() ?? '');
-
-    return NextResponse.json({ id: result.lastInsertRowid }, { status: 201 });
+    const { data: created, error } = await supabase
+      .from('session_requests')
+      .insert({
+        trainer_id: trainerId,
+        student_id: ctx.studentId,
+        package_id: packageId ?? null,
+        message: message?.trim() ?? '',
+      })
+      .select('id')
+      .single();
+    if (error || !created) throw error ?? new Error('insert failed');
+    return NextResponse.json({ id: created.id }, { status: 201 });
   } catch (err) {
     console.error('[session-requests POST]', err);
     return NextResponse.json({ error: 'Could not send your request. Please try again.' }, { status: 500 });
@@ -47,59 +67,62 @@ export async function POST(req: NextRequest) {
 
 // GET /api/session-requests — trainer sees incoming requests; a student sees
 // the requests they've sent (with the trainer + status).
-export async function GET(req: NextRequest) {
-  const payload = verifyToken(req);
-  if (!payload) return unauthorized();
+export async function GET() {
+  const supabase = await getServerSupabase();
+  const ctx = await getAuthContext(supabase);
+  if (!ctx) return unauthorized();
 
-  if (payload.role === 'student' && payload.studentId) {
-    const rows = await db.prepare(`
-      SELECT sr.id, sr.trainer_id, sr.package_id, sr.message, sr.status, sr.created_at,
-             tp.name AS trainer_name, tp.profile_photo AS trainer_photo,
-             pp.name AS package_name
-      FROM session_requests sr
-      JOIN trainer_profiles tp ON tp.id = sr.trainer_id
-      LEFT JOIN pricing_packages pp ON pp.id = sr.package_id
-      WHERE sr.student_id = ?
-      ORDER BY sr.created_at DESC
-    `).all(payload.studentId) as Record<string, unknown>[];
+  if (ctx.role === 'student' && ctx.studentId) {
+    const { data } = await supabase
+      .from('session_requests')
+      .select('id, trainer_id, package_id, message, status, created_at, trainer_profiles(name, profile_photo), pricing_packages(name)')
+      .eq('student_id', ctx.studentId)
+      .order('created_at', { ascending: false });
 
-    return NextResponse.json(rows.map((r) => ({
-      id: r.id,
-      trainerId: r.trainer_id,
-      trainerName: r.trainer_name,
-      trainerPhoto: r.trainer_photo,
-      packageId: r.package_id,
-      packageName: r.package_name,
-      message: r.message,
-      status: r.status,
-      createdAt: r.created_at,
-    })));
+    return NextResponse.json(
+      (data ?? []).map((r) => {
+        const tp = one(r.trainer_profiles as { name?: string; profile_photo?: string } | { name?: string; profile_photo?: string }[] | null);
+        const pp = one(r.pricing_packages as { name?: string } | { name?: string }[] | null);
+        return {
+          id: r.id,
+          trainerId: r.trainer_id,
+          trainerName: tp?.name,
+          trainerPhoto: tp?.profile_photo,
+          packageId: r.package_id,
+          packageName: pp?.name ?? null,
+          message: r.message,
+          status: r.status,
+          createdAt: r.created_at,
+        };
+      })
+    );
   }
 
-  if (payload.role !== 'trainer' || !payload.trainerId) return forbidden();
+  if (ctx.role !== 'trainer' || !ctx.trainerId) return forbidden();
 
-  const rows = await db.prepare(`
-    SELECT sr.id, sr.trainer_id, sr.student_id, sr.package_id, sr.message, sr.status, sr.created_at,
-           sp.name AS student_name, u.email AS student_email,
-           pp.name AS package_name
-    FROM session_requests sr
-    JOIN student_profiles sp ON sp.id = sr.student_id
-    JOIN users u ON u.id = sp.user_id
-    LEFT JOIN pricing_packages pp ON pp.id = sr.package_id
-    WHERE sr.trainer_id = ?
-    ORDER BY sr.created_at DESC
-  `).all(payload.trainerId) as Record<string, unknown>[];
+  const { data } = await supabase
+    .from('session_requests')
+    .select('id, trainer_id, student_id, package_id, message, status, created_at, student_profiles(name, users(email)), pricing_packages(name)')
+    .eq('trainer_id', ctx.trainerId)
+    .order('created_at', { ascending: false });
 
-  return NextResponse.json(rows.map((r) => ({
-    id: r.id,
-    trainerId: r.trainer_id,
-    studentId: r.student_id,
-    studentName: r.student_name,
-    studentEmail: r.student_email,
-    packageId: r.package_id,
-    packageName: r.package_name,
-    message: r.message,
-    status: r.status,
-    createdAt: r.created_at,
-  })));
+  return NextResponse.json(
+    (data ?? []).map((r) => {
+      const sp = one(r.student_profiles as { name?: string; users?: { email?: string } | { email?: string }[] } | { name?: string; users?: { email?: string } | { email?: string }[] }[] | null);
+      const u = one(sp?.users);
+      const pp = one(r.pricing_packages as { name?: string } | { name?: string }[] | null);
+      return {
+        id: r.id,
+        trainerId: r.trainer_id,
+        studentId: r.student_id,
+        studentName: sp?.name,
+        studentEmail: u?.email,
+        packageId: r.package_id,
+        packageName: pp?.name ?? null,
+        message: r.message,
+        status: r.status,
+        createdAt: r.created_at,
+      };
+    })
+  );
 }

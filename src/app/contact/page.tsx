@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { Mail, Clock, CheckCircle, Send } from 'lucide-react';
-import { useT } from '../../hooks/useLanguage';
-import { cn } from '../../lib/format';
-import api from '../../lib/client';
+import { useT } from '@/hooks/useLanguage';
+import { cn } from '@/lib/format';
+import api from '@/lib/client';
 
 const inputCls =
   'w-full border border-content/10 bg-content/5 px-4 py-3 text-sm text-content placeholder-content/30 transition-colors focus:border-volt/50 focus:outline-none';

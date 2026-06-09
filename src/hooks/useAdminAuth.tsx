@@ -1,55 +1,55 @@
 'use client';
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
-import api from '../lib/client';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import api from '@/lib/client';
+import type { User } from '@/lib/types';
 
-const ADMIN_TOKEN_KEY = 'traineruniverse_admin_token';
-
-interface AdminAuthState {
-  token: string | null;
-}
-
-interface AdminAuthContextValue extends AdminAuthState {
+interface AdminAuthContextValue {
   isAuthenticated: boolean;
+  hydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-}
-
-function readStored(): AdminAuthState {
-  try {
-    if (typeof window === 'undefined') return { token: null };
-    return { token: localStorage.getItem(ADMIN_TOKEN_KEY) };
-  } catch {
-    return { token: null };
-  }
+  logout: () => Promise<void>;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextValue | undefined>(undefined);
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AdminAuthState>(readStored);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
-  const persist = useCallback((token: string | null) => {
-    if (token) {
-      localStorage.setItem(ADMIN_TOKEN_KEY, token);
-      localStorage.setItem('traineruniverse_token', token);
-    } else {
-      localStorage.removeItem(ADMIN_TOKEN_KEY);
-    }
-    setState({ token });
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data } = await api.get<{ user: User }>('/auth/me');
+        if (active && data.user?.role === 'admin') setIsAuthenticated(true);
+      } catch {
+        /* not logged in */
+      } finally {
+        if (active) setHydrated(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { data } = await api.post<{ token: string }>('/admin/login', { email, password });
-    persist(data.token);
-  }, [persist]);
+    await api.post('/admin/login', { email, password });
+    setIsAuthenticated(true);
+  }, []);
 
-  const logout = useCallback(() => {
-    persist(null);
-  }, [persist]);
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      /* ignore */
+    }
+    setIsAuthenticated(false);
+  }, []);
 
   return (
-    <AdminAuthContext.Provider value={{ ...state, isAuthenticated: Boolean(state.token), login, logout }}>
+    <AdminAuthContext.Provider value={{ isAuthenticated, hydrated, login, logout }}>
       {children}
     </AdminAuthContext.Provider>
   );

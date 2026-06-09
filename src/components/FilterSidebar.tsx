@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { Check, Search } from 'lucide-react';
-import type { TrainerFilters } from '../hooks/useTrainers';
+import type { TrainerFilters } from '@/hooks/useTrainers';
 import {
   AVAILABILITY_OPTIONS,
   EXPERIENCE_OPTIONS,
@@ -11,10 +11,10 @@ import {
   PRICE_STEP,
   RATING_OPTIONS,
   SPECIALTY_GROUPS,
-} from '../lib/constants';
-import { useT, useLanguage } from '../hooks/useLanguage';
-import { localizeSpecialty } from '../lib/specialtyLabel';
-import { cn, formatPrice } from '../lib/format';
+} from '@/lib/constants';
+import { useT, useLanguage } from '@/hooks/useLanguage';
+import { localizeSpecialty } from '@/lib/specialtyLabel';
+import { cn, formatPrice } from '@/lib/format';
 
 function SelectRow({
   value,

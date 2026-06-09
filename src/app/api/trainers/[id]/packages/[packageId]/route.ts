@@ -1,49 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../../../lib/db';
-import { verifyToken, unauthorized, forbidden } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { getAuthContext, unauthorized, forbidden } from '@/lib/supabase-auth';
 import { mapPackage } from '@/lib/serialize';
 
 type Params = { params: Promise<{ id: string; packageId: string }> };
 
 export async function PUT(req: NextRequest, { params }: Params) {
   const { id, packageId } = await params;
-  const payload = verifyToken(req);
-  if (!payload) return unauthorized();
-  if (payload.trainerId !== Number(id)) return forbidden();
+  const supabase = await getServerSupabase();
+  const ctx = await getAuthContext(supabase);
+  if (!ctx) return unauthorized();
+  if (ctx.trainerId !== Number(id)) return forbidden();
 
-  const existing = await db
-    .prepare('SELECT * FROM pricing_packages WHERE id = ? AND trainer_id = ?')
-    .get(Number(packageId), Number(id)) as Record<string, unknown> | undefined;
+  const { data: existing } = await supabase
+    .from('pricing_packages')
+    .select('id')
+    .eq('id', Number(packageId))
+    .eq('trainer_id', Number(id))
+    .maybeSingle();
   if (!existing) return NextResponse.json({ error: 'Package not found.' }, { status: 404 });
 
   const body = await req.json().catch(() => ({}));
   const { name, description, sessions, price, isPopular } = body || {};
 
-  await db.prepare(`
-    UPDATE pricing_packages SET name = ?, description = ?, sessions = ?, price = ?, is_popular = ?
-    WHERE id = ?
-  `).run(
-    name !== undefined ? String(name) : existing.name,
-    description !== undefined ? String(description) : existing.description,
-    sessions !== undefined ? Math.max(0, Number(sessions) || 0) : existing.sessions,
-    price !== undefined ? Math.max(0, Number(price) || 0) : existing.price,
-    isPopular !== undefined ? (isPopular ? 1 : 0) : existing.is_popular,
-    Number(packageId)
-  );
+  const update: Record<string, unknown> = {};
+  if (name !== undefined) update.name = String(name);
+  if (description !== undefined) update.description = String(description);
+  if (sessions !== undefined) update.sessions = Math.max(0, Number(sessions) || 0);
+  if (price !== undefined) update.price = Math.max(0, Number(price) || 0);
+  if (isPopular !== undefined) update.is_popular = isPopular ? 1 : 0;
 
-  const updated = await db.prepare('SELECT * FROM pricing_packages WHERE id = ?').get(Number(packageId)) as Record<string, unknown>;
+  const { data: updated, error } = await supabase
+    .from('pricing_packages')
+    .update(update)
+    .eq('id', Number(packageId))
+    .select('*')
+    .single();
+  if (error || !updated) return NextResponse.json({ error: 'Could not update package.' }, { status: 500 });
   return NextResponse.json(mapPackage(updated));
 }
 
 export async function DELETE(req: NextRequest, { params }: Params) {
   const { id, packageId } = await params;
-  const payload = verifyToken(req);
-  if (!payload) return unauthorized();
-  if (payload.trainerId !== Number(id)) return forbidden();
+  const supabase = await getServerSupabase();
+  const ctx = await getAuthContext(supabase);
+  if (!ctx) return unauthorized();
+  if (ctx.trainerId !== Number(id)) return forbidden();
 
-  const info = await db
-    .prepare('DELETE FROM pricing_packages WHERE id = ? AND trainer_id = ?')
-    .run(Number(packageId), Number(id));
-  if (!info.changes) return NextResponse.json({ error: 'Package not found.' }, { status: 404 });
+  const { data: deleted } = await supabase
+    .from('pricing_packages')
+    .delete()
+    .eq('id', Number(packageId))
+    .eq('trainer_id', Number(id))
+    .select('id');
+  if (!deleted || deleted.length === 0)
+    return NextResponse.json({ error: 'Package not found.' }, { status: 404 });
   return NextResponse.json({ success: true });
 }

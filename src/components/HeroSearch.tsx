@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, ChevronDown, Globe, MapPin, Search, Video } from 'lucide-react';
 import CitySearch from './CitySearch';
-import { SPECIALTY_OPTIONS } from '../lib/constants';
-import { localizeSpecialty } from '../lib/specialtyLabel';
-import { useT, useLanguage } from '../hooks/useLanguage';
-import { useSyncedRotation } from '../hooks/useSyncedRotation';
+import { SPECIALTY_OPTIONS } from '@/lib/constants';
+import { localizeSpecialty } from '@/lib/specialtyLabel';
+import { useT, useLanguage } from '@/hooks/useLanguage';
+import { useSyncedRotation } from '@/hooks/useSyncedRotation';
 
 const POPULAR = ['Gym Training', 'Boxing', 'Yoga', 'Nutrition', 'Mathematics', 'Programming'];
 

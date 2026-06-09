@@ -3,14 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronLeft, ChevronRight, Quote, Star } from 'lucide-react';
-import api from '../lib/client';
-import type { TrainerSummary, TrainersResponse } from '../types/index.d.ts';
-import TrainerCard from '../components/TrainerCard';
-import TrainerCardSkeleton from '../components/TrainerCardSkeleton';
-import StarRating from '../components/StarRating';
-import HeroSearch from '../components/HeroSearch';
-import { useT } from '../hooks/useLanguage';
-import { useSyncedRotation } from '../hooks/useSyncedRotation';
+import api from '@/lib/client';
+import type { TrainerSummary, TrainersResponse } from '@/types/index.d.ts';
+import TrainerCard from '@/components/TrainerCard';
+import TrainerCardSkeleton from '@/components/TrainerCardSkeleton';
+import StarRating from '@/components/StarRating';
+import HeroSearch from '@/components/HeroSearch';
+import { useT } from '@/hooks/useLanguage';
+import { useSyncedRotation } from '@/hooks/useSyncedRotation';
 
 const TESTIMONIALS = [
   { quote: 'I found a strength coach in minutes. Six months later I deadlift double what I used to.', name: 'Rachel M.', role: 'Strength client', rating: 5 },

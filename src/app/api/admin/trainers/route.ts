@@ -1,37 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import db from '../../../../lib/db';
-import { verifyToken, unauthorized } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { requireAdmin, unauthorized } from '@/lib/supabase-auth';
+import { getAdminSupabase } from '@/lib/supabase-admin';
 
-export async function GET(req: NextRequest) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
+function one<T>(v: T | T[] | null | undefined): T | undefined {
+  return Array.isArray(v) ? v[0] : v ?? undefined;
+}
 
-  const rows = await db.prepare(`
-    SELECT
-      tp.id,
-      tp.name,
-      tp.is_published,
-      tp.is_verified,
-      tp.created_at,
-      u.email,
-      (SELECT string_agg(s.name, ', ')
-       FROM trainer_specialties tspc
-       JOIN specialties s ON s.id = tspc.specialty_id
-       WHERE tspc.trainer_id = tp.id) AS specialties,
-      (SELECT COUNT(*) FROM trainer_students ts WHERE ts.trainer_id = tp.id) AS student_count,
-      (SELECT COUNT(*) FROM training_sessions sess WHERE sess.trainer_id = tp.id) AS session_count
-    FROM trainer_profiles tp
-    JOIN users u ON u.id = tp.user_id
-    ORDER BY tp.created_at DESC
-  `).all();
+export async function GET() {
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
+
+  const { data: trainers } = await admin
+    .from('trainer_profiles')
+    .select('id, name, is_published, is_verified, created_at, user_id, users(email), trainer_specialties(specialties(name))')
+    .order('created_at', { ascending: false });
+
+  const { data: enrolments } = await admin.from('trainer_students').select('trainer_id');
+  const studentCount = new Map<number, number>();
+  for (const e of enrolments ?? []) studentCount.set(e.trainer_id, (studentCount.get(e.trainer_id) ?? 0) + 1);
+
+  const { data: sessions } = await admin.from('training_sessions').select('trainer_id');
+  const sessionCount = new Map<number, number>();
+  for (const s of sessions ?? []) sessionCount.set(s.trainer_id, (sessionCount.get(s.trainer_id) ?? 0) + 1);
+
+  const rows = (trainers ?? []).map((tp) => {
+    const specNames = ((tp.trainer_specialties ?? []) as Array<{ specialties: { name?: string } | { name?: string }[] | null }>)
+      .map((ts) => one(ts.specialties)?.name)
+      .filter(Boolean);
+    return {
+      id: tp.id,
+      name: tp.name,
+      is_published: tp.is_published,
+      is_verified: tp.is_verified,
+      created_at: tp.created_at,
+      email: one(tp.users as { email?: string } | { email?: string }[] | null)?.email,
+      specialties: specNames.length ? specNames.join(', ') : null,
+      student_count: studentCount.get(tp.id) ?? 0,
+      session_count: sessionCount.get(tp.id) ?? 0,
+    };
+  });
 
   return NextResponse.json(rows);
 }
 
 export async function POST(req: NextRequest) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
 
   const { name, email, password } = await req.json();
   if (!name || !email || !password || String(password).length < 6) {
@@ -39,27 +56,41 @@ export async function POST(req: NextRequest) {
   }
 
   const normalizedEmail = String(email).trim().toLowerCase();
-  const existing = await db.prepare('SELECT id FROM users WHERE email = ?').get(normalizedEmail);
+  const { data: existing } = await admin.from('users').select('id').eq('email', normalizedEmail).maybeSingle();
   if (existing) return NextResponse.json({ error: 'Email already in use.' }, { status: 409 });
 
-  const passwordHash = bcrypt.hashSync(String(password), 10);
-
-  const trainerId = await db.transaction(async (tx) => {
-    const userId = (await tx
-      .prepare('INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)')
-      .run(normalizedEmail, passwordHash, 'trainer')).lastInsertRowid as number;
-    return (await tx
-      .prepare('INSERT INTO trainer_profiles (user_id, name, is_published) VALUES (?, ?, 1)')
-      .run(userId, String(name).trim())).lastInsertRowid as number;
+  // Create the Supabase Auth user (pre-confirmed so they can log in right away).
+  const { data: authUser, error: authError } = await admin.auth.admin.createUser({
+    email: normalizedEmail,
+    password: String(password),
+    email_confirm: true,
   });
+  if (authError || !authUser.user) {
+    return NextResponse.json({ error: authError?.message ?? 'Could not create user.' }, { status: 400 });
+  }
 
-  const trainer = await db.prepare(`
-    SELECT tp.id, tp.name, tp.is_published, tp.created_at, u.email,
-           NULL as specialties, 0 as student_count, 0 as session_count
-    FROM trainer_profiles tp
-    JOIN users u ON u.id = tp.user_id
-    WHERE tp.id = ?
-  `).get(trainerId);
+  const { data: user } = await admin
+    .from('users')
+    .insert({ auth_id: authUser.user.id, email: normalizedEmail, role: 'trainer' })
+    .select('id')
+    .single();
+  const { data: trainer } = await admin
+    .from('trainer_profiles')
+    .insert({ user_id: user!.id, name: String(name).trim(), is_published: 1 })
+    .select('id, name, is_published, created_at')
+    .single();
 
-  return NextResponse.json(trainer, { status: 201 });
+  return NextResponse.json(
+    {
+      id: trainer!.id,
+      name: trainer!.name,
+      is_published: trainer!.is_published,
+      created_at: trainer!.created_at,
+      email: normalizedEmail,
+      specialties: null,
+      student_count: 0,
+      session_count: 0,
+    },
+    { status: 201 }
+  );
 }

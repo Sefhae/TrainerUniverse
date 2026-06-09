@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
-import Providers from '../components/Providers';
-import SiteShell from '../components/SiteShell';
+import Providers from '@/components/Providers';
+import SiteShell from '@/components/SiteShell';
 
 export const metadata: Metadata = {
   title: 'TrainerUniverse — Find Your Perfect Trainer',

@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, hydrated } = useAuth();

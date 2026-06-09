@@ -2,7 +2,7 @@
 
 import { TriangleAlert } from 'lucide-react';
 import Modal from './Modal';
-import { cn } from '../lib/format';
+import { cn } from '@/lib/format';
 
 interface ConfirmDialogProps {
   open: boolean;

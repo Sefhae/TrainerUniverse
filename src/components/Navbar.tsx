@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { BookOpen, ChevronDown, Cpu, Globe, HeartPulse, LogOut, Menu, Moon, Sun, Trophy, X } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { useStudentAuth } from '../hooks/useStudentAuth';
-import { useLanguage, useT } from '../hooks/useLanguage';
-import { useTheme } from '../hooks/useTheme';
-import { cn } from '../lib/format';
-import { SPECIALTY_GROUPS } from '../lib/constants';
-import { localizeSpecialty } from '../lib/specialtyLabel';
+import { useAuth } from '@/hooks/useAuth';
+import { useStudentAuth } from '@/hooks/useStudentAuth';
+import { useLanguage, useT } from '@/hooks/useLanguage';
+import { useTheme } from '@/hooks/useTheme';
+import { cn } from '@/lib/format';
+import { SPECIALTY_GROUPS } from '@/lib/constants';
+import { localizeSpecialty } from '@/lib/specialtyLabel';
 import BrandMark from './BrandMark';
 
 function Logo() {

@@ -1,16 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../lib/db';
-import { verifyToken, unauthorized } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { requireAdmin, unauthorized } from '@/lib/supabase-auth';
+import { getAdminSupabase } from '@/lib/supabase-admin';
 
-export async function GET(req: NextRequest) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
+export async function GET() {
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
 
-  const trainers  = (await db.prepare('SELECT COUNT(*) AS c FROM trainer_profiles').get() as { c: number }).c;
-  const published = (await db.prepare('SELECT COUNT(*) AS c FROM trainer_profiles WHERE is_published = 1').get() as { c: number }).c;
-  const students  = (await db.prepare('SELECT COUNT(*) AS c FROM student_profiles').get() as { c: number }).c;
-  const sessions  = (await db.prepare('SELECT COUNT(*) AS c FROM training_sessions').get() as { c: number }).c;
-  const messages  = (await db.prepare('SELECT COUNT(*) AS c FROM messages').get() as { c: number }).c;
+  const head = { count: 'exact' as const, head: true };
+  const [trainers, published, students, sessions, messages] = await Promise.all([
+    admin.from('trainer_profiles').select('*', head),
+    admin.from('trainer_profiles').select('*', head).eq('is_published', 1),
+    admin.from('student_profiles').select('*', head),
+    admin.from('training_sessions').select('*', head),
+    admin.from('messages').select('*', head),
+  ]);
 
-  return NextResponse.json({ trainers, published, students, sessions, messages });
+  return NextResponse.json({
+    trainers: trainers.count ?? 0,
+    published: published.count ?? 0,
+    students: students.count ?? 0,
+    sessions: sessions.count ?? 0,
+    messages: messages.count ?? 0,
+  });
 }

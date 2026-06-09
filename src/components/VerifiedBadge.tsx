@@ -2,7 +2,7 @@
 
 import { ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
-import { cn } from '../lib/format';
+import { cn } from '@/lib/format';
 
 export default function VerifiedBadge({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   const [open, setOpen] = useState(false);

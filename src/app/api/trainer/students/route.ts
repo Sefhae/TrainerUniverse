@@ -1,79 +1,99 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../lib/db';
-import { verifyToken, unauthorized, forbidden } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { getAuthContext, unauthorized, forbidden } from '@/lib/supabase-auth';
+
+function one<T>(v: T | T[] | null | undefined): T | undefined {
+  return Array.isArray(v) ? v[0] : v ?? undefined;
+}
 
 // GET /api/trainer/students — list all students enrolled with the auth'd trainer
-export async function GET(req: NextRequest) {
-  const payload = verifyToken(req);
-  if (!payload) return unauthorized();
-  if (payload.role !== 'trainer' || !payload.trainerId) return forbidden();
+export async function GET() {
+  const supabase = await getServerSupabase();
+  const ctx = await getAuthContext(supabase);
+  if (!ctx) return unauthorized();
+  if (ctx.role !== 'trainer' || !ctx.trainerId) return forbidden();
+  const trainerId = ctx.trainerId;
 
-  const rows = await db.prepare(`
-    SELECT sp.id, sp.name, u.email, ts_rel.enrolled_at,
-           COUNT(sess.id) AS session_count,
-           (SELECT COUNT(*) FROM student_removal_requests r
-             WHERE r.trainer_id = ts_rel.trainer_id AND r.student_id = sp.id AND r.status = 'pending')
-             AS removal_pending
-    FROM trainer_students ts_rel
-    JOIN student_profiles sp ON sp.id = ts_rel.student_id
-    JOIN users u ON u.id = sp.user_id
-    LEFT JOIN training_sessions sess
-           ON sess.student_id = sp.id AND sess.trainer_id = ts_rel.trainer_id
-    WHERE ts_rel.trainer_id = ?
-    GROUP BY sp.id
-    ORDER BY ts_rel.enrolled_at DESC
-  `).all(payload.trainerId) as Array<{
-    id: number;
-    name: string;
-    email: string;
-    enrolled_at: string;
-    session_count: number;
-    removal_pending: number;
-  }>;
+  // 1) Enrolled students (+ name + email via nested embed).
+  const { data: enrolments } = await supabase
+    .from('trainer_students')
+    .select('student_id, enrolled_at, student_profiles(id, name, users(email))')
+    .eq('trainer_id', trainerId)
+    .order('enrolled_at', { ascending: false });
+
+  // 2) Session counts per student, computed in JS to avoid a GROUP BY.
+  const { data: sessions } = await supabase
+    .from('training_sessions')
+    .select('student_id')
+    .eq('trainer_id', trainerId);
+  const sessionCount = new Map<number, number>();
+  for (const s of sessions ?? []) {
+    sessionCount.set(s.student_id, (sessionCount.get(s.student_id) ?? 0) + 1);
+  }
+
+  // 3) Which students have a pending removal request.
+  const { data: removals } = await supabase
+    .from('student_removal_requests')
+    .select('student_id')
+    .eq('trainer_id', trainerId)
+    .eq('status', 'pending');
+  const removalPending = new Set((removals ?? []).map((r) => r.student_id));
 
   return NextResponse.json(
-    rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      email: r.email,
-      enrolledAt: r.enrolled_at,
-      sessionCount: r.session_count,
-      removalPending: r.removal_pending > 0,
-    }))
+    (enrolments ?? []).map((r) => {
+      const sp = one(
+        r.student_profiles as
+          | { id: number; name: string; users?: { email?: string } | { email?: string }[] }
+          | { id: number; name: string; users?: { email?: string } | { email?: string }[] }[]
+          | null
+      );
+      const u = one(sp?.users);
+      return {
+        id: sp?.id ?? r.student_id,
+        name: sp?.name,
+        email: u?.email,
+        enrolledAt: r.enrolled_at,
+        sessionCount: sessionCount.get(r.student_id) ?? 0,
+        removalPending: removalPending.has(r.student_id),
+      };
+    })
   );
 }
 
 // POST /api/trainer/students — enroll a student by email
 export async function POST(req: NextRequest) {
-  const payload = verifyToken(req);
-  if (!payload) return unauthorized();
-  if (payload.role !== 'trainer' || !payload.trainerId) return forbidden();
+  const supabase = await getServerSupabase();
+  const ctx = await getAuthContext(supabase);
+  if (!ctx) return unauthorized();
+  if (ctx.role !== 'trainer' || !ctx.trainerId) return forbidden();
 
   const { email } = await req.json();
   if (!email) return NextResponse.json({ error: 'Email is required.' }, { status: 400 });
 
-  const user = await db.prepare(`SELECT id FROM users WHERE email = ? AND role = 'student'`).get(
-    email.toLowerCase().trim()
-  ) as { id: number } | undefined;
-
+  const { data: user } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', email.toLowerCase().trim())
+    .eq('role', 'student')
+    .maybeSingle();
   if (!user) return NextResponse.json({ error: 'No student found with that email.' }, { status: 404 });
 
-  const profile = await db.prepare('SELECT id FROM student_profiles WHERE user_id = ?').get(user.id) as
-    | { id: number }
-    | undefined;
-
+  const { data: profile } = await supabase
+    .from('student_profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle();
   if (!profile) return NextResponse.json({ error: 'Student profile not found.' }, { status: 404 });
 
-  const existing = await db.prepare(
-    'SELECT 1 FROM trainer_students WHERE trainer_id = ? AND student_id = ?'
-  ).get(payload.trainerId, profile.id);
-
+  const { data: existing } = await supabase
+    .from('trainer_students')
+    .select('student_id')
+    .eq('trainer_id', ctx.trainerId)
+    .eq('student_id', profile.id)
+    .maybeSingle();
   if (existing) return NextResponse.json({ error: 'Student is already enrolled.' }, { status: 409 });
 
-  await db.prepare(
-    'INSERT INTO trainer_students (trainer_id, student_id) VALUES (?, ?)'
-  ).run(payload.trainerId, profile.id);
-
+  await supabase.from('trainer_students').insert({ trainer_id: ctx.trainerId, student_id: profile.id });
   return NextResponse.json({ success: true, studentId: profile.id });
 }
 

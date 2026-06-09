@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../lib/db';
-import { serializeTrainerSummary } from '../../../lib/serialize';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { serializeTrainerSummary } from '@/lib/serialize';
 
 function experienceBucket(years: number) {
   if (years <= 3) return '1-3';
@@ -18,8 +18,12 @@ function csv(value: string | null): string[] {
 export async function GET(req: NextRequest) {
   try {
   const { searchParams } = new URL(req.url);
-  const rows = await db.prepare('SELECT * FROM trainer_profiles WHERE is_published = 1').all() as Record<string, unknown>[];
-  let trainers = await Promise.all(rows.map(serializeTrainerSummary));
+  const supabase = await getServerSupabase();
+  const { data: rows } = await supabase
+    .from('trainer_profiles')
+    .select('*')
+    .eq('is_published', 1);
+  let trainers = await Promise.all((rows ?? []).map((r) => serializeTrainerSummary(supabase, r)));
 
   const specialty = searchParams.get('specialty');
   const minPrice = searchParams.get('minPrice');

@@ -3,13 +3,13 @@
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, TriangleAlert } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
-import { useStudentAuth } from '../../hooks/useStudentAuth';
-import { useToast } from '../../hooks/useToast';
-import { cn, getApiError } from '../../lib/format';
-import { PASSWORD_RULES, validatePassword } from '../../lib/password';
-import { useT } from '../../hooks/useLanguage';
-import api from '../../lib/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useStudentAuth } from '@/hooks/useStudentAuth';
+import { useToast } from '@/hooks/useToast';
+import { cn, getApiError } from '@/lib/format';
+import { PASSWORD_RULES, validatePassword } from '@/lib/password';
+import { useT } from '@/hooks/useLanguage';
+import api from '@/lib/client';
 
 type Mode = 'login' | 'register';
 type Step = 'credentials' | 'role';
@@ -70,18 +70,17 @@ function AuthForm() {
     setSubmitting(true);
     try {
       const { data } = await api.post<{
-        token: string;
         user: { id: number; email: string; role: string };
         trainerId: number | null;
         studentId: number | null;
       }>('/auth/unified-login', { email: email.trim(), password });
 
       if (data.user.role === 'trainer') {
-        loginWithData({ token: data.token, user: data.user as never, trainerId: data.trainerId });
+        loginWithData({ user: data.user as never, trainerId: data.trainerId });
         toast.success(t.toastWelcomeBack);
         router.replace('/dashboard');
       } else {
-        studentLoginWithData({ token: data.token, user: data.user as never, studentId: data.studentId });
+        studentLoginWithData({ user: data.user as never, studentId: data.studentId });
         router.replace('/student/dashboard');
       }
     } catch (err) {

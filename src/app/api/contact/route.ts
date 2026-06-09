@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../lib/db';
+import { getServerSupabase } from '@/lib/supabase-server';
 import { checkProfanity } from '@/lib/profanity';
 
 export async function POST(req: NextRequest) {
@@ -10,9 +10,14 @@ export async function POST(req: NextRequest) {
     }
     const profanity = checkProfanity(name, subject, message);
     if (profanity) return NextResponse.json({ error: profanity }, { status: 400 });
-    await db.prepare(
-      'INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)'
-    ).run(String(name).trim(), String(email).trim().toLowerCase(), String(subject ?? '').trim(), String(message).trim());
+
+    const supabase = await getServerSupabase();
+    await supabase.from('contact_messages').insert({
+      name: String(name).trim(),
+      email: String(email).trim().toLowerCase(),
+      subject: String(subject ?? '').trim(),
+      message: String(message).trim(),
+    });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: 'Failed to send message.' }, { status: 500 });

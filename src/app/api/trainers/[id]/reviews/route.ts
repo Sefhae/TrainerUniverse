@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../../lib/db';
+import { getServerSupabase } from '@/lib/supabase-server';
 import { mapReview } from '@/lib/serialize';
 import { checkProfanity } from '@/lib/profanity';
 
@@ -7,15 +7,23 @@ type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const rows = (await db
-    .prepare('SELECT * FROM reviews WHERE trainer_id = ? ORDER BY created_at DESC')
-    .all(Number(id)) as Record<string, unknown>[]).map(mapReview);
-  return NextResponse.json(rows);
+  const supabase = await getServerSupabase();
+  const { data } = await supabase
+    .from('reviews')
+    .select('*')
+    .eq('trainer_id', Number(id))
+    .order('created_at', { ascending: false });
+  return NextResponse.json((data ?? []).map(mapReview));
 }
 
 export async function POST(req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const trainer = await db.prepare('SELECT id FROM trainer_profiles WHERE id = ?').get(Number(id));
+  const supabase = await getServerSupabase();
+  const { data: trainer } = await supabase
+    .from('trainer_profiles')
+    .select('id')
+    .eq('id', Number(id))
+    .maybeSingle();
   if (!trainer) return NextResponse.json({ error: 'Trainer not found.' }, { status: 404 });
 
   const body = await req.json().catch(() => ({}));
@@ -30,9 +38,16 @@ export async function POST(req: NextRequest, { params }: Params) {
   const profanity = checkProfanity(reviewerName, comment);
   if (profanity) return NextResponse.json({ error: profanity }, { status: 400 });
 
-  const info = await db
-    .prepare('INSERT INTO reviews (trainer_id, reviewer_name, rating, comment) VALUES (?, ?, ?, ?)')
-    .run(Number(id), String(reviewerName).trim(), Math.round(numericRating), String(comment).trim());
-  const created = await db.prepare('SELECT * FROM reviews WHERE id = ?').get(info.lastInsertRowid) as Record<string, unknown>;
+  const { data: created, error } = await supabase
+    .from('reviews')
+    .insert({
+      trainer_id: Number(id),
+      reviewer_name: String(reviewerName).trim(),
+      rating: Math.round(numericRating),
+      comment: String(comment).trim(),
+    })
+    .select('*')
+    .single();
+  if (error || !created) return NextResponse.json({ error: 'Could not submit review.' }, { status: 500 });
   return NextResponse.json(mapReview(created), { status: 201 });
 }

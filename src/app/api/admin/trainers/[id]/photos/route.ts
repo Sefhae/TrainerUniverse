@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../../../lib/db';
-import { verifyToken, unauthorized } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { requireAdmin, unauthorized } from '@/lib/supabase-auth';
+import { getAdminSupabase } from '@/lib/supabase-admin';
 import { saveUploadedFile } from '@/lib/upload';
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(req: NextRequest, { params }: Params) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
 
   const { id } = await params;
   const formData = await req.formData();
@@ -16,14 +18,14 @@ export async function POST(req: NextRequest, { params }: Params) {
   const profilePhoto = formData.get('profilePhoto') as File | null;
   if (profilePhoto instanceof File) {
     const photoPath = await saveUploadedFile(profilePhoto);
-    await db.prepare('UPDATE trainer_profiles SET profile_photo = ? WHERE id = ?').run(photoPath, Number(id));
+    await admin.from('trainer_profiles').update({ profile_photo: photoPath }).eq('id', Number(id));
     result.profilePhoto = photoPath;
   }
 
   const coverPhoto = formData.get('coverPhoto') as File | null;
   if (coverPhoto instanceof File) {
     const photoPath = await saveUploadedFile(coverPhoto);
-    await db.prepare('UPDATE trainer_profiles SET cover_photo = ? WHERE id = ?').run(photoPath, Number(id));
+    await admin.from('trainer_profiles').update({ cover_photo: photoPath }).eq('id', Number(id));
     result.coverPhoto = photoPath;
   }
 

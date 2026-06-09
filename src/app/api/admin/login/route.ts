@@ -1,18 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { signToken } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { getAuthContext } from '@/lib/supabase-auth';
+import { authErrorResponse, normalizeEmail } from '@/lib/auth-helpers';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'admin123';
-
+// Admin is now a normal Supabase Auth account whose app `users.role` is 'admin'.
+// See SUPABASE_SETUP.md (step 6) for how to create it.
 export async function POST(req: NextRequest) {
-  try {
-    const { email, password } = await req.json();
-    if (!email || !password || email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-      return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
-    }
-    const token = signToken({ userId: 0, role: 'admin', trainerId: null });
-    return NextResponse.json({ token });
-  } catch {
-    return NextResponse.json({ error: 'Bad request.' }, { status: 400 });
+  const body = await req.json().catch(() => ({}));
+  const { email, password } = body || {};
+  if (!email || !password) {
+    return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
   }
+
+  const supabase = await getServerSupabase();
+  const { error } = await supabase.auth.signInWithPassword({
+    email: normalizeEmail(email),
+    password: String(password),
+  });
+  if (error) return authErrorResponse(error);
+
+  const ctx = await getAuthContext(supabase);
+  if (!ctx || ctx.role !== 'admin') {
+    await supabase.auth.signOut();
+    return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
+  }
+  return NextResponse.json({ ok: true });
 }

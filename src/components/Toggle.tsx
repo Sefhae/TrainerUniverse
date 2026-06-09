@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '../lib/format';
+import { cn } from '@/lib/format';
 
 interface ToggleProps {
   checked: boolean;

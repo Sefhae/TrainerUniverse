@@ -2,13 +2,13 @@
 
 import { useState, type FormEvent } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import api from '../../lib/client';
-import type { PricingPackage, Trainer } from '../../lib/types';
-import { cn, formatPrice, getApiError } from '../../lib/format';
-import { useToast } from '../../hooks/useToast';
-import Modal from '../Modal';
-import ConfirmDialog from '../ConfirmDialog';
-import Toggle from '../Toggle';
+import api from '@/lib/client';
+import type { PricingPackage, Trainer } from '@/lib/types';
+import { cn, formatPrice, getApiError } from '@/lib/format';
+import { useToast } from '@/hooks/useToast';
+import Modal from '@/components/Modal';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import Toggle from '@/components/Toggle';
 
 interface Props {
   trainer: Trainer;

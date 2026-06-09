@@ -1,54 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../../lib/db';
-import { verifyToken, unauthorized } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { requireAdmin, unauthorized } from '@/lib/supabase-auth';
+import { getAdminSupabase } from '@/lib/supabase-admin';
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(req: NextRequest, { params }: Params) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
-
-  const { id } = await params;
-  const profile = await db.prepare(`
-    SELECT tp.id, tp.name, tp.tagline, tp.bio, tp.location, tp.is_remote,
-           tp.years_experience, tp.is_published, tp.is_verified, tp.response_time,
-           tp.profile_photo, tp.cover_photo, u.email
-    FROM trainer_profiles tp
-    JOIN users u ON u.id = tp.user_id
-    WHERE tp.id = ?
-  `).get(Number(id));
-  if (!profile) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json(profile);
+function one<T>(v: T | T[] | null | undefined): T | undefined {
+  return Array.isArray(v) ? v[0] : v ?? undefined;
 }
 
-export async function DELETE(req: NextRequest, { params }: Params) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
+export async function GET(_req: NextRequest, { params }: Params) {
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
 
   const { id } = await params;
-  const trainer = await db.prepare('SELECT user_id FROM trainer_profiles WHERE id = ?').get(Number(id)) as { user_id: number } | undefined;
+  const { data: profile } = await admin
+    .from('trainer_profiles')
+    .select('id, name, tagline, bio, location, is_remote, years_experience, is_published, is_verified, response_time, profile_photo, cover_photo, users(email)')
+    .eq('id', Number(id))
+    .maybeSingle();
+  if (!profile) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  const { users, ...rest } = profile as Record<string, unknown> & { users?: unknown };
+  return NextResponse.json({
+    ...rest,
+    email: one(users as { email?: string } | { email?: string }[] | null)?.email,
+  });
+}
+
+export async function DELETE(_req: NextRequest, { params }: Params) {
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
+
+  const { id } = await params;
+  const { data: trainer } = await admin
+    .from('trainer_profiles')
+    .select('user_id')
+    .eq('id', Number(id))
+    .maybeSingle();
   if (!trainer) return NextResponse.json({ error: 'Trainer not found.' }, { status: 404 });
 
-  await db.prepare('DELETE FROM users WHERE id = ?').run(trainer.user_id);
+  const { data: user } = await admin
+    .from('users')
+    .select('id, auth_id')
+    .eq('id', trainer.user_id)
+    .maybeSingle();
+  if (user?.auth_id) {
+    await admin.auth.admin.deleteUser(user.auth_id);
+  } else if (user) {
+    await admin.from('users').delete().eq('id', user.id);
+  }
   return NextResponse.json({ ok: true });
 }
 
 export async function PUT(req: NextRequest, { params }: Params) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
 
   const { id } = await params;
-  const body = await req.json();
-  const { isPublished, isVerified, responseTime } = body;
+  const { isPublished, isVerified, responseTime } = await req.json();
 
-  if (isPublished !== undefined) {
-    await db.prepare('UPDATE trainer_profiles SET is_published = ? WHERE id = ?').run(isPublished ? 1 : 0, Number(id));
-  }
-  if (isVerified !== undefined) {
-    await db.prepare('UPDATE trainer_profiles SET is_verified = ? WHERE id = ?').run(isVerified ? 1 : 0, Number(id));
-  }
-  if (responseTime !== undefined) {
-    await db.prepare('UPDATE trainer_profiles SET response_time = ? WHERE id = ?').run(String(responseTime), Number(id));
+  const update: Record<string, unknown> = {};
+  if (isPublished !== undefined) update.is_published = isPublished ? 1 : 0;
+  if (isVerified !== undefined) update.is_verified = isVerified ? 1 : 0;
+  if (responseTime !== undefined) update.response_time = String(responseTime);
+  if (Object.keys(update).length) {
+    await admin.from('trainer_profiles').update(update).eq('id', Number(id));
   }
   return NextResponse.json({ ok: true });
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../../lib/db';
-import { verifyToken, unauthorized, forbidden } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { getAuthContext, unauthorized, forbidden } from '@/lib/supabase-auth';
 import { serializeTrainerDetail } from '@/lib/serialize';
 import { saveUploadedFile } from '@/lib/upload';
 
@@ -9,9 +9,10 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(req: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
-    const payload = verifyToken(req);
-    if (!payload) return unauthorized();
-    if (payload.trainerId !== Number(id)) return forbidden();
+    const supabase = await getServerSupabase();
+    const ctx = await getAuthContext(supabase);
+    if (!ctx) return unauthorized();
+    if (ctx.trainerId !== Number(id)) return forbidden();
 
     const formData = await req.formData();
     let changed = false;
@@ -19,21 +20,25 @@ export async function POST(req: NextRequest, { params }: Params) {
     const profilePhoto = formData.get('profilePhoto') as File | null;
     if (profilePhoto instanceof File) {
       const path = await saveUploadedFile(profilePhoto);
-      await db.prepare('UPDATE trainer_profiles SET profile_photo = ? WHERE id = ?').run(path, Number(id));
+      await supabase.from('trainer_profiles').update({ profile_photo: path }).eq('id', Number(id));
       changed = true;
     }
 
     const coverPhoto = formData.get('coverPhoto') as File | null;
     if (coverPhoto instanceof File) {
       const path = await saveUploadedFile(coverPhoto);
-      await db.prepare('UPDATE trainer_profiles SET cover_photo = ? WHERE id = ?').run(path, Number(id));
+      await supabase.from('trainer_profiles').update({ cover_photo: path }).eq('id', Number(id));
       changed = true;
     }
 
     if (!changed) return NextResponse.json({ error: 'No image file was provided.' }, { status: 400 });
 
-    const updated = await db.prepare('SELECT * FROM trainer_profiles WHERE id = ?').get(Number(id)) as Record<string, unknown>;
-    return NextResponse.json(await serializeTrainerDetail(updated));
+    const { data: updated } = await supabase
+      .from('trainer_profiles')
+      .select('*')
+      .eq('id', Number(id))
+      .maybeSingle();
+    return NextResponse.json(await serializeTrainerDetail(supabase, updated as Record<string, unknown>));
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Upload failed.';
     return NextResponse.json({ error: msg }, { status: 400 });

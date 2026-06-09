@@ -1,5 +1,5 @@
-import { DAY_PARTS, WEEK_DAYS } from '../lib/constants';
-import { cn } from '../lib/format';
+import { DAY_PARTS, WEEK_DAYS } from '@/lib/constants';
+import { cn } from '@/lib/format';
 
 export default function AvailabilityCalendar({ availability }: { availability: string[] }) {
   if (!availability || availability.length === 0) {

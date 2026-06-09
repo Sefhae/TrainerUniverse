@@ -1,12 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../lib/db';
-import { verifyToken, unauthorized } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { getAuthContext, unauthorized } from '@/lib/supabase-auth';
+import { authResponse } from '@/lib/auth-helpers';
 
-export async function GET(req: NextRequest) {
-  const payload = verifyToken(req);
-  if (!payload) return unauthorized();
-
-  const user = await db.prepare('SELECT id, email, role FROM users WHERE id = ?').get(payload.userId) as Record<string, unknown> | undefined;
-  if (!user) return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
-  return NextResponse.json({ user, trainerId: payload.trainerId });
+// Hydrates the client from the Supabase session cookie on page load.
+export async function GET() {
+  const supabase = await getServerSupabase();
+  const ctx = await getAuthContext(supabase);
+  if (!ctx) return unauthorized();
+  return authResponse(ctx);
 }

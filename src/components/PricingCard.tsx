@@ -1,5 +1,5 @@
-import type { PricingPackage } from '../lib/types';
-import { cn, formatPrice } from '../lib/format';
+import type { PricingPackage } from '@/lib/types';
+import { cn, formatPrice } from '@/lib/format';
 
 interface PricingCardProps {
   pkg: PricingPackage;

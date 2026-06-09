@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ChevronLeft, ChevronRight, Plus, X, Clock, AlertCircle, Check, Pencil, Trash2,
 } from 'lucide-react';
-import api from '../../lib/client';
-import { useT } from '../../hooks/useLanguage';
-import { useToast } from '../../hooks/useToast';
-import { cn } from '../../lib/format';
-import type { TrainingSession } from '../../lib/types';
+import api from '@/lib/client';
+import { useT } from '@/hooks/useLanguage';
+import { useToast } from '@/hooks/useToast';
+import { cn } from '@/lib/format';
+import type { TrainingSession } from '@/lib/types';
 
 interface Student { id: number; name: string; }
 

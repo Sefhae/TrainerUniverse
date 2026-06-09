@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { CheckCircle2, Clock, Package, User, XCircle } from 'lucide-react';
-import api from '../../lib/client';
-import { cn, formatPrice } from '../../lib/format';
-import type { SessionRequest } from '../../lib/types';
+import api from '@/lib/client';
+import { cn, formatPrice } from '@/lib/format';
+import type { SessionRequest } from '@/lib/types';
 
 export default function SessionRequestsPanel() {
   const [requests, setRequests] = useState<SessionRequest[]>([]);

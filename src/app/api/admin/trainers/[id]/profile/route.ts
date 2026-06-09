@@ -1,21 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../../../lib/db';
-import { verifyToken, unauthorized } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { requireAdmin, unauthorized } from '@/lib/supabase-auth';
+import { getAdminSupabase } from '@/lib/supabase-admin';
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function PUT(req: NextRequest, { params }: Params) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
 
   const { id } = await params;
   const { name, tagline, bio, location, yearsExperience, isRemote } = await req.json();
 
-  await db.prepare(`
-    UPDATE trainer_profiles
-    SET name = ?, tagline = ?, bio = ?, location = ?, years_experience = ?, is_remote = ?
-    WHERE id = ?
-  `).run(name, tagline ?? '', bio ?? '', location ?? '', Number(yearsExperience) || 0, isRemote ? 1 : 0, Number(id));
+  await admin
+    .from('trainer_profiles')
+    .update({
+      name,
+      tagline: tagline ?? '',
+      bio: bio ?? '',
+      location: location ?? '',
+      years_experience: Number(yearsExperience) || 0,
+      is_remote: isRemote ? 1 : 0,
+    })
+    .eq('id', Number(id));
 
   return NextResponse.json({ ok: true });
 }

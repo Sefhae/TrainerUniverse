@@ -1,30 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../../../lib/db';
-import { verifyToken, unauthorized } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { requireAdmin, unauthorized } from '@/lib/supabase-auth';
+import { getAdminSupabase } from '@/lib/supabase-admin';
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(req: NextRequest, { params }: Params) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
+export async function GET(_req: NextRequest, { params }: Params) {
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
 
   const { id } = await params;
-  const packages = await db
-    .prepare('SELECT * FROM pricing_packages WHERE trainer_id = ? ORDER BY price ASC')
-    .all(Number(id));
-  return NextResponse.json(packages);
+  const { data } = await admin
+    .from('pricing_packages')
+    .select('*')
+    .eq('trainer_id', Number(id))
+    .order('price', { ascending: true });
+  return NextResponse.json(data ?? []);
 }
 
 export async function POST(req: NextRequest, { params }: Params) {
-  const p = verifyToken(req);
-  if (!p || p.role !== 'admin') return unauthorized();
+  const supabase = await getServerSupabase();
+  if (!(await requireAdmin(supabase))) return unauthorized();
+  const admin = getAdminSupabase();
 
   const { id } = await params;
   const { name, description, sessions, price, isPopular } = await req.json();
 
-  const result = await db.prepare(
-    'INSERT INTO pricing_packages (trainer_id, name, description, sessions, price, is_popular) VALUES (?, ?, ?, ?, ?, ?)'
-  ).run(Number(id), name, description ?? '', Number(sessions) || 1, Number(price) || 0, isPopular ? 1 : 0);
+  const { data: created } = await admin
+    .from('pricing_packages')
+    .insert({
+      trainer_id: Number(id),
+      name,
+      description: description ?? '',
+      sessions: Number(sessions) || 1,
+      price: Number(price) || 0,
+      is_popular: isPopular ? 1 : 0,
+    })
+    .select('id')
+    .single();
 
-  return NextResponse.json({ id: result.lastInsertRowid });
+  return NextResponse.json({ id: created?.id });
 }

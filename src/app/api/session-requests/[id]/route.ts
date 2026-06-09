@@ -1,66 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../../lib/db';
-import { verifyToken, unauthorized, forbidden } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { getAuthContext, unauthorized, forbidden } from '@/lib/supabase-auth';
 
 // PUT /api/session-requests/[id] — trainer approves or rejects
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const payload = verifyToken(req);
-  if (!payload) return unauthorized();
-  if (payload.role !== 'trainer' || !payload.trainerId) return forbidden();
+  const supabase = await getServerSupabase();
+  const ctx = await getAuthContext(supabase);
+  if (!ctx) return unauthorized();
+  if (ctx.role !== 'trainer' || !ctx.trainerId) return forbidden();
 
   const { id } = await params;
   const requestId = Number(id);
 
-  const row = await db.prepare(
-    `SELECT * FROM session_requests WHERE id = ? AND trainer_id = ?`
-  ).get(requestId, payload.trainerId) as Record<string, unknown> | undefined;
-
-  if (!row) {
-    return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
-  }
+  const { data: row } = await supabase
+    .from('session_requests')
+    .select('*')
+    .eq('id', requestId)
+    .eq('trainer_id', ctx.trainerId)
+    .maybeSingle();
+  if (!row) return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
   if (row.status !== 'pending') {
     return NextResponse.json({ error: 'Request has already been resolved.' }, { status: 409 });
   }
 
-  const { action } = await req.json() as { action: 'approve' | 'reject' };
+  const { action } = (await req.json()) as { action: 'approve' | 'reject' };
   if (action !== 'approve' && action !== 'reject') {
     return NextResponse.json({ error: 'action must be "approve" or "reject".' }, { status: 400 });
   }
 
   if (action === 'approve') {
-    await db.transaction(async (tx) => {
-      await tx.prepare(`UPDATE session_requests SET status = 'approved' WHERE id = ?`).run(requestId);
-      // Enroll student if not already enrolled
-      await tx.prepare(`
-        INSERT INTO trainer_students (trainer_id, student_id) VALUES (?, ?) ON CONFLICT DO NOTHING
-      `).run(payload.trainerId, row.student_id);
-    });
+    await supabase.from('session_requests').update({ status: 'approved' }).eq('id', requestId);
+    // Enroll the student if not already enrolled (composite PK guards duplicates).
+    await supabase
+      .from('trainer_students')
+      .upsert(
+        { trainer_id: ctx.trainerId, student_id: row.student_id },
+        { onConflict: 'trainer_id,student_id', ignoreDuplicates: true }
+      );
   } else {
-    await db.prepare(`UPDATE session_requests SET status = 'rejected' WHERE id = ?`).run(requestId);
+    await supabase.from('session_requests').update({ status: 'rejected' }).eq('id', requestId);
   }
 
   return NextResponse.json({ ok: true });
 }
 
-// DELETE /api/session-requests/[id] — student cancels (withdraws) their own
-// still-pending request.
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const payload = verifyToken(req);
-  if (!payload) return unauthorized();
-  if (payload.role !== 'student' || !payload.studentId) return forbidden();
+// DELETE /api/session-requests/[id] — student withdraws their own pending request.
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const supabase = await getServerSupabase();
+  const ctx = await getAuthContext(supabase);
+  if (!ctx) return unauthorized();
+  if (ctx.role !== 'student' || !ctx.studentId) return forbidden();
 
   const { id } = await params;
   const requestId = Number(id);
 
-  const row = await db.prepare(
-    `SELECT status FROM session_requests WHERE id = ? AND student_id = ?`
-  ).get(requestId, payload.studentId) as { status: string } | undefined;
-
+  const { data: row } = await supabase
+    .from('session_requests')
+    .select('status')
+    .eq('id', requestId)
+    .eq('student_id', ctx.studentId)
+    .maybeSingle();
   if (!row) return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
   if (row.status !== 'pending') {
     return NextResponse.json({ error: 'Only pending requests can be cancelled.' }, { status: 409 });
   }
 
-  await db.prepare(`DELETE FROM session_requests WHERE id = ?`).run(requestId);
+  await supabase.from('session_requests').delete().eq('id', requestId);
   return NextResponse.json({ ok: true });
 }

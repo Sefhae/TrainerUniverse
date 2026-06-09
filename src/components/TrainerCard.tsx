@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { ArrowRight, Globe, MapPin } from 'lucide-react';
-import type { TrainerSummary } from '../lib/types';
-import { formatPrice, initials, resolveImage } from '../lib/format';
+import type { TrainerSummary } from '@/lib/types';
+import { formatPrice, initials, resolveImage } from '@/lib/format';
 import StarRating from './StarRating';
 import VerifiedBadge from './VerifiedBadge';
-import { useT, useLanguage } from '../hooks/useLanguage';
-import { localizeSpecialty } from '../lib/specialtyLabel';
+import { useT, useLanguage } from '@/hooks/useLanguage';
+import { localizeSpecialty } from '@/lib/specialtyLabel';
 
 export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
   const t = useT();

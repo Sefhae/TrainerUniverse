@@ -3,10 +3,10 @@
 import { useState, type FormEvent } from 'react';
 import Modal from './Modal';
 import StarRating from './StarRating';
-import api from '../lib/client';
-import { useToast } from '../hooks/useToast';
-import { cn, getApiError } from '../lib/format';
-import type { Review } from '../lib/types';
+import api from '@/lib/client';
+import { useToast } from '@/hooks/useToast';
+import { cn, getApiError } from '@/lib/format';
+import type { Review } from '@/lib/types';
 
 interface ReviewModalProps {
   open: boolean;

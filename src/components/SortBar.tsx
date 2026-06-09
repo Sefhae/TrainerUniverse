@@ -1,8 +1,8 @@
 'use client';
 
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
-import { SORT_OPTIONS } from '../lib/constants';
-import { useT } from '../hooks/useLanguage';
+import { SORT_OPTIONS } from '@/lib/constants';
+import { useT } from '@/hooks/useLanguage';
 
 interface SortBarProps {
   total: number;

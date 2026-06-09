@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import db from '../../../../lib/db';
-import { signToken } from '@/lib/auth';
+import { getServerSupabase } from '@/lib/supabase-server';
+import { getAuthContext } from '@/lib/supabase-auth';
+import { authResponse, authErrorResponse, normalizeEmail } from '@/lib/auth-helpers';
 import { validatePassword } from '@/lib/password';
 import { checkProfanity } from '@/lib/profanity';
 
@@ -9,55 +9,61 @@ const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 export async function POST(req: NextRequest) {
   try {
-  const body = await req.json().catch(() => ({}));
-  const { name, email, password, specialties } = body || {};
+    const body = await req.json().catch(() => ({}));
+    const { name, email, password, specialties } = body || {};
 
-  if (!name || !String(name).trim())
-    return NextResponse.json({ error: 'Your name is required.' }, { status: 400 });
-  if (!email || !EMAIL_RE.test(String(email)))
-    return NextResponse.json({ error: 'A valid email address is required.' }, { status: 400 });
-  const pwError = validatePassword(String(password ?? ''));
-  if (pwError)
-    return NextResponse.json({ error: pwError }, { status: 400 });
+    if (!name || !String(name).trim())
+      return NextResponse.json({ error: 'Your name is required.' }, { status: 400 });
+    if (!email || !EMAIL_RE.test(String(email)))
+      return NextResponse.json({ error: 'A valid email address is required.' }, { status: 400 });
+    const pwError = validatePassword(String(password ?? ''));
+    if (pwError) return NextResponse.json({ error: pwError }, { status: 400 });
+    const profanity = checkProfanity(name);
+    if (profanity) return NextResponse.json({ error: profanity }, { status: 400 });
 
-  const profanity = checkProfanity(name);
-  if (profanity)
-    return NextResponse.json({ error: profanity }, { status: 400 });
+    const normalizedEmail = normalizeEmail(email);
+    const supabase = await getServerSupabase();
 
-  const normalizedEmail = String(email).trim().toLowerCase();
-  const existing = await db.prepare('SELECT id FROM users WHERE email = ?').get(normalizedEmail);
-  if (existing)
-    return NextResponse.json({ error: 'An account with that email already exists.' }, { status: 409 });
+    // 1) Create the Supabase Auth user (this also sets the session cookies when
+    //    email confirmation is disabled — see SUPABASE_SETUP.md, step 4).
+    const { data: signUp, error: signUpError } = await supabase.auth.signUp({
+      email: normalizedEmail,
+      password: String(password),
+    });
+    if (signUpError) return authErrorResponse(signUpError);
+    if (!signUp.user) return NextResponse.json({ error: 'Registration failed.' }, { status: 500 });
+    if (!signUp.session)
+      return NextResponse.json({ error: 'Please confirm your email, then sign in.' }, { status: 200 });
 
-  const passwordHash = bcrypt.hashSync(String(password), 10);
+    // 2) Create the app-side user row linked to the auth user.
+    const { data: appUser, error: userError } = await supabase
+      .from('users')
+      .insert({ auth_id: signUp.user.id, email: normalizedEmail, role: 'trainer' })
+      .select('id')
+      .single();
+    if (userError || !appUser) throw userError ?? new Error('Could not create user row.');
 
-  const { userId, trainerId } = await db.transaction(async (tx) => {
-    const newUserId = (await tx
-      .prepare('INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)')
-      .run(normalizedEmail, passwordHash, 'trainer')).lastInsertRowid as number;
+    // 3) Publish the trainer profile immediately (matches the old flow).
+    const { data: profile, error: profileError } = await supabase
+      .from('trainer_profiles')
+      .insert({ user_id: appUser.id, name: String(name).trim(), is_published: 1 })
+      .select('id')
+      .single();
+    if (profileError || !profile) throw profileError ?? new Error('Could not create profile.');
 
-    // Publish new trainers immediately so students can find and request them
-    // right after signup (matches admin-created trainers and the schema default).
-    // A trainer can still hide their profile from the dashboard afterwards.
-    const newTrainerId = (await tx
-      .prepare('INSERT INTO trainer_profiles (user_id, name, is_published) VALUES (?, ?, 1)')
-      .run(newUserId, String(name).trim())).lastInsertRowid as number;
-
-    if (Array.isArray(specialties)) {
-      const findSpec = tx.prepare('SELECT id FROM specialties WHERE name = ?');
-      const link = tx.prepare('INSERT INTO trainer_specialties (trainer_id, specialty_id) VALUES (?, ?) ON CONFLICT DO NOTHING');
-      for (const s of specialties) {
-        const row = (await findSpec.get(s)) as { id: number } | undefined;
-        if (row) await link.run(newTrainerId, row.id);
-      }
+    // 4) Link chosen specialties (unknown names are simply skipped).
+    if (Array.isArray(specialties) && specialties.length) {
+      const { data: specRows } = await supabase
+        .from('specialties')
+        .select('id, name')
+        .in('name', specialties.map(String));
+      const links = (specRows ?? []).map((s) => ({ trainer_id: profile.id, specialty_id: s.id }));
+      if (links.length) await supabase.from('trainer_specialties').insert(links);
     }
-    return { userId: newUserId, trainerId: newTrainerId };
-  });
-  const token = signToken({ userId, role: 'trainer', trainerId });
-  return NextResponse.json(
-    { token, user: { id: userId, email: normalizedEmail, role: 'trainer' }, trainerId },
-    { status: 201 }
-  );
+
+    const ctx = await getAuthContext(supabase);
+    if (!ctx) return NextResponse.json({ error: 'Registration failed.' }, { status: 500 });
+    return authResponse(ctx, 201);
   } catch (err) {
     console.error('[register]', err);
     return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 });

@@ -4,9 +4,9 @@ import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { LogIn, Send } from 'lucide-react';
 import Modal from './Modal';
-import api from '../lib/client';
-import { useStudentAuth } from '../hooks/useStudentAuth';
-import { cn } from '../lib/format';
+import api from '@/lib/client';
+import { useStudentAuth } from '@/hooks/useStudentAuth';
+import { cn } from '@/lib/format';
 
 interface MessageModalProps {
   open: boolean;

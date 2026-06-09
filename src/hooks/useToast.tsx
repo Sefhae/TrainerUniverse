@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
 import { Check, Info, X } from 'lucide-react';
-import { cn } from '../lib/format';
+import { cn } from '@/lib/format';
 
 type ToastType = 'success' | 'error' | 'info';
 

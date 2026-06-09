@@ -1,8 +1,10 @@
-import db from './db';
+import type { ServerSupabase } from '@/lib/supabase-server';
+
+type Row = Record<string, unknown>;
 
 // --- row mappers (snake_case DB -> camelCase API) ---
 
-export function mapPackage(r: Record<string, unknown>) {
+export function mapPackage(r: Row) {
   return {
     id: r.id,
     trainerId: r.trainer_id,
@@ -14,7 +16,7 @@ export function mapPackage(r: Record<string, unknown>) {
   };
 }
 
-export function mapWork(r: Record<string, unknown>) {
+export function mapWork(r: Row) {
   return {
     id: r.id,
     trainerId: r.trainer_id,
@@ -28,7 +30,7 @@ export function mapWork(r: Record<string, unknown>) {
   };
 }
 
-export function mapReview(r: Record<string, unknown>) {
+export function mapReview(r: Row) {
   return {
     id: r.id,
     trainerId: r.trainer_id,
@@ -39,7 +41,7 @@ export function mapReview(r: Record<string, unknown>) {
   };
 }
 
-export function mapCert(r: Record<string, unknown>) {
+export function mapCert(r: Row) {
   return {
     id: r.id,
     trainerId: r.trainer_id,
@@ -49,34 +51,72 @@ export function mapCert(r: Record<string, unknown>) {
   };
 }
 
-// --- related-record lookups ---
+// --- related-record lookups (Supabase query builder) ---
 
-const getSpecialties = async (trainerId: number) =>
-  (await db.prepare(`
-    SELECT s.id, s.name FROM specialties s
-    JOIN trainer_specialties ts ON ts.specialty_id = s.id
-    WHERE ts.trainer_id = ?
-    ORDER BY s.name
-  `).all(trainerId)) as { id: number; name: string }[];
+type SpecialtyRef = { id: number; name: string };
 
-const getPackages = async (trainerId: number) =>
-  ((await db.prepare('SELECT * FROM pricing_packages WHERE trainer_id = ? ORDER BY price ASC').all(trainerId)) as Record<string, unknown>[]).map(mapPackage);
+const getSpecialties = async (sb: ServerSupabase, trainerId: number): Promise<SpecialtyRef[]> => {
+  const { data } = await sb
+    .from('trainer_specialties')
+    .select('specialties(id, name)')
+    .eq('trainer_id', trainerId);
+  // PostgREST nests the joined specialty under `specialties` (object for a
+  // to-one embed, but typed loosely without generated DB types).
+  const rows = (data ?? []) as unknown as Array<{ specialties: SpecialtyRef | SpecialtyRef[] | null }>;
+  const specialties = rows.flatMap((r) => {
+    const s = r.specialties;
+    if (!s) return [];
+    return Array.isArray(s) ? s : [s];
+  });
+  specialties.sort((a, b) => a.name.localeCompare(b.name));
+  return specialties;
+};
 
-const getWork = async (trainerId: number) =>
-  ((await db.prepare('SELECT * FROM previous_work WHERE trainer_id = ? ORDER BY display_order ASC, id ASC').all(trainerId)) as Record<string, unknown>[]).map(mapWork);
+const getPackages = async (sb: ServerSupabase, trainerId: number) => {
+  const { data } = await sb
+    .from('pricing_packages')
+    .select('*')
+    .eq('trainer_id', trainerId)
+    .order('price', { ascending: true });
+  return (data ?? []).map(mapPackage);
+};
 
-const getReviews = async (trainerId: number) =>
-  ((await db.prepare('SELECT * FROM reviews WHERE trainer_id = ? ORDER BY created_at DESC').all(trainerId)) as Record<string, unknown>[]).map(mapReview);
+const getWork = async (sb: ServerSupabase, trainerId: number) => {
+  const { data } = await sb
+    .from('previous_work')
+    .select('*')
+    .eq('trainer_id', trainerId)
+    .order('display_order', { ascending: true })
+    .order('id', { ascending: true });
+  return (data ?? []).map(mapWork);
+};
 
-const getCertifications = async (trainerId: number) =>
-  ((await db.prepare('SELECT * FROM certifications WHERE trainer_id = ? ORDER BY year DESC').all(trainerId)) as Record<string, unknown>[]).map(mapCert);
+const getReviews = async (sb: ServerSupabase, trainerId: number) => {
+  const { data } = await sb
+    .from('reviews')
+    .select('*')
+    .eq('trainer_id', trainerId)
+    .order('created_at', { ascending: false });
+  return (data ?? []).map(mapReview);
+};
 
-async function ratingStats(trainerId: number) {
-  const row = (await db.prepare('SELECT COUNT(*) AS cnt, AVG(rating) AS avg FROM reviews WHERE trainer_id = ?').get(trainerId)) as { cnt: number; avg: number | null };
-  return {
-    reviewCount: row.cnt,
-    rating: row.cnt ? Math.round((row.avg ?? 0) * 10) / 10 : 0,
-  };
+const getCertifications = async (sb: ServerSupabase, trainerId: number) => {
+  const { data } = await sb
+    .from('certifications')
+    .select('*')
+    .eq('trainer_id', trainerId)
+    .order('year', { ascending: false });
+  return (data ?? []).map(mapCert);
+};
+
+async function ratingStats(sb: ServerSupabase, trainerId: number) {
+  // PostgREST has no simple AVG over a filter, so pull the ratings and reduce
+  // in JS — review volumes here are small enough that this is fine.
+  const { data } = await sb.from('reviews').select('rating').eq('trainer_id', trainerId);
+  const ratings = (data ?? []).map((r) => Number((r as { rating: number }).rating));
+  const cnt = ratings.length;
+  const avg = cnt ? ratings.reduce((a, b) => a + b, 0) / cnt : 0;
+  return { reviewCount: cnt, rating: cnt ? Math.round(avg * 10) / 10 : 0 };
 }
 
 function startingPrice(packages: ReturnType<typeof mapPackage>[]) {
@@ -95,7 +135,7 @@ function parseAvailability(raw: unknown) {
   }
 }
 
-function mapProfileBase(r: Record<string, unknown>) {
+function mapProfileBase(r: Row) {
   return {
     id: r.id,
     userId: r.user_id,
@@ -114,12 +154,12 @@ function mapProfileBase(r: Record<string, unknown>) {
   };
 }
 
-export async function serializeTrainerSummary(r: Record<string, unknown>) {
+export async function serializeTrainerSummary(sb: ServerSupabase, r: Row) {
   const id = r.id as number;
   const [packages, stats, specialties] = await Promise.all([
-    getPackages(id),
-    ratingStats(id),
-    getSpecialties(id),
+    getPackages(sb, id),
+    ratingStats(sb, id),
+    getSpecialties(sb, id),
   ]);
   return {
     ...mapProfileBase(r),
@@ -131,14 +171,14 @@ export async function serializeTrainerSummary(r: Record<string, unknown>) {
   };
 }
 
-export async function serializeTrainerDetail(r: Record<string, unknown>) {
+export async function serializeTrainerDetail(sb: ServerSupabase, r: Row) {
   const id = r.id as number;
   const [summary, packages, previousWork, reviews, certifications] = await Promise.all([
-    serializeTrainerSummary(r),
-    getPackages(id),
-    getWork(id),
-    getReviews(id),
-    getCertifications(id),
+    serializeTrainerSummary(sb, r),
+    getPackages(sb, id),
+    getWork(sb, id),
+    getReviews(sb, id),
+    getCertifications(sb, id),
   ]);
   return {
     ...summary,

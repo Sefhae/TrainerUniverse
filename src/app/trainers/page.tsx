@@ -2,13 +2,13 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
-import { useTrainers } from '../../hooks/useTrainers';
-import { useT } from '../../hooks/useLanguage';
-import FilterSidebar from '../../components/FilterSidebar';
-import SortBar from '../../components/SortBar';
-import TrainerCard from '../../components/TrainerCard';
-import TrainerCardSkeleton from '../../components/TrainerCardSkeleton';
-import EmptyState from '../../components/EmptyState';
+import { useTrainers } from '@/hooks/useTrainers';
+import { useT } from '@/hooks/useLanguage';
+import FilterSidebar from '@/components/FilterSidebar';
+import SortBar from '@/components/SortBar';
+import TrainerCard from '@/components/TrainerCard';
+import TrainerCardSkeleton from '@/components/TrainerCardSkeleton';
+import EmptyState from '@/components/EmptyState';
 
 function DirectoryContent() {
   const { trainers, total, loading, error, filters, setFilters, clearFilters, activeFilterCount } =

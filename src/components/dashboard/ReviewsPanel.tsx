@@ -1,7 +1,7 @@
-import type { Trainer } from '../../lib/types';
-import StarRating from '../StarRating';
-import ReviewCard from '../ReviewCard';
-import EmptyState from '../EmptyState';
+import type { Trainer } from '@/lib/types';
+import StarRating from '@/components/StarRating';
+import ReviewCard from '@/components/ReviewCard';
+import EmptyState from '@/components/EmptyState';
 
 export default function ReviewsPanel({ trainer }: { trainer: Trainer }) {
   const { reviews, rating, reviewCount } = trainer;
