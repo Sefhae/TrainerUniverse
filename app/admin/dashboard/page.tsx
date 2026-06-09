@@ -6,13 +6,14 @@ import Image from 'next/image';
 import {
   LayoutDashboard, Users, GraduationCap, CalendarDays,
   LogOut, Trash2, Eye, EyeOff, ShieldCheck, Pencil, Plus, X, Star, Camera, UserCircle, KeyRound,
+  UserMinus, Check,
 } from 'lucide-react';
 import { useAdminAuth } from '../../../src/hooks/useAdminAuth';
 import api from '../../../src/api/client';
 import { cn } from '../../../src/lib/format';
 import CitySearch from '../../../src/components/CitySearch';
 
-type Section = 'overview' | 'trainers' | 'students' | 'sessions';
+type Section = 'overview' | 'trainers' | 'students' | 'sessions' | 'removals';
 
 const SEEDED_TRAINER_EMAILS = new Set([
   'marcus@fitconnect.com', 'sofia@fitconnect.com', 'darnell@fitconnect.com',
@@ -32,12 +33,14 @@ interface AdminSession { id: number; title: string; trainer_name: string; studen
 interface TrainerProfile { id: number; name: string; tagline: string; bio: string; location: string; is_remote: number; years_experience: number; is_verified: number; response_time: string; email: string; profile_photo: string | null; cover_photo: string | null; }
 interface PricingPackage { id: number; trainer_id: number; name: string; description: string; sessions: number; price: number; is_popular: number; }
 interface StudentDetail { id: number; user_id: number; name: string; email: string; created_at: string; }
+interface AdminRemoval { id: number; reason: string; created_at: string; trainer_id: number; student_id: number; trainer_name: string; student_name: string; student_email: string; }
 
 const NAV: { id: Section; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'trainers', label: 'Trainers', icon: Users },
   { id: 'students', label: 'Students', icon: GraduationCap },
   { id: 'sessions', label: 'Sessions', icon: CalendarDays },
+  { id: 'removals', label: 'Removals', icon: UserMinus },
 ];
 
 function Spinner() {
@@ -707,6 +710,7 @@ export default function AdminDashboardPage() {
   const [trainers, setTrainers] = useState<AdminTrainer[]>([]);
   const [students, setStudents] = useState<AdminStudent[]>([]);
   const [sessions, setSessions] = useState<AdminSession[]>([]);
+  const [removals, setRemovals] = useState<AdminRemoval[]>([]);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [toggling, setToggling] = useState<number | null>(null);
@@ -736,12 +740,25 @@ export default function AdminDashboardPage() {
     const { data } = await api.get<AdminSession[]>('/admin/sessions');
     setSessions(data);
   }, []);
+  const loadRemovals = useCallback(async () => {
+    const { data } = await api.get<AdminRemoval[]>('/admin/student-removals');
+    setRemovals(data);
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     setLoading(true);
-    Promise.all([loadStats(), loadTrainers(), loadStudents(), loadSessions()]).finally(() => setLoading(false));
-  }, [isAuthenticated, loadStats, loadTrainers, loadStudents, loadSessions]);
+    Promise.all([loadStats(), loadTrainers(), loadStudents(), loadSessions(), loadRemovals()]).finally(() => setLoading(false));
+  }, [isAuthenticated, loadStats, loadTrainers, loadStudents, loadSessions, loadRemovals]);
+
+  async function handleRemoval(id: number, action: 'approve' | 'reject') {
+    setDeleting(id);
+    try {
+      await api.post(`/admin/student-removals/${id}`, { action });
+      setRemovals((p) => p.filter((r) => r.id !== id));
+      if (action === 'approve') { loadStudents(); loadStats(); loadTrainers(); }
+    } finally { setDeleting(null); }
+  }
 
   async function deleteTrainer(id: number) {
     if (!confirm('Delete this trainer and all their data?')) return;
@@ -807,7 +824,15 @@ export default function AdminDashboardPage() {
               )}
             >
               <Icon className="h-4 w-4" />
-              {label}
+              <span className="flex-1 text-left">{label}</span>
+              {id === 'removals' && removals.length > 0 && (
+                <span className={cn(
+                  'rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums',
+                  section === id ? 'bg-ink/20 text-ink' : 'bg-red-500/20 text-red-400'
+                )}>
+                  {removals.length}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -1058,6 +1083,66 @@ export default function AdminDashboardPage() {
                                 className="p-1.5 text-bone/40 hover:text-red-400 disabled:opacity-40"
                               >
                                 <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Removals ── */}
+          {section === 'removals' && (
+            <div>
+              <h1 className="font-display text-4xl tracking-wide">Student Removals</h1>
+              <p className="mt-1 text-sm text-bone/40">
+                {removals.length} pending request{removals.length !== 1 ? 's' : ''} — approve to remove the student from the trainer&apos;s roster.
+              </p>
+              {loading ? <Spinner /> : removals.length === 0 ? (
+                <div className="mt-8 border border-white/10 bg-white/4 px-6 py-16 text-center text-sm text-bone/40">
+                  No pending removal requests.
+                </div>
+              ) : (
+                <div className="mt-8 overflow-x-auto border border-white/10">
+                  <table className="w-full text-sm">
+                    <thead className="border-b border-white/10 bg-white/4 text-left">
+                      <tr>
+                        {['Student', 'Email', 'Trainer', 'Reason', 'Requested', 'Actions'].map((h) => (
+                          <th key={h} className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-bone/40">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/8">
+                      {removals.map((r) => (
+                        <tr key={r.id} className="hover:bg-white/[0.02]">
+                          <td className="px-4 py-3 font-semibold">{r.student_name}</td>
+                          <td className="px-4 py-3 text-bone/60">{r.student_email}</td>
+                          <td className="px-4 py-3 text-bone/60">{r.trainer_name}</td>
+                          <td className="max-w-[220px] px-4 py-3 text-bone/50">
+                            <span className="line-clamp-2">{r.reason || '—'}</span>
+                          </td>
+                          <td className="px-4 py-3 text-xs text-bone/40">{new Date(r.created_at).toLocaleDateString()}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleRemoval(r.id, 'approve')}
+                                disabled={deleting === r.id}
+                                title="Approve removal"
+                                className="flex items-center gap-1 rounded bg-red-600/90 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white hover:bg-red-600 disabled:opacity-40"
+                              >
+                                <Check className="h-3.5 w-3.5" /> Approve
+                              </button>
+                              <button
+                                onClick={() => handleRemoval(r.id, 'reject')}
+                                disabled={deleting === r.id}
+                                title="Reject request"
+                                className="flex items-center gap-1 rounded border border-white/15 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-bone/60 hover:text-bone disabled:opacity-40"
+                              >
+                                <X className="h-3.5 w-3.5" /> Reject
                               </button>
                             </div>
                           </td>

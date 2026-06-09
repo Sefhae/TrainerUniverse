@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { UserPlus, Trash2, Users } from 'lucide-react';
+import { UserPlus, Users, Clock, ChevronRight } from 'lucide-react';
 import api from '../../api/client';
 import { useT } from '../../hooks/useLanguage';
 import { useToast } from '../../hooks/useToast';
+import Modal from '../Modal';
 
 interface Student {
   id: number;
@@ -12,6 +13,7 @@ interface Student {
   email: string;
   enrolledAt: string;
   sessionCount: number;
+  removalPending: boolean;
 }
 
 export default function StudentsPanel() {
@@ -21,7 +23,9 @@ export default function StudentsPanel() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [enrolling, setEnrolling] = useState(false);
-  const [removing, setRemoving] = useState<number | null>(null);
+  const [detail, setDetail] = useState<Student | null>(null);
+  const [reason, setReason] = useState('');
+  const [requesting, setRequesting] = useState(false);
 
   async function load() {
     try {
@@ -48,8 +52,7 @@ export default function StudentsPanel() {
       setEmail('');
       load();
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
       if (msg?.includes('already')) toast.error(t.students.alreadyEnrolled);
       else if (msg?.includes('No student')) toast.error(t.students.notFound);
       else toast.error(msg || 'Error');
@@ -58,15 +61,20 @@ export default function StudentsPanel() {
     }
   }
 
-  async function remove(studentId: number) {
-    setRemoving(studentId);
+  async function requestRemoval() {
+    if (!detail) return;
+    setRequesting(true);
     try {
-      await api.delete(`/trainer/students?studentId=${studentId}`);
-      setStudents((prev) => prev.filter((s) => s.id !== studentId));
-    } catch {
-      toast.error('Error removing student.');
+      await api.post('/trainer/students/removal', { studentId: detail.id, reason: reason.trim() });
+      toast.success('Removal requested — pending TrainerUniverse approval.');
+      setDetail(null);
+      setReason('');
+      load();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      toast.error(msg || 'Error');
     } finally {
-      setRemoving(null);
+      setRequesting(false);
     }
   }
 
@@ -75,7 +83,7 @@ export default function StudentsPanel() {
       {/* Add student */}
       <div className="border border-ink/10 bg-white p-5">
         <h2 className="mb-4 font-display text-xl tracking-wide">{t.students.addStudent}</h2>
-        <form onSubmit={enroll} className="flex gap-3">
+        <form onSubmit={enroll} className="flex flex-col gap-3 sm:flex-row">
           <input
             type="email"
             value={email}
@@ -86,7 +94,7 @@ export default function StudentsPanel() {
           <button
             type="submit"
             disabled={enrolling || !email.trim()}
-            className="btn btn-dark flex items-center gap-2 disabled:opacity-50"
+            className="btn btn-dark flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <UserPlus className="h-4 w-4" />
             {enrolling ? '…' : t.students.enrollBtn}
@@ -108,7 +116,11 @@ export default function StudentsPanel() {
       ) : (
         <div className="divide-y divide-ink/8 border border-ink/10 bg-white">
           {students.map((s) => (
-            <div key={s.id} className="flex items-center gap-4 px-5 py-4">
+            <button
+              key={s.id}
+              onClick={() => { setReason(''); setDetail(s); }}
+              className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-ink/[0.02]"
+            >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-volt font-display text-base font-bold text-ink">
                 {s.name.charAt(0).toUpperCase()}
               </div>
@@ -116,31 +128,92 @@ export default function StudentsPanel() {
                 <p className="truncate font-semibold">{s.name}</p>
                 <p className="truncate text-sm text-ink/55">{s.email}</p>
               </div>
+              {s.removalPending && (
+                <span className="hidden items-center gap-1 bg-yellow-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-yellow-700 sm:inline-flex">
+                  <Clock className="h-3 w-3" /> Removal pending
+                </span>
+              )}
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-semibold text-volt">
                   {s.sessionCount} {t.students.sessionCount}
                 </p>
                 <p className="text-xs text-ink/40">
-                  {t.students.enrolledSince}{' '}
-                  {new Date(s.enrolledAt).toLocaleDateString()}
+                  {t.students.enrolledSince} {new Date(s.enrolledAt).toLocaleDateString()}
                 </p>
               </div>
-              <button
-                onClick={() => remove(s.id)}
-                disabled={removing === s.id}
-                className="shrink-0 p-2 text-ink/30 transition-colors hover:text-red-500 disabled:opacity-50"
-                aria-label={t.students.removeStudent}
-              >
-                {removing === s.id ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink/20 border-t-ink block" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-              </button>
-            </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-ink/30" />
+            </button>
           ))}
         </div>
       )}
+
+      {/* Detail modal */}
+      <Modal
+        open={detail !== null}
+        onClose={() => { setDetail(null); setReason(''); }}
+        title="Student Details"
+        size="sm"
+      >
+        {detail && (
+          <div className="space-y-5">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center bg-volt font-display text-xl font-bold text-ink">
+                {detail.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-display text-2xl tracking-wide">{detail.name}</p>
+                <p className="truncate text-sm text-ink/55">{detail.email}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="border border-ink/10 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/45">
+                  {t.students.sessionCount}
+                </p>
+                <p className="mt-1 font-display text-2xl">{detail.sessionCount}</p>
+              </div>
+              <div className="border border-ink/10 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/45">
+                  {t.students.enrolledSince}
+                </p>
+                <p className="mt-1 text-sm font-semibold">{new Date(detail.enrolledAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+
+            {detail.removalPending ? (
+              <div className="flex items-center gap-2 border border-yellow-300 bg-yellow-50 px-3 py-2.5 text-sm text-yellow-700">
+                <Clock className="h-4 w-4 shrink-0" />
+                Removal request pending TrainerUniverse approval.
+              </div>
+            ) : (
+              <div className="border-t border-ink/10 pt-4">
+                <label className="field-label" htmlFor="removal-reason">
+                  Reason for removal (optional)
+                </label>
+                <textarea
+                  id="removal-reason"
+                  rows={2}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="field-input resize-none"
+                  placeholder="Why do you want to remove this student?"
+                />
+                <button
+                  onClick={requestRemoval}
+                  disabled={requesting}
+                  className="btn mt-3 w-full bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {requesting ? 'Requesting…' : 'Request Removal'}
+                </button>
+                <p className="mt-2 text-[11px] leading-relaxed text-ink/45">
+                  A TrainerUniverse admin must approve the request before the student is removed from your roster.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -10,7 +10,10 @@ export async function GET(req: NextRequest) {
 
   const rows = db.prepare(`
     SELECT sp.id, sp.name, u.email, ts_rel.enrolled_at,
-           COUNT(sess.id) AS session_count
+           COUNT(sess.id) AS session_count,
+           (SELECT COUNT(*) FROM student_removal_requests r
+             WHERE r.trainer_id = ts_rel.trainer_id AND r.student_id = sp.id AND r.status = 'pending')
+             AS removal_pending
     FROM trainer_students ts_rel
     JOIN student_profiles sp ON sp.id = ts_rel.student_id
     JOIN users u ON u.id = sp.user_id
@@ -25,6 +28,7 @@ export async function GET(req: NextRequest) {
     email: string;
     enrolled_at: string;
     session_count: number;
+    removal_pending: number;
   }>;
 
   return NextResponse.json(
@@ -34,6 +38,7 @@ export async function GET(req: NextRequest) {
       email: r.email,
       enrolledAt: r.enrolled_at,
       sessionCount: r.session_count,
+      removalPending: r.removal_pending > 0,
     }))
   );
 }
@@ -72,18 +77,5 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ success: true, studentId: profile.id });
 }
 
-// DELETE /api/trainer/students?studentId=X — remove a student from trainer's roster
-export async function DELETE(req: NextRequest) {
-  const payload = verifyToken(req);
-  if (!payload) return unauthorized();
-  if (payload.role !== 'trainer' || !payload.trainerId) return forbidden();
-
-  const studentId = Number(req.nextUrl.searchParams.get('studentId'));
-  if (!studentId) return NextResponse.json({ error: 'studentId required.' }, { status: 400 });
-
-  db.prepare(
-    'DELETE FROM trainer_students WHERE trainer_id = ? AND student_id = ?'
-  ).run(payload.trainerId, studentId);
-
-  return NextResponse.json({ success: true });
-}
+// Direct removal is no longer allowed — trainers must request removal and a
+// TrainerUniverse admin approves it (see app/api/trainer/students/removal).
