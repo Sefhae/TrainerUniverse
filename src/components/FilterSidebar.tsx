@@ -269,7 +269,7 @@ export default function FilterSidebar({
               className="w-full bg-content/5 border border-content/15 pl-8 pr-3 py-2 text-sm text-content placeholder:text-content/35 focus:outline-none focus:border-volt/60 transition-colors duration-200"
             />
           </div>
-          <div className="space-y-3">
+          <div className="max-h-64 space-y-3 overflow-y-auto pr-1">
             {SPECIALTY_GROUPS.map((group) => {
               const q = specialtySearch.toLowerCase();
               const visible = group.options.filter((o) => o.toLowerCase().includes(q));
