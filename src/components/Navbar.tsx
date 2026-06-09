@@ -43,6 +43,7 @@ function ThemeToggle() {
 const LANGS = [
   { id: 'en', label: 'English', short: 'EN' },
   { id: 'tr', label: 'Türkçe', short: 'TR' },
+  { id: 'es', label: 'Español', short: 'ES' },
 ] as const;
 
 function LangToggle() {

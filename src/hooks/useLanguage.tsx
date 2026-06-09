@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { translations, type Lang, type Translations } from '../lib/i18n';
+import { translations, esTranslations, type Lang, type Translations } from '../lib/i18n';
 
 interface LanguageContextValue {
   lang: Lang;
@@ -18,7 +18,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem('traineruniverse-lang') as Lang | null;
-    if (saved === 'en' || saved === 'tr') setLangState(saved);
+    if (saved === 'en' || saved === 'tr' || saved === 'es') setLangState(saved);
   }, []);
 
   useEffect(() => {
@@ -43,5 +43,6 @@ export function useLanguage() {
 
 export function useT(): Translations {
   const { lang } = useLanguage();
+  if (lang === 'es') return esTranslations as unknown as Translations;
   return translations[lang] as unknown as Translations;
 }
