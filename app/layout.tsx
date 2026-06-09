@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Providers from '../src/components/Providers';
 import SiteShell from '../src/components/SiteShell';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: 'TrainerUniverse — Find Your Perfect Trainer',
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <SiteShell>{children}</SiteShell>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
