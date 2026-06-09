@@ -23,13 +23,13 @@ const TESTIMONIALS = [
   { quote: 'Down 30 pounds and my energy is through the roof. Worth every single session.', name: 'James O.', role: 'Nutrition client', rating: 5 },
 ];
 
-// Lorem Picsum is a reliable image CDN (loremflickr frequently fails to load in
-// production). Fixed seeds keep the same photos across loads; the component shows
-// them grayscale and reveals colour on hover.
+// Curated Unsplash photos matched to each hero label (Sports / Academic / Tech).
+// Served from Unsplash's CDN with fit=crop sizing them to each slot; the component
+// shows them grayscale and reveals colour on hover.
 const HERO_SRCS = [
-  'https://picsum.photos/seed/tu-sport/820/1080',
-  'https://picsum.photos/seed/tu-academic/720/680',
-  'https://picsum.photos/seed/tu-tech/720/680',
+  'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=820&h=1080&q=70&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=720&h=680&q=70&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=720&h=680&q=70&auto=format&fit=crop',
 ];
 
 function HeroImage({ src, label }: { src: string; label: string }) {
