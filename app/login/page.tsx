@@ -8,6 +8,7 @@ import { useStudentAuth } from '../../src/hooks/useStudentAuth';
 import { useToast } from '../../src/hooks/useToast';
 import { cn, getApiError } from '../../src/lib/format';
 import { PASSWORD_RULES, validatePassword } from '../../src/lib/password';
+import { useT } from '../../src/hooks/useLanguage';
 import api from '../../src/api/client';
 
 type Mode = 'login' | 'register';
@@ -15,21 +16,8 @@ type Step = 'credentials' | 'role';
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
-const TRAINER_BENEFITS = [
-  'Reach thousands of motivated clients',
-  'Set your own packages and pricing',
-  'Showcase real client transformations',
-  'Collect reviews that build your reputation',
-];
-
-const STUDENT_BENEFITS = [
-  'Browse elite coaches in every discipline',
-  'Book sessions that fit your schedule',
-  'Message your trainer directly',
-  'Track your progress and growth',
-];
-
 function AuthForm() {
+  const t = useT().auth;
   const { loginWithData, register } = useAuth();
   const { loginWithData: studentLoginWithData, register: studentRegister } = useStudentAuth();
   const router = useRouter();
@@ -48,6 +36,7 @@ function AuthForm() {
   useEffect(() => {
     setMode(modeParam === 'register' ? 'register' : 'login');
     setStep('credentials');
+    setAccepted(false);
     setErrors({});
     setFormError('');
   }, [modeParam]);
@@ -56,6 +45,7 @@ function AuthForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -63,6 +53,7 @@ function AuthForm() {
   function switchMode(next: Mode) {
     setMode(next);
     setStep('credentials');
+    setAccepted(false);
     setErrors({});
     setFormError('');
   }
@@ -70,8 +61,8 @@ function AuthForm() {
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!email.trim()) errs.email = 'Email is required.';
-    if (!password) errs.password = 'Password is required.';
+    if (!email.trim()) errs.email = t.errEmailRequired;
+    if (!password) errs.password = t.errPasswordRequired;
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
@@ -87,14 +78,14 @@ function AuthForm() {
 
       if (data.user.role === 'trainer') {
         loginWithData({ token: data.token, user: data.user as never, trainerId: data.trainerId });
-        toast.success('Welcome back!');
+        toast.success(t.toastWelcomeBack);
         router.replace('/dashboard');
       } else {
         studentLoginWithData({ token: data.token, user: data.user as never, studentId: data.studentId });
         router.replace('/student/dashboard');
       }
     } catch (err) {
-      setFormError(getApiError(err, 'Incorrect email or password.'));
+      setFormError(getApiError(err, t.errIncorrectLogin));
     } finally {
       setSubmitting(false);
     }
@@ -103,10 +94,10 @@ function AuthForm() {
   const handleCredentials = (e: FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!name.trim()) errs.name = 'Name is required.';
-    if (!EMAIL_RE.test(email.trim())) errs.email = 'Enter a valid email.';
-    const pwError = validatePassword(password);
-    if (pwError) errs.password = pwError;
+    if (!name.trim()) errs.name = t.errNameRequired;
+    if (!EMAIL_RE.test(email.trim())) errs.email = t.errEmailInvalid;
+    if (validatePassword(password)) errs.password = t.errPasswordInvalid;
+    if (!accepted) errs.accepted = t.errAcceptRequired;
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
     setFormError('');
@@ -119,14 +110,14 @@ function AuthForm() {
     try {
       if (role === 'trainer') {
         await register({ name: name.trim(), email: email.trim(), password, specialties: [] });
-        toast.success('Account created! Complete your profile to get listed.');
+        toast.success(t.toastAccountCreated);
         router.replace('/dashboard');
       } else {
         await studentRegister(name.trim(), email.trim(), password);
         router.replace('/student/dashboard');
       }
     } catch (err) {
-      setFormError(getApiError(err, 'Registration failed. Please try again.'));
+      setFormError(getApiError(err, t.errRegisterFailed));
       setStep('credentials');
     } finally {
       setSubmitting(false);
@@ -144,22 +135,22 @@ function AuthForm() {
         />
         <p className="eyebrow relative text-accent">
           <span className="h-px w-8 bg-accent" />
-          TrainerUniverse
+          {t.brandEyebrow}
         </p>
         <div className="relative space-y-10">
           <h1 className="font-display text-6xl leading-[0.92] tracking-wide xl:text-7xl">
-            Train smarter.
+            {t.brandTitle1}
             <br />
-            <span className="text-accent">Go further.</span>
+            <span className="text-accent">{t.brandTitle2}</span>
           </h1>
 
           <div className="grid grid-cols-2 gap-8">
             <div>
               <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-accent/70">
-                For Trainers
+                {t.forTrainers}
               </p>
               <ul className="space-y-3">
-                {TRAINER_BENEFITS.map((b) => (
+                {t.trainerBenefits.map((b) => (
                   <li key={b} className="flex items-start gap-2.5 text-sm text-content/70">
                     <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center bg-volt text-ink">
                       <Check className="h-2.5 w-2.5" strokeWidth={4} />
@@ -171,10 +162,10 @@ function AuthForm() {
             </div>
             <div>
               <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-accent/70">
-                For Students
+                {t.forStudents}
               </p>
               <ul className="space-y-3">
-                {STUDENT_BENEFITS.map((b) => (
+                {t.studentBenefits.map((b) => (
                   <li key={b} className="flex items-start gap-2.5 text-sm text-content/70">
                     <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center bg-volt/20 text-accent">
                       <Check className="h-2.5 w-2.5" strokeWidth={4} />
@@ -187,7 +178,7 @@ function AuthForm() {
           </div>
         </div>
         <p className="relative text-[12px] uppercase tracking-[0.18em] text-content/35">
-          TrainerUniverse — Train smarter. Go further.
+          {t.brandTagline}
         </p>
       </div>
 
@@ -208,7 +199,7 @@ function AuthForm() {
                     mode === m ? 'bg-ink text-bone' : 'text-ink/45 hover:text-ink'
                   )}
                 >
-                  {m === 'login' ? 'Log In' : 'Create Account'}
+                  {m === 'login' ? t.tabLogin : t.tabRegister}
                 </button>
               ))}
             </div>
@@ -224,21 +215,21 @@ function AuthForm() {
           {/* ── LOGIN ── */}
           {mode === 'login' && (
             <>
-              <h2 className="font-display text-5xl leading-none tracking-wide">Welcome back.</h2>
+              <h2 className="font-display text-5xl leading-none tracking-wide">{t.loginTitle}</h2>
               <p className="mt-2 text-sm text-ink/55">
-                No account yet?{' '}
+                {t.noAccount}{' '}
                 <button
                   type="button"
                   onClick={() => switchMode('register')}
                   className="font-semibold text-ink underline hover:text-ink/70"
                 >
-                  Create one
+                  {t.createOne}
                 </button>
               </p>
 
               <form onSubmit={handleLogin} noValidate className="mt-6 space-y-4">
                 <div>
-                  <label className="field-label" htmlFor="login-email">Email Address</label>
+                  <label className="field-label" htmlFor="login-email">{t.emailLabel}</label>
                   <input
                     id="login-email"
                     type="email"
@@ -246,13 +237,13 @@ function AuthForm() {
                     className={cn('field-input', errors.email && 'field-input-invalid')}
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: '' })); }}
-                    placeholder="you@example.com"
+                    placeholder={t.emailPlaceholder}
                   />
                   {errors.email && <p className="field-error">{errors.email}</p>}
                 </div>
 
                 <div>
-                  <label className="field-label" htmlFor="login-password">Password</label>
+                  <label className="field-label" htmlFor="login-password">{t.passwordLabel}</label>
                   <div className="relative">
                     <input
                       id="login-password"
@@ -261,7 +252,7 @@ function AuthForm() {
                       className={cn('field-input pr-12', errors.password && 'field-input-invalid')}
                       value={password}
                       onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: '' })); }}
-                      placeholder="Your password"
+                      placeholder={t.loginPasswordPlaceholder}
                     />
                     <button
                       type="button"
@@ -277,16 +268,16 @@ function AuthForm() {
                 <button type="submit" disabled={submitting} className="btn btn-dark w-full">
                   {submitting
                     ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-bone border-t-transparent" />
-                    : <><span>Log In</span><ArrowRight className="h-4 w-4" /></>}
+                    : <><span>{t.loginSubmit}</span><ArrowRight className="h-4 w-4" /></>}
                 </button>
               </form>
 
               {/* Demo box */}
               <div className="mt-6 border border-ink/10 bg-white p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45">Demo accounts</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45">{t.demoTitle}</p>
                 <div className="mt-2 space-y-1 text-sm text-ink/60">
-                  <p>Trainer: <span className="font-mono">marcus@fitconnect.com · trainer123</span></p>
-                  <p>Student: <span className="font-mono">demo.student@fitconnect.com · student123</span></p>
+                  <p>{t.demoTrainer}: <span className="font-mono">marcus@fitconnect.com · trainer123</span></p>
+                  <p>{t.demoStudent}: <span className="font-mono">demo.student@fitconnect.com · student123</span></p>
                 </div>
                 <div className="mt-2 flex gap-3">
                   <button
@@ -294,14 +285,14 @@ function AuthForm() {
                     onClick={() => { setEmail('marcus@fitconnect.com'); setPassword('trainer123'); }}
                     className="text-[12px] font-semibold uppercase tracking-[0.1em] text-ink underline hover:text-ink/60"
                   >
-                    Fill Trainer
+                    {t.fillTrainer}
                   </button>
                   <button
                     type="button"
                     onClick={() => { setEmail('demo.student@fitconnect.com'); setPassword('student123'); }}
                     className="text-[12px] font-semibold uppercase tracking-[0.1em] text-ink underline hover:text-ink/60"
                   >
-                    Fill Student
+                    {t.fillStudent}
                   </button>
                 </div>
               </div>
@@ -311,21 +302,21 @@ function AuthForm() {
           {/* ── REGISTER: Step 1 — credentials ── */}
           {mode === 'register' && step === 'credentials' && (
             <>
-              <h2 className="font-display text-5xl leading-none tracking-wide">Create your account.</h2>
+              <h2 className="font-display text-5xl leading-none tracking-wide">{t.registerTitle}</h2>
               <p className="mt-2 text-sm text-ink/55">
-                Already have one?{' '}
+                {t.haveAccount}{' '}
                 <button
                   type="button"
                   onClick={() => switchMode('login')}
                   className="font-semibold text-ink underline hover:text-ink/70"
                 >
-                  Log in
+                  {t.logIn}
                 </button>
               </p>
 
               <form onSubmit={handleCredentials} noValidate className="mt-6 space-y-4">
                 <div>
-                  <label className="field-label" htmlFor="reg-name">Full Name</label>
+                  <label className="field-label" htmlFor="reg-name">{t.nameLabel}</label>
                   <input
                     id="reg-name"
                     className={cn('field-input', errors.name && 'field-input-invalid')}
@@ -337,7 +328,7 @@ function AuthForm() {
                 </div>
 
                 <div>
-                  <label className="field-label" htmlFor="reg-email">Email Address</label>
+                  <label className="field-label" htmlFor="reg-email">{t.emailLabel}</label>
                   <input
                     id="reg-email"
                     type="email"
@@ -345,13 +336,13 @@ function AuthForm() {
                     className={cn('field-input', errors.email && 'field-input-invalid')}
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: '' })); }}
-                    placeholder="you@example.com"
+                    placeholder={t.emailPlaceholder}
                   />
                   {errors.email && <p className="field-error">{errors.email}</p>}
                 </div>
 
                 <div>
-                  <label className="field-label" htmlFor="reg-password">Password</label>
+                  <label className="field-label" htmlFor="reg-password">{t.passwordLabel}</label>
                   <div className="relative">
                     <input
                       id="reg-password"
@@ -360,7 +351,7 @@ function AuthForm() {
                       className={cn('field-input pr-12', errors.password && 'field-input-invalid')}
                       value={password}
                       onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: '' })); }}
-                      placeholder="Create a strong password"
+                      placeholder={t.registerPasswordPlaceholder}
                     />
                     <button
                       type="button"
@@ -389,15 +380,39 @@ function AuthForm() {
                               <span className="h-1 w-1 rounded-full bg-ink/30" />
                             )}
                           </span>
-                          {rule.label}
+                          {t.pwRules[rule.id as keyof typeof t.pwRules]}
                         </li>
                       );
                     })}
                   </ul>
                 </div>
 
+                <div>
+                  <label className="flex items-start gap-2.5 text-sm text-ink/70">
+                    <input
+                      type="checkbox"
+                      checked={accepted}
+                      onChange={(e) => { setAccepted(e.target.checked); setErrors((p) => ({ ...p, accepted: '' })); }}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-ink"
+                    />
+                    <span>
+                      {t.agreePrefix}
+                      <a
+                        href="/user-agreement"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-semibold text-ink underline hover:text-ink/70"
+                      >
+                        {t.agreeLink}
+                      </a>
+                      {t.agreeSuffix}
+                    </span>
+                  </label>
+                  {errors.accepted && <p className="field-error">{errors.accepted}</p>}
+                </div>
+
                 <button type="submit" className="btn btn-dark w-full">
-                  Continue
+                  {t.continue}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </form>
@@ -413,11 +428,11 @@ function AuthForm() {
                 className="mb-6 flex items-center gap-1.5 text-sm font-semibold text-ink/50 hover:text-ink transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back
+                {t.back}
               </button>
 
-              <h2 className="font-display text-4xl leading-none tracking-wide">What describes you?</h2>
-              <p className="mt-2 text-sm text-ink/55">Choose your role — you can't change this later.</p>
+              <h2 className="font-display text-4xl leading-none tracking-wide">{t.roleTitle}</h2>
+              <p className="mt-2 text-sm text-ink/55">{t.roleSubtitle}</p>
 
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
                 {/* Trainer card */}
@@ -431,13 +446,13 @@ function AuthForm() {
                     🏋️
                   </div>
                   <div>
-                    <p className="font-display text-xl tracking-wide">Trainer</p>
+                    <p className="font-display text-xl tracking-wide">{t.roleTrainer}</p>
                     <p className="mt-1 text-sm text-ink/55">
-                      I coach others and want to grow my client base.
+                      {t.roleTrainerDesc}
                     </p>
                   </div>
                   <ul className="mt-auto space-y-1.5">
-                    {TRAINER_BENEFITS.slice(0, 3).map((b) => (
+                    {t.trainerBenefits.slice(0, 3).map((b) => (
                       <li key={b} className="flex items-start gap-2 text-xs text-ink/50">
                         <Check className="mt-0.5 h-3 w-3 shrink-0 text-accent" strokeWidth={3} />
                         {b}
@@ -460,13 +475,13 @@ function AuthForm() {
                     📚
                   </div>
                   <div>
-                    <p className="font-display text-xl tracking-wide">Student</p>
+                    <p className="font-display text-xl tracking-wide">{t.roleStudent}</p>
                     <p className="mt-1 text-sm text-ink/55">
-                      I want to find a coach and start training.
+                      {t.roleStudentDesc}
                     </p>
                   </div>
                   <ul className="mt-auto space-y-1.5">
-                    {STUDENT_BENEFITS.slice(0, 3).map((b) => (
+                    {t.studentBenefits.slice(0, 3).map((b) => (
                       <li key={b} className="flex items-start gap-2 text-xs text-ink/50">
                         <Check className="mt-0.5 h-3 w-3 shrink-0 text-ink/40" strokeWidth={3} />
                         {b}

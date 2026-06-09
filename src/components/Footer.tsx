@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useT } from '../hooks/useLanguage';
+import BrandMark from './BrandMark';
 
 export default function Footer() {
   const t = useT();
@@ -12,10 +13,7 @@ export default function Footer() {
         <div className="grid gap-12 md:grid-cols-[1.6fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-2.5">
-              <svg viewBox="0 0 64 64" className="h-8 w-8">
-                <rect width="64" height="64" fill="#C8FF00" />
-                <path d="M37 8 L16 38 H30 L28 56 L48 26 H34 Z" fill="#0A0A0A" />
-              </svg>
+              <BrandMark className="h-8 w-8 text-content" />
               <span className="font-display text-2xl tracking-[0.08em]">
                 TRAINER<span className="text-accent">UNIVERSE</span>
               </span>
@@ -67,7 +65,16 @@ export default function Footer() {
 
         <div className="mt-14 flex flex-col gap-3 border-t border-content/10 pt-7 text-[12px] text-content/40 sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} TrainerUniverse. {t.footer.allRightsReserved}</p>
-          <p className="uppercase tracking-[0.18em]">{t.footer.tagline}</p>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/user-agreement"
+              className="uppercase tracking-[0.18em] transition-colors duration-200 hover:text-accent"
+            >
+              User Agreement
+            </Link>
+            <span className="hidden h-3 w-px bg-content/20 sm:block" />
+            <p className="uppercase tracking-[0.18em]">{t.footer.tagline}</p>
+          </div>
         </div>
       </div>
     </footer>

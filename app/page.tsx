@@ -84,6 +84,9 @@ function HeroCollage({ avgRatingLabel, shots }: { avgRatingLabel: string; shots:
 export default function Home() {
   const t = useT();
   const wordIndex = useSyncedRotation(t.home.rotating.length);
+  // Reserve the widest word's width so nothing shifts as the word rotates —
+  // mirrors the fixed-width slot used by HeroSearch.
+  const longestRotating = t.home.rotating.reduce((a, b) => (b.length >= a.length ? b : a), t.home.rotating[0] ?? '');
   const [featured, setFeatured] = useState<TrainerSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -111,8 +114,8 @@ export default function Home() {
       <section id="discover" className="relative overflow-hidden bg-surface text-content scroll-mt-[72px]">
         <div className="grain-layer" />
         <div
-          className="pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full opacity-20 blur-3xl"
-          style={{ background: 'radial-gradient(circle, #C8FF00 0%, transparent 70%)' }}
+          className="pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full opacity-20 blur-3xl theme-light:opacity-40"
+          style={{ background: 'radial-gradient(circle, rgb(var(--glow)) 0%, transparent 70%)' }}
         />
         <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-5 pb-20 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:px-8 lg:pb-28 lg:pt-24">
           <div>
@@ -124,11 +127,27 @@ export default function Home() {
               <span className="animate-fade-up block text-6xl sm:text-7xl xl:text-8xl" style={{ animationDelay: '0.08s' }}>
                 {t.home.heroLine1}
               </span>
-              <span
-                key={`${wordIndex}-${t.home.rotating[wordIndex]}`}
-                className="animate-fade-up mt-1 inline-block text-7xl text-accent sm:text-8xl xl:text-9xl theme-light:bg-volt theme-light:px-3 theme-light:text-ink"
-              >
-                {t.home.rotating[wordIndex]}
+              <span className="mt-1 block text-7xl sm:text-8xl xl:text-9xl">
+                {/* Same swipe-highlight + word-slide treatment as HeroSearch. */}
+                <span className="relative inline-block">
+                  <span aria-hidden className="invisible px-[0.12em]">{longestRotating}</span>
+                  <span className="absolute inset-0">
+                    <span className="relative inline-block px-[0.12em]">
+                      <span
+                        key={`highlight-${wordIndex}`}
+                        aria-hidden
+                        className="animate-highlight-swipe absolute inset-x-0 inset-y-[0.04em] origin-left rounded-[4px] bg-volt"
+                        style={{ animationDelay: '0.1s' }}
+                      />
+                      <span
+                        key={`${wordIndex}-${t.home.rotating[wordIndex % t.home.rotating.length]}`}
+                        className="animate-word-slide relative inline-block text-ink"
+                      >
+                        {t.home.rotating[wordIndex % t.home.rotating.length]}
+                      </span>
+                    </span>
+                  </span>
+                </span>
               </span>
             </h1>
             <p className="animate-fade-up mt-6 max-w-xl text-base leading-relaxed text-content/60 sm:text-lg" style={{ animationDelay: '0.16s' }}>

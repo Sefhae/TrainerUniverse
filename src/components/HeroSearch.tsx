@@ -100,13 +100,19 @@ export default function HeroSearch() {
   return (
     <section className="relative flex min-h-[calc(100vh-72px)] flex-col justify-center overflow-hidden border-b border-content/10 bg-surface text-content">
       <div className="grain-layer" />
+      {/* Light-mode hero backdrop: a clean tonal spotlight — no pattern. Hidden in
+          dark where the soft glows carry the space. */}
       <div
-        className="pointer-events-none absolute -left-40 top-1/4 h-[520px] w-[520px] rounded-full opacity-[0.18] blur-3xl"
-        style={{ background: 'radial-gradient(circle, #C8FF00 0%, transparent 70%)' }}
+        className="pointer-events-none absolute inset-0 hidden theme-light:block"
+        style={{ background: 'radial-gradient(125% 75% at 50% 12%, rgb(255 255 255 / 0.95) 0%, rgb(255 255 255 / 0) 58%)' }}
       />
       <div
-        className="pointer-events-none absolute -right-32 bottom-0 h-[420px] w-[420px] rounded-full opacity-[0.12] blur-3xl"
-        style={{ background: 'radial-gradient(circle, #C8FF00 0%, transparent 70%)' }}
+        className="pointer-events-none absolute -left-40 top-1/4 h-[520px] w-[520px] rounded-full opacity-[0.18] blur-3xl theme-light:opacity-[0.16]"
+        style={{ background: 'radial-gradient(circle, rgb(var(--glow)) 0%, transparent 70%)' }}
+      />
+      <div
+        className="pointer-events-none absolute -right-32 bottom-0 h-[420px] w-[420px] rounded-full opacity-[0.12] blur-3xl theme-light:opacity-[0.12]"
+        style={{ background: 'radial-gradient(circle, rgb(var(--glow)) 0%, transparent 70%)' }}
       />
 
       <div className="relative mx-auto w-full max-w-4xl px-5 py-20 text-center lg:px-8">
@@ -154,10 +160,10 @@ export default function HeroSearch() {
           {t.home.searchSubtitle}
         </p>
 
-        <div className="animate-fade-up mx-auto mt-10 max-w-3xl" style={{ animationDelay: '0.24s' }}>
-          <div className="flex flex-col gap-1.5 border border-content/15 bg-surface-2/60 p-1.5 backdrop-blur sm:flex-row sm:items-stretch sm:gap-2 sm:p-2">
+        <div className="animate-fade-up mx-auto mt-10 max-w-4xl" style={{ animationDelay: '0.24s' }}>
+          <div className="flex flex-col gap-1.5 border border-content/15 bg-surface-2/95 p-1.5 shadow-xl shadow-black/5 backdrop-blur sm:flex-row sm:items-stretch sm:gap-2 sm:p-2">
             <div ref={specRef} className="relative flex-[1.7]">
-              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-content/35 sm:left-4 sm:h-5 sm:w-5" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-content/45 sm:left-4 sm:h-5 sm:w-5" />
               <input
                 type="text"
                 value={specialty}
@@ -166,7 +172,7 @@ export default function HeroSearch() {
                 onFocus={() => specialty.trim() && suggestions.length > 0 && setOpen(true)}
                 placeholder={t.home.searchSpecialtyPlaceholder}
                 autoComplete="off"
-                className="w-full bg-transparent py-3 pl-10 pr-3 text-sm text-content placeholder:text-content/40 focus:outline-none sm:py-4 sm:pl-12 sm:pr-4 sm:text-base"
+                className="w-full bg-transparent py-3 pl-10 pr-3 text-sm text-content placeholder:text-content/55 focus:outline-none sm:py-4 sm:pl-12 sm:pr-4 sm:text-base"
               />
               {open && (
                 <ul className="absolute left-0 right-0 top-full z-50 mt-2 max-h-64 overflow-y-auto border border-content/15 bg-surface-2 text-left shadow-2xl">
@@ -194,12 +200,12 @@ export default function HeroSearch() {
             <div className="hidden w-px self-stretch bg-content/10 sm:block" />
 
             <div className="relative flex-1">
-              <MapPin className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-content/35 sm:left-4 sm:h-5 sm:w-5" />
+              <MapPin className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-content/45 sm:left-4 sm:h-5 sm:w-5" />
               <CitySearch
                 value={city}
                 onChange={setCity}
                 placeholder={t.home.searchCityPlaceholder}
-                className="w-full bg-transparent py-3 pl-10 pr-3 text-sm text-content placeholder:text-content/40 focus:outline-none sm:py-4 sm:pl-12 sm:pr-4 sm:text-base"
+                className="w-full bg-transparent py-3 pl-10 pr-3 text-sm text-content placeholder:text-content/55 focus:outline-none sm:py-4 sm:pl-12 sm:pr-4 sm:text-base"
               />
             </div>
 
@@ -213,8 +219,8 @@ export default function HeroSearch() {
                 aria-expanded={modeOpen}
                 className="flex h-full w-full items-center justify-center gap-2 whitespace-nowrap px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-content/70 transition-colors hover:text-content sm:py-0"
               >
-                <CurrentModeIcon className="h-4 w-4 shrink-0 text-content/45" />
-                <span className="text-content/40">{t.home.searchModeLabel}:</span>
+                <CurrentModeIcon className="h-4 w-4 shrink-0 text-content/55" />
+                <span className="text-content/55">{t.home.searchModeLabel}:</span>
                 <span>{currentMode.label}</span>
                 <ChevronDown
                   className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${modeOpen ? 'rotate-180' : ''}`}

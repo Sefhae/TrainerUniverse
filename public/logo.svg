@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="280 248 562 685">
+  <defs>
+    <linearGradient id="Yellow_Green" x1="285.43" y1="411.03" x2="504.79" y2="411.03" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d5e4a7"/>
+      <stop offset=".5" stop-color="#b7d37d"/>
+      <stop offset="1" stop-color="#8cb74b"/>
+    </linearGradient>
+    <linearGradient id="Yellow_Green1" x1="369.14" y1="889.5" x2="563.43" y2="889.5" xlink:href="#Yellow_Green"/>
+    <linearGradient id="Yellow_Green2" x1="488.14" y1="649.68" x2="647.54" y2="649.68" xlink:href="#Yellow_Green"/>
+    <linearGradient id="Yellow_Green3" x1="572.19" y1="410.58" x2="815.5" y2="410.58" xlink:href="#Yellow_Green"/>
+    <linearGradient id="Yellow_Green4" x1="740.01" y1="350.54" x2="836.64" y2="350.54" xlink:href="#Yellow_Green"/>
+  </defs>
+  <polygon fill="url(#Yellow_Green)" points="285.43 373 360.61 448.14 504.79 449.25 504.79 372.81 285.43 373"/>
+  <path fill="#fff" d="M572.39,372.11l-84.26,477.86h-119.07l84.26-477.86h-167.96l21.13-119.86h454.99l-21.13,119.86h-167.96Z"/>
+  <polygon fill="url(#Yellow_Green1)" points="369.14 851.72 444.21 927.38 563.43 927.38 488.14 851.62 369.14 851.72"/>
+  <polygon fill="url(#Yellow_Green2)" points="488.14 850.85 572.4 373 647.54 448.14 563.43 926.36 488.14 850.85"/>
+  <polygon fill="url(#Yellow_Green3)" points="572.19 373.89 740.01 373.89 815.5 447.27 647.34 447.27 572.19 373.89"/>
+  <polygon fill="url(#Yellow_Green4)" points="740.01 372.81 761.49 253.14 836.64 328.28 815.5 447.95 740.01 372.81"/>
+</svg>

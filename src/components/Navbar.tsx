@@ -10,16 +10,12 @@ import { useLanguage, useT } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
 import { cn } from '../lib/format';
 import { SPECIALTY_GROUPS } from '../lib/constants';
+import BrandMark from './BrandMark';
 
 function Logo() {
   return (
-    <Link href="/" className="group flex items-center gap-3">
-      <svg viewBox="0 0 40 40" className="h-9 w-9 shrink-0 transition-transform duration-300 group-hover:scale-110">
-        <circle cx="20" cy="20" r="20" fill="#C8FF00" />
-        <ellipse cx="20" cy="20" rx="13" ry="4.5" fill="none" stroke="#0A0A0A" strokeWidth="1.2"
-          transform="rotate(-38 20 20)" opacity="0.3" />
-        <path d="M24 4 L12 22 H20 L16 36 L28 18 H20 Z" fill="#0A0A0A" />
-      </svg>
+    <Link href="/" className="group flex items-center gap-2.5">
+      <BrandMark className="h-9 w-9 shrink-0 text-content transition-transform duration-300 group-hover:scale-110" />
       <div className="flex flex-col leading-none">
         <span className="font-display text-[22px] tracking-[0.06em] text-content">TRAINER</span>
         <span className="font-display text-[13px] tracking-[0.28em] text-accent">UNIVERSE</span>
@@ -44,29 +40,62 @@ function ThemeToggle() {
   );
 }
 
+const LANGS = [
+  { id: 'en', label: 'English', short: 'EN' },
+  { id: 'tr', label: 'Türkçe', short: 'TR' },
+] as const;
+
 function LangToggle() {
   const { lang, setLang } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const current = LANGS.find((l) => l.id === lang) ?? LANGS[0];
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
+
   return (
-    <div className="flex items-center gap-0.5">
+    <div ref={ref} className="relative">
       <button
-        onClick={() => setLang('en')}
-        className={cn(
-          'px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors duration-200',
-          lang === 'en' ? 'text-accent' : 'text-content/40 hover:text-content'
-        )}
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex items-center gap-1.5 px-1.5 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-content/70 transition-colors duration-200 hover:text-content"
       >
-        EN
+        <Globe className="h-3.5 w-3.5" />
+        {current.short}
+        <ChevronDown
+          className={cn('h-3 w-3 transition-transform duration-200', open ? 'rotate-180' : '')}
+        />
       </button>
-      <span className="text-[10px] text-content/20">|</span>
-      <button
-        onClick={() => setLang('tr')}
-        className={cn(
-          'px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors duration-200',
-          lang === 'tr' ? 'text-accent' : 'text-content/40 hover:text-content'
-        )}
-      >
-        TR
-      </button>
+      {open && (
+        <ul
+          role="listbox"
+          className="absolute right-0 top-full z-50 mt-2 min-w-[9rem] border border-content/10 bg-surface py-1 shadow-2xl"
+        >
+          {LANGS.map((l) => (
+            <li key={l.id} role="option" aria-selected={lang === l.id}>
+              <button
+                type="button"
+                onClick={() => { setLang(l.id); setOpen(false); }}
+                className={cn(
+                  'flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[12px] font-semibold uppercase tracking-[0.1em] transition-colors duration-150',
+                  lang === l.id ? 'text-accent' : 'text-content/60 hover:bg-content/5 hover:text-content'
+                )}
+              >
+                <span>{l.label}</span>
+                <span className="text-[10px] text-content/40">{l.short}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -224,10 +253,6 @@ export default function Navbar() {
           <Link href="/faq" className={navLinkClass('/faq')}>
             {t.nav.faq}
           </Link>
-          <span className="mx-6 h-4 w-px bg-content/20" />
-          <Link href="/contact" className={navLinkClass('/contact')}>
-            {t.nav.contact}
-          </Link>
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
@@ -287,9 +312,6 @@ export default function Navbar() {
             )}
             <Link href="/faq" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-content/80">
               {t.nav.faq}
-            </Link>
-            <Link href="/contact" className="py-3 text-sm font-semibold uppercase tracking-[0.14em] text-content/80">
-              {t.nav.contact}
             </Link>
             <div className="mt-3 flex flex-col gap-2.5 border-t border-content/10 pt-4">
               <div className="flex items-center justify-between pb-1">

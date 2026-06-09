@@ -6,8 +6,10 @@ import type { TrainerSummary } from '../types';
 import { formatPrice, initials, resolveImage } from '../lib/format';
 import StarRating from './StarRating';
 import VerifiedBadge from './VerifiedBadge';
+import { useT } from '../hooks/useLanguage';
 
 export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
+  const t = useT();
   const photo = resolveImage(trainer.profilePhoto);
   const visibleSpecs = trainer.specialties.slice(0, 3);
   const extra = trainer.specialties.length - visibleSpecs.length;
@@ -30,21 +32,21 @@ export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
             <span className="font-display text-7xl text-content/10">{initials(trainer.name)}</span>
           </div>
         )}
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface/90 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface/90 to-transparent theme-light:from-volt/90" />
         <div className="absolute left-3 top-3 flex flex-col gap-1">
           {trainer.isRemote && (
-            <span className="chip bg-surface/85 text-content backdrop-blur">
-              <Globe className="mr-1 h-3 w-3 text-accent" /> Remote
+            <span className="chip bg-surface/85 text-content backdrop-blur theme-light:bg-volt theme-light:text-ink">
+              <Globe className="mr-1 h-3 w-3 text-accent" /> {t.card.remote}
             </span>
           )}
           {trainer.location && (
-            <span className="chip bg-surface/85 text-content backdrop-blur">
+            <span className="chip bg-surface/85 text-content backdrop-blur theme-light:bg-volt theme-light:text-ink">
               <MapPin className="mr-1 h-3 w-3 text-accent" /> {trainer.location}
             </span>
           )}
           {!trainer.isRemote && !trainer.location && (
-            <span className="chip bg-surface/85 text-content backdrop-blur">
-              <MapPin className="mr-1 h-3 w-3 text-accent" /> In-Person
+            <span className="chip bg-surface/85 text-content backdrop-blur theme-light:bg-volt theme-light:text-ink">
+              <MapPin className="mr-1 h-3 w-3 text-accent" /> {t.card.inPerson}
             </span>
           )}
         </div>
@@ -55,7 +57,7 @@ export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
           <h3 className="font-display text-lg leading-none tracking-wide text-content sm:text-2xl">{trainer.name}</h3>
           {trainer.isVerified && <VerifiedBadge size="sm" />}
         </div>
-        <p className="mt-1 line-clamp-1 text-xs text-content/55 sm:mt-2 sm:text-sm">{trainer.tagline || 'Personal Trainer'}</p>
+        <p className="mt-1 line-clamp-1 text-xs text-content/55 sm:mt-2 sm:text-sm">{trainer.tagline || t.card.personalTrainer}</p>
 
         <div className="mt-2 hidden flex-wrap gap-1.5 sm:flex">
           {visibleSpecs.map((s) => (
@@ -74,14 +76,14 @@ export default function TrainerCard({ trainer }: { trainer: TrainerSummary }) {
 
         <div className="mt-auto flex items-end justify-between border-t border-content/10 pt-2 sm:pt-4">
           <div>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-content/40 sm:text-[10px]">From</p>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-content/40 sm:text-[10px]">{t.card.from}</p>
             <p className="font-display text-xl leading-none text-accent sm:text-3xl">
               {formatPrice(trainer.startingPrice)}
-              <span className="ml-0.5 font-sans text-[10px] font-medium text-content/45 sm:ml-1 sm:text-xs">/ session</span>
+              <span className="ml-0.5 font-sans text-[10px] font-medium text-content/45 sm:ml-1 sm:text-xs">{t.card.perSession}</span>
             </p>
           </div>
           <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-content transition-colors duration-200 group-hover:text-accent sm:text-[11px]">
-            View
+            {t.card.view}
             <ArrowRight className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-1 sm:h-3.5 sm:w-3.5" />
           </span>
         </div>
