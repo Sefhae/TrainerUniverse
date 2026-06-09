@@ -1,14 +1,9 @@
-import fs from 'fs';
-import path from 'path';
-import crypto from 'crypto';
+// Uploaded images are stored as base64 data URLs in the database rather than
+// written to the filesystem. The deploy target (Vercel) has a read-only
+// filesystem, so writing to public/uploads fails there; data URLs work
+// everywhere and need no external storage. resolveImage() passes them straight
+// through to <img src>.
 
-export const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
 const MAX_SIZE = 6 * 1024 * 1024;
 
 export async function saveUploadedFile(file: File): Promise<string> {
@@ -19,24 +14,12 @@ export async function saveUploadedFile(file: File): Promise<string> {
     throw new Error('That image is too large (6MB maximum).');
   }
 
-  let ext = path.extname(file.name).toLowerCase();
-  if (!ALLOWED_EXT.includes(ext)) ext = '.jpg';
-
-  const filename = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`;
-  const filepath = path.join(uploadDir, filename);
-
-  const bytes = await file.arrayBuffer();
-  fs.writeFileSync(filepath, Buffer.from(bytes));
-
-  return `/uploads/${filename}`;
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const mime = file.type || 'image/jpeg';
+  return `data:${mime};base64,${bytes.toString('base64')}`;
 }
 
-export function deleteUploadedFile(photoPath: string) {
-  if (!photoPath || !photoPath.startsWith('/uploads/')) return;
-  const filepath = path.join(uploadDir, path.basename(photoPath));
-  try {
-    fs.unlinkSync(filepath);
-  } catch {
-    // ignore if file not found
-  }
+// Data URLs live in the DB row, so there is nothing on disk to remove.
+export function deleteUploadedFile(_photoPath: string) {
+  void _photoPath;
 }
