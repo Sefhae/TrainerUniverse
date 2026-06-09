@@ -51,28 +51,28 @@ export function mapCert(r: Record<string, unknown>) {
 
 // --- related-record lookups ---
 
-const getSpecialties = (trainerId: number) =>
-  db.prepare(`
+const getSpecialties = async (trainerId: number) =>
+  (await db.prepare(`
     SELECT s.id, s.name FROM specialties s
     JOIN trainer_specialties ts ON ts.specialty_id = s.id
     WHERE ts.trainer_id = ?
     ORDER BY s.name
-  `).all(trainerId) as { id: number; name: string }[];
+  `).all(trainerId)) as { id: number; name: string }[];
 
-const getPackages = (trainerId: number) =>
-  (db.prepare('SELECT * FROM pricing_packages WHERE trainer_id = ? ORDER BY price ASC').all(trainerId) as Record<string, unknown>[]).map(mapPackage);
+const getPackages = async (trainerId: number) =>
+  ((await db.prepare('SELECT * FROM pricing_packages WHERE trainer_id = ? ORDER BY price ASC').all(trainerId)) as Record<string, unknown>[]).map(mapPackage);
 
-const getWork = (trainerId: number) =>
-  (db.prepare('SELECT * FROM previous_work WHERE trainer_id = ? ORDER BY display_order ASC, id ASC').all(trainerId) as Record<string, unknown>[]).map(mapWork);
+const getWork = async (trainerId: number) =>
+  ((await db.prepare('SELECT * FROM previous_work WHERE trainer_id = ? ORDER BY display_order ASC, id ASC').all(trainerId)) as Record<string, unknown>[]).map(mapWork);
 
-const getReviews = (trainerId: number) =>
-  (db.prepare('SELECT * FROM reviews WHERE trainer_id = ? ORDER BY created_at DESC').all(trainerId) as Record<string, unknown>[]).map(mapReview);
+const getReviews = async (trainerId: number) =>
+  ((await db.prepare('SELECT * FROM reviews WHERE trainer_id = ? ORDER BY created_at DESC').all(trainerId)) as Record<string, unknown>[]).map(mapReview);
 
-const getCertifications = (trainerId: number) =>
-  (db.prepare('SELECT * FROM certifications WHERE trainer_id = ? ORDER BY year DESC').all(trainerId) as Record<string, unknown>[]).map(mapCert);
+const getCertifications = async (trainerId: number) =>
+  ((await db.prepare('SELECT * FROM certifications WHERE trainer_id = ? ORDER BY year DESC').all(trainerId)) as Record<string, unknown>[]).map(mapCert);
 
-function ratingStats(trainerId: number) {
-  const row = db.prepare('SELECT COUNT(*) AS cnt, AVG(rating) AS avg FROM reviews WHERE trainer_id = ?').get(trainerId) as { cnt: number; avg: number | null };
+async function ratingStats(trainerId: number) {
+  const row = (await db.prepare('SELECT COUNT(*) AS cnt, AVG(rating) AS avg FROM reviews WHERE trainer_id = ?').get(trainerId)) as { cnt: number; avg: number | null };
   return {
     reviewCount: row.cnt,
     rating: row.cnt ? Math.round((row.avg ?? 0) * 10) / 10 : 0,
@@ -114,12 +114,16 @@ function mapProfileBase(r: Record<string, unknown>) {
   };
 }
 
-export function serializeTrainerSummary(r: Record<string, unknown>) {
-  const packages = getPackages(r.id as number);
-  const stats = ratingStats(r.id as number);
+export async function serializeTrainerSummary(r: Record<string, unknown>) {
+  const id = r.id as number;
+  const [packages, stats, specialties] = await Promise.all([
+    getPackages(id),
+    ratingStats(id),
+    getSpecialties(id),
+  ]);
   return {
     ...mapProfileBase(r),
-    specialties: getSpecialties(r.id as number),
+    specialties,
     rating: stats.rating,
     reviewCount: stats.reviewCount,
     startingPrice: startingPrice(packages),
@@ -127,13 +131,21 @@ export function serializeTrainerSummary(r: Record<string, unknown>) {
   };
 }
 
-export function serializeTrainerDetail(r: Record<string, unknown>) {
+export async function serializeTrainerDetail(r: Record<string, unknown>) {
+  const id = r.id as number;
+  const [summary, packages, previousWork, reviews, certifications] = await Promise.all([
+    serializeTrainerSummary(r),
+    getPackages(id),
+    getWork(id),
+    getReviews(id),
+    getCertifications(id),
+  ]);
   return {
-    ...serializeTrainerSummary(r),
+    ...summary,
     bio: r.bio,
-    packages: getPackages(r.id as number),
-    previousWork: getWork(r.id as number),
-    reviews: getReviews(r.id as number),
-    certifications: getCertifications(r.id as number),
+    packages,
+    previousWork,
+    reviews,
+    certifications,
   };
 }

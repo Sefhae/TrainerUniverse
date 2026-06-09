@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import type { PreviousWork } from '../types';
+import type { PreviousWork } from '../lib/types';
 import { resolveImage } from '../lib/format';
 
 export default function WorkGallery({ items }: { items: PreviousWork[] }) {

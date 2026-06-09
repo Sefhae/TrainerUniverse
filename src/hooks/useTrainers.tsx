@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import api from '../api/client';
-import type { TrainerSummary, TrainersResponse } from '../types';
+import api from '../lib/client';
+import type { TrainerSummary, TrainersResponse } from '../lib/types';
 import { PRICE_MAX, PRICE_MIN } from '../lib/constants';
 
 export interface TrainerFilters {

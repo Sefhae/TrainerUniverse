@@ -1,0 +1,491 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import {
+  CalendarDays, MessageSquare, LogOut, LayoutDashboard,
+  Clock, CheckCircle2, AlertCircle, Inbox, XCircle, ChevronDown, Settings,
+} from 'lucide-react';
+import { useStudentAuth } from '@/hooks/useStudentAuth';
+import { useT } from '@/hooks/useLanguage';
+import { cn, resolveImage } from '@/lib/format';
+import api from '@/lib/client';
+import TrainingCalendar from '@/components/dashboard/TrainingCalendar';
+import MessagesPanel from '@/components/dashboard/MessagesPanel';
+import StudentSettingsPanel from '@/components/dashboard/StudentSettingsPanel';
+import type { TrainingSession } from '@/types/index.d.ts';
+
+type Section = 'overview' | 'requests' | 'calendar' | 'messages' | 'settings';
+
+interface TrainerInfo {
+  id: number;
+  name: string;
+  tagline: string;
+  profilePhoto: string;
+  specialties: { id: number; name: string }[];
+}
+
+interface StudentRequest {
+  id: number;
+  trainerId: number;
+  trainerName: string;
+  trainerPhoto: string;
+  packageName: string | null;
+  message: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}
+
+export default function StudentDashboardPage() {
+  const { user, studentId, isAuthenticated, hydrated, logout } = useStudentAuth();
+  const t = useT();
+  const sp = t.studentPortal;
+  const router = useRouter();
+  const [section, setSection] = useState<Section>('overview');
+  const [navOpen, setNavOpen] = useState(false);
+  const [photo, setPhoto] = useState('');
+  const [trainer, setTrainer] = useState<TrainerInfo | null>(null);
+  const [sessions, setSessions] = useState<TrainingSession[]>([]);
+  const [requests, setRequests] = useState<StudentRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (hydrated && !isAuthenticated) {
+      router.replace('/student/login');
+    }
+  }, [hydrated, isAuthenticated, router]);
+
+  const load = useCallback(async () => {
+    try {
+      const { data } = await api.get<TrainingSession[]>('/sessions');
+      setSessions(data);
+
+      // Prefer the trainer the student is enrolled with (an approved request),
+      // so "My Trainer" + messaging appear as soon as the trainer accepts —
+      // before any session is scheduled. Fall back to the trainer from sessions.
+      let trainerId: number | undefined;
+      try {
+        const { data: enrolled } = await api.get<{ id: number }[]>('/student/trainers');
+        if (enrolled.length > 0) trainerId = enrolled[0].id;
+      } catch { /* ignore */ }
+      if (!trainerId && data.length > 0) trainerId = data[0].trainerId;
+
+      if (trainerId) {
+        const { data: td } = await api.get<TrainerInfo>(`/trainers/${trainerId}`);
+        setTrainer(td);
+      }
+
+      try {
+        const { data: reqs } = await api.get<StudentRequest[]>('/session-requests');
+        setRequests(reqs);
+      } catch { /* ignore */ }
+
+      try {
+        const { data: prof } = await api.get<{ profilePhoto: string }>('/student/profile');
+        setPhoto(prof.profilePhoto);
+      } catch { /* ignore */ }
+    } catch { /* silent */ } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) load();
+  }, [isAuthenticated, load]);
+
+  function handleLogout() {
+    logout();
+    router.push('/student/login');
+  }
+
+  const [cancelling, setCancelling] = useState<number | null>(null);
+  async function cancelRequest(id: number) {
+    setCancelling(id);
+    try {
+      await api.delete(`/session-requests/${id}`);
+      setRequests((prev) => prev.filter((r) => r.id !== id));
+    } catch { /* silent */ } finally {
+      setCancelling(null);
+    }
+  }
+
+  const now = new Date();
+  const upcoming = sessions.filter(
+    (s) => new Date(s.scheduledAt) >= now && s.status !== 'cancelled'
+  );
+  const completed = sessions.filter(
+    (s) => new Date(s.scheduledAt) < now && s.status === 'confirmed'
+  );
+  const pendingChanges = sessions.filter((s) => s.pendingChangeRequest);
+
+  const navItems: { id: Section; label: string; icon: typeof LayoutDashboard }[] = [
+    { id: 'overview', label: sp.overview, icon: LayoutDashboard },
+    { id: 'requests', label: sp.myRequests, icon: Inbox },
+    { id: 'calendar', label: t.sessionCalendar.title, icon: CalendarDays },
+    { id: 'messages', label: t.chat.title, icon: MessageSquare },
+    { id: 'settings', label: t.dashboard.settings, icon: Settings },
+  ];
+
+  if (!hydrated) return null;
+  if (!isAuthenticated) return null;
+
+  const activeItem = navItems.find((i) => i.id === section) ?? navItems[0];
+  const ActiveIcon = activeItem.icon;
+
+  return (
+    <div className="min-h-[calc(100vh-72px)] bg-bone">
+      <div className="mx-auto max-w-7xl px-5 py-8 lg:px-8 lg:py-10">
+        <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
+
+          {/* Sidebar */}
+          <aside className="min-w-0 lg:sticky lg:top-[88px] lg:self-start">
+            <div className="bg-ink text-bone">
+              {/* Student identity */}
+              <div className="flex items-center gap-3 border-b border-white/10 p-5">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden bg-volt font-display text-lg text-ink">
+                  {resolveImage(photo) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={resolveImage(photo)} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    (user?.email?.charAt(0) ?? 'S').toUpperCase()
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold leading-tight">
+                    {user?.email?.split('@')[0]}
+                  </p>
+                  <p className="truncate text-xs text-bone/50">{user?.email}</p>
+                </div>
+              </div>
+
+              {/* Navigation — mobile: roll-down picker */}
+              <div className="p-2 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setNavOpen((o) => !o)}
+                  aria-haspopup="listbox"
+                  aria-expanded={navOpen}
+                  className="flex w-full items-center gap-3 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-bone"
+                >
+                  <ActiveIcon className="h-4 w-4 shrink-0" />
+                  <span className="flex-1 whitespace-nowrap">{activeItem.label}</span>
+                  <ChevronDown
+                    className={cn('h-4 w-4 shrink-0 transition-transform duration-200', navOpen ? 'rotate-180' : '')}
+                  />
+                </button>
+                {navOpen && (
+                  <div className="mt-1 flex flex-col">
+                    {navItems.map((item) => {
+                      const Icon = item.icon;
+                      const active = section === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setSection(item.id);
+                            setNavOpen(false);
+                          }}
+                          className={cn(
+                            'flex items-center gap-3 px-4 py-3 text-left text-sm font-semibold transition-colors duration-200',
+                            active ? 'bg-volt text-ink' : 'text-bone/65 hover:bg-white/5 hover:text-bone'
+                          )}
+                        >
+                          <Icon className="h-4 w-4 shrink-0" />
+                          <span className="whitespace-nowrap">{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Navigation — desktop: vertical nav */}
+              <nav className="hidden p-2 lg:flex lg:flex-col lg:gap-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = section === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setSection(item.id)}
+                      className={cn(
+                        'flex items-center gap-3 px-4 py-3 text-left text-sm font-semibold transition-colors duration-200',
+                        active ? 'bg-volt text-ink' : 'text-bone/65 hover:bg-white/5 hover:text-bone'
+                      )}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span className="whitespace-nowrap">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* Logout */}
+              <div className="border-t border-white/10 p-2">
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-semibold text-bone/65 transition-colors duration-200 hover:text-red-400"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {sp.logOut}
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main content */}
+          <div className="min-w-0">
+            {/* Page heading */}
+            <div className="mb-7">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/45">
+                {sp.dashboardTitle}
+              </p>
+              <h1 className="mt-1 font-display text-4xl tracking-wide sm:text-5xl">
+                {user?.email?.split('@')[0]}
+              </h1>
+              <p className="mt-1 text-sm text-ink/55">{user?.email}</p>
+            </div>
+
+            {/* ── Overview ── */}
+            {section === 'overview' && (
+              <div className="space-y-6">
+                {/* Stats row */}
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                  {([
+                    { label: sp.totalSessions, value: sessions.length, icon: CalendarDays, color: 'text-ink' },
+                    { label: sp.upcomingSessions, value: upcoming.length, icon: Clock, color: 'text-volt' },
+                    { label: sp.completedSessions, value: completed.length, icon: CheckCircle2, color: 'text-green-600' },
+                    { label: sp.pendingChanges, value: pendingChanges.length, icon: AlertCircle, color: 'text-amber-500' },
+                  ] as const).map(({ label, value, icon: Icon, color }) => (
+                    <div key={label} className="border border-ink/10 bg-white p-4">
+                      <div className={cn('mb-2', color)}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <p className="font-display text-3xl tabular-nums">{value}</p>
+                      <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-ink/45">{label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* My Trainer card */}
+                <div className="border border-ink/10 bg-white">
+                  <div className="border-b border-ink/10 px-5 py-3">
+                    <p className="text-xs font-bold uppercase tracking-widest text-ink/40">{sp.myTrainer}</p>
+                  </div>
+                  {loading ? (
+                    <div className="flex justify-center py-8">
+                      <span className="h-6 w-6 animate-spin rounded-full border-2 border-ink/20 border-t-ink" />
+                    </div>
+                  ) : trainer ? (
+                    <div className="p-5">
+                      <div className="flex items-center gap-4">
+                        {trainer.profilePhoto ? (
+                          <img
+                            src={resolveImage(trainer.profilePhoto) || trainer.profilePhoto}
+                            alt={trainer.name}
+                            className="h-16 w-16 shrink-0 object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-16 w-16 shrink-0 items-center justify-center bg-volt font-display text-xl text-ink">
+                            {trainer.name.charAt(0)}
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-lg font-semibold leading-tight">{trainer.name}</p>
+                          <p className="text-sm text-ink/55">{trainer.tagline}</p>
+                        </div>
+                      </div>
+                      {trainer.specialties.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-1.5">
+                          {trainer.specialties.map((s) => (
+                            <span
+                              key={s.id}
+                              className="bg-bone px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink/60"
+                            >
+                              {s.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <Link
+                        href={`/trainers/${trainer.id}`}
+                        className="mt-4 inline-block text-sm font-semibold text-ink/50 underline hover:text-ink"
+                      >
+                        {sp.viewProfile} →
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-start gap-4 px-5 py-8">
+                      <p className="text-sm text-ink/50">{sp.noTrainer}</p>
+                      <Link
+                        href="/trainers"
+                        className="btn btn-dark text-sm"
+                      >
+                        {sp.browseTrainers}
+                      </Link>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upcoming sessions list */}
+                <div className="border border-ink/10 bg-white">
+                  <div className="border-b border-ink/10 px-5 py-3">
+                    <p className="text-xs font-bold uppercase tracking-widest text-ink/40">{sp.upcomingSessions}</p>
+                  </div>
+                  {upcoming.length === 0 ? (
+                    <p className="px-5 py-8 text-sm text-ink/50">{sp.noSessions}</p>
+                  ) : (
+                    <div className="divide-y divide-ink/8">
+                      {upcoming.slice(0, 5).map((s) => (
+                        <div key={s.id} className="flex items-start justify-between gap-4 px-5 py-4">
+                          <div className="min-w-0">
+                            <p className="font-semibold">{s.title}</p>
+                            <p className="mt-0.5 text-sm text-ink/55">
+                              {new Date(s.scheduledAt).toLocaleString([], {
+                                weekday: 'short', month: 'short', day: 'numeric',
+                                hour: '2-digit', minute: '2-digit',
+                              })}
+                              {' · '}{s.durationMin} min
+                            </p>
+                            {s.pendingChangeRequest && (
+                              <p className="mt-1 flex items-center gap-1 text-xs text-amber-600">
+                                <AlertCircle className="h-3 w-3" />
+                                {sp.pendingChanges}
+                              </p>
+                            )}
+                          </div>
+                          <span className={cn(
+                            'shrink-0 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+                            s.status === 'confirmed' ? 'bg-volt text-ink' :
+                            s.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          )}>
+                            {t.sessionCalendar[s.status as 'confirmed' | 'pending' | 'cancelled']}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {upcoming.length > 5 && (
+                    <div className="border-t border-ink/10 px-5 py-3">
+                      <button
+                        onClick={() => setSection('calendar')}
+                        className="text-sm font-semibold text-ink/55 underline hover:text-ink"
+                      >
+                        {t.sessionCalendar.title} →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── Requests ── */}
+            {section === 'requests' && (
+              <div className="border border-ink/10 bg-white">
+                <div className="border-b border-ink/10 px-5 py-3">
+                  <p className="text-xs font-bold uppercase tracking-widest text-ink/40">{sp.myRequests}</p>
+                </div>
+                {loading ? (
+                  <div className="flex justify-center py-10">
+                    <span className="h-6 w-6 animate-spin rounded-full border-2 border-ink/20 border-t-ink" />
+                  </div>
+                ) : requests.length === 0 ? (
+                  <div className="flex flex-col items-start gap-4 px-5 py-8">
+                    <p className="text-sm text-ink/50">{sp.noRequests}</p>
+                    <Link href="/trainers" className="btn btn-dark text-sm">{sp.browseTrainers}</Link>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-ink/8">
+                    {requests.map((r) => {
+                      const statusLabel =
+                        r.status === 'approved' ? sp.statusApproved :
+                        r.status === 'rejected' ? sp.statusRejected : sp.statusPending;
+                      return (
+                        <div key={r.id} className="flex items-start justify-between gap-4 px-5 py-4">
+                          <div className="flex min-w-0 items-start gap-3">
+                            {r.trainerPhoto ? (
+                              <img
+                                src={resolveImage(r.trainerPhoto) || r.trainerPhoto}
+                                alt={r.trainerName}
+                                className="h-10 w-10 shrink-0 object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-volt font-display text-ink">
+                                {r.trainerName.charAt(0)}
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <Link href={`/trainers/${r.trainerId}`} className="font-semibold hover:underline">
+                                {r.trainerName}
+                              </Link>
+                              {r.packageName && <p className="text-sm text-ink/55">{r.packageName}</p>}
+                              {r.message && <p className="mt-1 text-sm italic text-ink/60">&ldquo;{r.message}&rdquo;</p>}
+                              <p className="mt-1 text-[11px] text-ink/35">
+                                {new Date(r.createdAt).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' })}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 flex-col items-end gap-2">
+                            <span className={cn(
+                              'px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide',
+                              r.status === 'approved' ? 'bg-volt text-ink' :
+                              r.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                              'bg-yellow-100 text-yellow-700'
+                            )}>
+                              {statusLabel}
+                            </span>
+                            {r.status === 'pending' && (
+                              <button
+                                type="button"
+                                onClick={() => cancelRequest(r.id)}
+                                disabled={cancelling === r.id}
+                                className="flex items-center gap-1 text-[11px] font-semibold text-ink/50 transition-colors hover:text-red-600 disabled:opacity-40"
+                              >
+                                {cancelling === r.id ? (
+                                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-ink/30 border-t-ink" />
+                                ) : (
+                                  <XCircle className="h-3.5 w-3.5" />
+                                )}
+                                {sp.cancelRequest}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Calendar ── */}
+            {section === 'calendar' && (
+              <TrainingCalendar
+                role="student"
+                studentId={studentId ?? undefined}
+                trainerId={trainer?.id}
+              />
+            )}
+
+            {/* ── Messages ── */}
+            {section === 'messages' && trainer && (
+              <MessagesPanel
+                role="student"
+                myStudentId={studentId ?? undefined}
+                myTrainerId={trainer.id}
+              />
+            )}
+            {section === 'messages' && !loading && !trainer && (
+              <p className="py-12 text-center text-sm text-ink/50">{sp.noTrainer}</p>
+            )}
+
+            {/* ── Settings ── */}
+            {section === 'settings' && <StudentSettingsPanel onPhotoChange={setPhoto} />}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

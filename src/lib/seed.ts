@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import db from './db';
+import db, { type Querier } from './db';
 
 const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
 
@@ -570,82 +570,73 @@ const STUDENTS: StudentData[] = [
   { email: 'sara@student.com',  name: 'Sara Koç',      trainerEmail: 'darnell@fitconnect.com'},
 ];
 
-export function seed() {
-  const insUser = db.prepare('INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)');
-  const insProfile = db.prepare(`
+async function seedWithin(tx: Querier) {
+  const insUser = tx.prepare('INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)');
+  const insProfile = tx.prepare(`
     INSERT INTO trainer_profiles
       (user_id, name, tagline, bio, profile_photo, cover_photo, location, is_remote, years_experience, availability, is_published)
     VALUES
       (@user_id, @name, @tagline, @bio, @profile_photo, @cover_photo, @location, @is_remote, @years_experience, @availability, @is_published)
   `);
-  const insSpec = db.prepare('INSERT INTO specialties (name) VALUES (?)');
-  const linkSpec = db.prepare('INSERT INTO trainer_specialties (trainer_id, specialty_id) VALUES (?, ?)');
-  const insPkg = db.prepare(`
+  const insSpec = tx.prepare('INSERT INTO specialties (name) VALUES (?)');
+  const linkSpec = tx.prepare('INSERT INTO trainer_specialties (trainer_id, specialty_id) VALUES (?, ?)');
+  const insPkg = tx.prepare(`
     INSERT INTO pricing_packages (trainer_id, name, description, sessions, price, is_popular)
     VALUES (@trainer_id, @name, @description, @sessions, @price, @is_popular)
   `);
-  const insWork = db.prepare(`
+  const insWork = tx.prepare(`
     INSERT INTO previous_work (trainer_id, photo, student_name, goal, duration, description, display_order, is_visible)
     VALUES (@trainer_id, @photo, @student_name, @goal, @duration, @description, @display_order, @is_visible)
   `);
-  const insReview = db.prepare(`
+  const insReview = tx.prepare(`
     INSERT INTO reviews (trainer_id, reviewer_name, rating, comment, created_at)
     VALUES (@trainer_id, @reviewer_name, @rating, @comment, @created_at)
   `);
-  const insCert = db.prepare(`
+  const insCert = tx.prepare(`
     INSERT INTO certifications (trainer_id, name, issuer, year)
     VALUES (@trainer_id, @name, @issuer, @year)
   `);
-  const insStudentProfile = db.prepare(`
-    INSERT INTO student_profiles (user_id, name, created_at)
-    VALUES (?, ?, datetime('now'))
-  `);
-  const insEnroll = db.prepare(`
-    INSERT INTO trainer_students (trainer_id, student_id, enrolled_at)
-    VALUES (?, ?, datetime('now'))
-  `);
-  const insSession = db.prepare(`
+  const insStudentProfile = tx.prepare(
+    'INSERT INTO student_profiles (user_id, name) VALUES (?, ?)'
+  );
+  const insEnroll = tx.prepare(
+    'INSERT INTO trainer_students (trainer_id, student_id) VALUES (?, ?)'
+  );
+  const insSession = tx.prepare(`
     INSERT INTO training_sessions (trainer_id, student_id, title, scheduled_at, duration_min, status, notes)
     VALUES (@trainer_id, @student_id, @title, @scheduled_at, @duration_min, @status, @notes)
   `);
-  const insChangeReq = db.prepare(`
-    INSERT INTO session_change_requests (session_id, requested_by, proposed_at, message, status, created_at)
-    VALUES (?, ?, ?, ?, 'pending', datetime('now'))
+  const insChangeReq = tx.prepare(`
+    INSERT INTO session_change_requests (session_id, requested_by, proposed_at, message, status)
+    VALUES (?, ?, ?, ?, 'pending')
   `);
-  const insMessage = db.prepare(`
+  const insMessage = tx.prepare(`
     INSERT INTO messages (trainer_id, student_id, sender, content, created_at)
     VALUES (?, ?, ?, ?, ?)
   `);
 
-  const run = db.transaction(() => {
-    db.exec(`
-      DELETE FROM messages;
-      DELETE FROM session_change_requests;
-      DELETE FROM training_sessions;
-      DELETE FROM trainer_students;
-      DELETE FROM student_profiles;
-      DELETE FROM trainer_specialties;
-      DELETE FROM pricing_packages;
-      DELETE FROM previous_work;
-      DELETE FROM reviews;
-      DELETE FROM certifications;
-      DELETE FROM trainer_profiles;
-      DELETE FROM specialties;
-      DELETE FROM users;
-    `);
-    try { db.exec('DELETE FROM sqlite_sequence'); } catch { /* created lazily */ }
+  // Wipe everything and reset SERIAL sequences so a reseed is fully deterministic.
+  await tx.exec(`
+    TRUNCATE
+      messages, session_change_requests, training_sessions, session_requests,
+      student_removal_requests, trainer_students, student_profiles, trainer_specialties,
+      pricing_packages, previous_work, reviews, certifications, contact_messages,
+      trainer_profiles, specialties, users
+    RESTART IDENTITY CASCADE;
+  `);
 
+  {
     const specId: Record<string, number | bigint> = {};
     for (const name of SPECIALTIES) {
-      specId[name] = insSpec.run(name).lastInsertRowid;
+      specId[name] = (await insSpec.run(name)).lastInsertRowid as number;
     }
 
     const trainerHash = bcrypt.hashSync('trainer123', 10);
     const trainerIdByEmail: Record<string, number | bigint> = {};
 
     for (const t of TRAINERS) {
-      const userId = insUser.run(t.email, trainerHash, 'trainer').lastInsertRowid;
-      const trainerId = insProfile.run({
+      const userId = (await insUser.run(t.email, trainerHash, 'trainer')).lastInsertRowid as number;
+      const trainerId = (await insProfile.run({
         user_id: userId,
         name: t.name,
         tagline: t.tagline,
@@ -657,15 +648,15 @@ export function seed() {
         years_experience: t.years,
         availability: JSON.stringify(t.availability),
         is_published: 1,
-      }).lastInsertRowid;
+      })).lastInsertRowid as number;
 
       trainerIdByEmail[t.email] = trainerId;
 
       for (const s of t.specialties) {
-        linkSpec.run(trainerId, specId[s]);
+        await linkSpec.run(trainerId, specId[s]);
       }
       for (const p of t.packages) {
-        insPkg.run({
+        await insPkg.run({
           trainer_id: trainerId,
           name: p.name,
           description: p.description,
@@ -674,8 +665,9 @@ export function seed() {
           is_popular: p.popular ? 1 : 0,
         });
       }
-      t.work.forEach((w, i) => {
-        insWork.run({
+      for (let i = 0; i < t.work.length; i++) {
+        const w = t.work[i];
+        await insWork.run({
           trainer_id: trainerId,
           photo: workPhotoFor(t.email, i),
           student_name: w.student,
@@ -685,9 +677,9 @@ export function seed() {
           display_order: i,
           is_visible: w.visible === false ? 0 : 1,
         });
-      });
+      }
       for (const r of t.reviews) {
-        insReview.run({
+        await insReview.run({
           trainer_id: trainerId,
           reviewer_name: r.name,
           rating: r.rating,
@@ -696,7 +688,7 @@ export function seed() {
         });
       }
       for (const c of t.certs) {
-        insCert.run({ trainer_id: trainerId, name: c.name, issuer: c.issuer, year: c.year });
+        await insCert.run({ trainer_id: trainerId, name: c.name, issuer: c.issuer, year: c.year });
       }
     }
 
@@ -705,11 +697,11 @@ export function seed() {
     const studentIdByEmail: Record<string, number | bigint> = {};
 
     for (const s of STUDENTS) {
-      const userId = insUser.run(s.email, studentHash, 'student').lastInsertRowid;
-      const studentId = insStudentProfile.run(userId, s.name).lastInsertRowid;
+      const userId = (await insUser.run(s.email, studentHash, 'student')).lastInsertRowid as number;
+      const studentId = (await insStudentProfile.run(userId, s.name)).lastInsertRowid as number;
       studentIdByEmail[s.email] = studentId;
       const trainerId = trainerIdByEmail[s.trainerEmail];
-      insEnroll.run(trainerId, studentId);
+      await insEnroll.run(trainerId, studentId);
     }
 
     // ── Training sessions ────────────────────────────────────────────────────
@@ -723,37 +715,37 @@ export function seed() {
     const saraId  = studentIdByEmail['sara@student.com'];
 
     // Past sessions — Marcus & Alex
-    insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Deadlift Technique',        scheduled_at: schedAt(-14, 9),  duration_min: 60, status: 'confirmed', notes: 'Focus on hip hinge and bar path.' });
-    insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Squat Progression',          scheduled_at: schedAt(-7,  9),  duration_min: 60, status: 'confirmed', notes: 'Working up to 3×5 back squat.' });
-    insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Upper Body Push',             scheduled_at: schedAt(-3,  10), duration_min: 60, status: 'confirmed', notes: 'Bench press + OHP accessory work.' });
+    await insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Deadlift Technique',        scheduled_at: schedAt(-14, 9),  duration_min: 60, status: 'confirmed', notes: 'Focus on hip hinge and bar path.' });
+    await insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Squat Progression',          scheduled_at: schedAt(-7,  9),  duration_min: 60, status: 'confirmed', notes: 'Working up to 3×5 back squat.' });
+    await insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Upper Body Push',             scheduled_at: schedAt(-3,  10), duration_min: 60, status: 'confirmed', notes: 'Bench press + OHP accessory work.' });
 
     // Upcoming sessions — Marcus & Alex
-    const sess1 = insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Pull Day — Rows & Pull-Ups', scheduled_at: schedAt(2,  9),  duration_min: 60, status: 'confirmed', notes: '' });
-    const sess2 = insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Leg Day — Heavy Squats',     scheduled_at: schedAt(7,  9),  duration_min: 75, status: 'confirmed', notes: 'Aiming for a new 5-rep max.' });
-    insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Conditioning Circuit',        scheduled_at: schedAt(14, 10), duration_min: 45, status: 'confirmed', notes: '' });
+    const sess1 = await insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Pull Day — Rows & Pull-Ups', scheduled_at: schedAt(2,  9),  duration_min: 60, status: 'confirmed', notes: '' });
+    const sess2 = await insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Leg Day — Heavy Squats',     scheduled_at: schedAt(7,  9),  duration_min: 75, status: 'confirmed', notes: 'Aiming for a new 5-rep max.' });
+    await insSession.run({ trainer_id: marcus, student_id: alexId,  title: 'Conditioning Circuit',        scheduled_at: schedAt(14, 10), duration_min: 45, status: 'confirmed', notes: '' });
 
     // Upcoming sessions — Marcus & Emma
-    insSession.run({ trainer_id: marcus, student_id: emmaId, title: 'Foundation Assessment',        scheduled_at: schedAt(3,  11), duration_min: 75, status: 'confirmed', notes: 'First session — movement screen and goal setting.' });
-    insSession.run({ trainer_id: marcus, student_id: emmaId, title: 'Barbell Basics',                scheduled_at: schedAt(10, 11), duration_min: 60, status: 'confirmed', notes: '' });
+    await insSession.run({ trainer_id: marcus, student_id: emmaId, title: 'Foundation Assessment',        scheduled_at: schedAt(3,  11), duration_min: 75, status: 'confirmed', notes: 'First session — movement screen and goal setting.' });
+    await insSession.run({ trainer_id: marcus, student_id: emmaId, title: 'Barbell Basics',                scheduled_at: schedAt(10, 11), duration_min: 60, status: 'confirmed', notes: '' });
 
     // Sofia & Cem
-    insSession.run({ trainer_id: sofia, student_id: cemId,   title: 'Hip Opener Flow',              scheduled_at: schedAt(1,  8),  duration_min: 60, status: 'confirmed', notes: '' });
-    insSession.run({ trainer_id: sofia, student_id: cemId,   title: 'Shoulder Mobility & Breath',    scheduled_at: schedAt(8,  8),  duration_min: 60, status: 'confirmed', notes: 'Bring a block and strap.' });
+    await insSession.run({ trainer_id: sofia, student_id: cemId,   title: 'Hip Opener Flow',              scheduled_at: schedAt(1,  8),  duration_min: 60, status: 'confirmed', notes: '' });
+    await insSession.run({ trainer_id: sofia, student_id: cemId,   title: 'Shoulder Mobility & Breath',    scheduled_at: schedAt(8,  8),  duration_min: 60, status: 'confirmed', notes: 'Bring a block and strap.' });
 
     // Darnell & Sara
-    insSession.run({ trainer_id: darnell, student_id: saraId, title: 'Boxing Fundamentals',          scheduled_at: schedAt(4,  18), duration_min: 60, status: 'confirmed', notes: 'Bring hand wraps.' });
-    insSession.run({ trainer_id: darnell, student_id: saraId, title: 'Pad Work & Footwork',           scheduled_at: schedAt(11, 18), duration_min: 60, status: 'pending',   notes: '' });
+    await insSession.run({ trainer_id: darnell, student_id: saraId, title: 'Boxing Fundamentals',          scheduled_at: schedAt(4,  18), duration_min: 60, status: 'confirmed', notes: 'Bring hand wraps.' });
+    await insSession.run({ trainer_id: darnell, student_id: saraId, title: 'Pad Work & Footwork',           scheduled_at: schedAt(11, 18), duration_min: 60, status: 'pending',   notes: '' });
 
     // ── Change requests ──────────────────────────────────────────────────────
     // Alex requests to move sess1 two days later
-    insChangeReq.run(
+    await insChangeReq.run(
       sess1.lastInsertRowid,
       'student',
       schedAt(4, 9),
       "Something came up on Thursday — can we move to Saturday morning instead?"
     );
     // Marcus requests to move sess2 one day earlier
-    insChangeReq.run(
+    await insChangeReq.run(
       sess2.lastInsertRowid,
       'trainer',
       schedAt(6, 9),
@@ -776,7 +768,7 @@ export function seed() {
 
     for (const m of msgs) {
       const createdAt = new Date(Date.now() - m.hoursAgo * 3600000).toISOString();
-      insMessage.run(marcus, alexId, m.sender, m.content, createdAt);
+      await insMessage.run(marcus, alexId, m.sender, m.content, createdAt);
     }
 
     // A short exchange — Sofia & Cem
@@ -788,21 +780,46 @@ export function seed() {
 
     for (const m of sofaMsgs) {
       const createdAt = new Date(Date.now() - m.hoursAgo * 3600000).toISOString();
-      insMessage.run(sofia, cemId, m.sender, m.content, createdAt);
+      await insMessage.run(sofia, cemId, m.sender, m.content, createdAt);
     }
-  });
+  }
+}
 
-  run();
+/** Wipe and reseed the database with sample data. Runs in a single transaction. */
+export async function seed(): Promise<number> {
+  await db.transaction(seedWithin);
   return TRAINERS.length;
+}
+
+/**
+ * Seed only if the database is empty. Takes a transaction-level advisory lock and
+ * re-checks the user count under it, so concurrent cold starts can't double-seed
+ * or wipe freshly-created accounts.
+ */
+export async function ensureSeeded(): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    await tx.exec('SELECT pg_advisory_xact_lock(728114)');
+    const row = (await tx.prepare('SELECT COUNT(*) AS c FROM users').get()) as { c: number };
+    if (row.c > 0) return false;
+    await seedWithin(tx);
+    return true;
+  });
 }
 
 // Run directly: tsx src/lib/seed.ts
 if (process.argv[1] && process.argv[1].endsWith('seed.ts')) {
-  const count = seed();
-  console.log(`Seeded ${count} trainers + ${STUDENTS.length} students.`);
-  console.log('Trainer login  → marcus@fitconnect.com / trainer123');
-  console.log('Student logins → alex@student.com / student123');
-  console.log('               → emma@student.com / student123');
-  console.log('               → cem@student.com  / student123');
-  console.log('               → sara@student.com / student123');
+  (async () => {
+    const { loadEnvConfig } = await import('@next/env');
+    loadEnvConfig(process.cwd());
+    const { ensureSchema } = await import('./schema');
+    await ensureSchema();
+    const count = await seed();
+    console.log(`Seeded ${count} trainers + ${STUDENTS.length} students.`);
+    console.log('Trainer login  → marcus@fitconnect.com / trainer123');
+    console.log('Student logins → alex@student.com / student123');
+    console.log('               → emma@student.com / student123');
+    console.log('               → cem@student.com  / student123');
+    console.log('               → sara@student.com / student123');
+    await db.pool.end();
+  })();
 }

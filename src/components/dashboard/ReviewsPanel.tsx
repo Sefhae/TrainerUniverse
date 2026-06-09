@@ -1,4 +1,4 @@
-import type { Trainer } from '../../types';
+import type { Trainer } from '../../lib/types';
 import StarRating from '../StarRating';
 import ReviewCard from '../ReviewCard';
 import EmptyState from '../EmptyState';

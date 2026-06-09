@@ -5,7 +5,7 @@ import { useLanguage, useT } from '../../hooks/useLanguage';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 import { cn, getApiError } from '../../lib/format';
-import api from '../../api/client';
+import api from '../../lib/client';
 
 export default function SettingsPanel() {
   const t = useT();

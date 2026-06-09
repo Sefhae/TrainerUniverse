@@ -2,8 +2,8 @@
 
 import { useEffect, useState, type FormEvent, type ReactNode, useRef } from 'react';
 import { Check, ChevronDown, Eye, EyeOff, Search, X } from 'lucide-react';
-import api from '../../api/client';
-import type { Trainer } from '../../types';
+import api from '../../lib/client';
+import type { Trainer } from '../../lib/types';
 import { AVAILABILITY_OPTIONS, SPECIALTY_GROUPS } from '../../lib/constants';
 import { cn, getApiError } from '../../lib/format';
 import { useToast } from '../../hooks/useToast';

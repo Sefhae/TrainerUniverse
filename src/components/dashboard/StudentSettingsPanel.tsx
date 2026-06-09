@@ -5,7 +5,7 @@ import { Camera, UserCircle } from 'lucide-react';
 import { useLanguage, useT } from '../../hooks/useLanguage';
 import { useToast } from '../../hooks/useToast';
 import { cn, getApiError, resolveImage } from '../../lib/format';
-import api from '../../api/client';
+import api from '../../lib/client';
 import ImageCropModal from '../ImageCropModal';
 
 export default function StudentSettingsPanel({ onPhotoChange }: { onPhotoChange?: (url: string) => void }) {

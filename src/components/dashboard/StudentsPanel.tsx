@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { UserPlus, Users, Clock, ChevronRight } from 'lucide-react';
-import api from '../../api/client';
+import api from '../../lib/client';
 import { useT } from '../../hooks/useLanguage';
 import { useToast } from '../../hooks/useToast';
 import Modal from '../Modal';

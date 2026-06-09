@@ -1,4 +1,4 @@
-import type { PricingPackage } from '../types';
+import type { PricingPackage } from '../lib/types';
 import { cn, formatPrice } from '../lib/format';
 
 interface PricingCardProps {

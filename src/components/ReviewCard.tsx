@@ -1,4 +1,4 @@
-import type { Review } from '../types';
+import type { Review } from '../lib/types';
 import { cn, initials, timeAgo } from '../lib/format';
 import StarRating from './StarRating';
 

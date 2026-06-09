@@ -1,16 +1,25 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
-    const { default: db } = await import('./src/lib/db');
-    // IMPORTANT: seed() does a full wipe (DELETE FROM users, …) before inserting
-    // sample data. Only run it on a brand-new, completely empty database so it
-    // can never delete real, user-created accounts. (Previously this re-seeded
-    // whenever trainers OR students hit zero, which could wipe everything.)
-    const users = db.prepare('SELECT COUNT(*) AS c FROM users').get() as { c: number };
-    if (users.c === 0) {
-      console.log('[traineruniverse] Empty database — seeding sample data…');
-      const { seed } = await import('./src/lib/seed');
-      seed();
-      console.log('[traineruniverse] Seed complete.');
+    // Provision the Postgres schema (idempotent), then seed sample data only if
+    // the database is brand-new and empty. ensureSeeded() takes an advisory lock
+    // and re-checks emptiness, so it can never wipe real, user-created accounts.
+    //
+    // Wrapped in try/catch so an unreachable database at boot only logs — it must
+    // not crash the whole server. Routes will surface their own errors until the
+    // DB is reachable.
+    try {
+      const { ensureSchema } = await import('./src/lib/schema');
+      await ensureSchema();
+
+      const { ensureSeeded } = await import('./src/lib/seed');
+      const seeded = await ensureSeeded();
+      if (seeded) console.log('[traineruniverse] Empty database — seeded sample data.');
+    } catch (err) {
+      console.error(
+        '[traineruniverse] Skipped DB init — could not reach the database. ' +
+          'Check DATABASE_URL (use the Supabase pooler host on IPv4 networks).',
+        err instanceof Error ? err.message : err
+      );
     }
   }
 }

@@ -1,8 +1,8 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import api from '../api/client';
-import type { User } from '../types';
+import api from '../lib/client';
+import type { User } from '../lib/types';
 
 const STUDENT_TOKEN_KEY = 'traineruniverse_student_token';
 const STUDENT_AUTH_KEY = 'traineruniverse_student_auth';

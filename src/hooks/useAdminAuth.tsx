@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
-import api from '../api/client';
+import api from '../lib/client';
 
 const ADMIN_TOKEN_KEY = 'traineruniverse_admin_token';
 

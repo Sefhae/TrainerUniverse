@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent } from 'react';
 import { Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react';
-import api from '../../api/client';
-import type { PreviousWork, Trainer } from '../../types';
+import api from '../../lib/client';
+import type { PreviousWork, Trainer } from '../../lib/types';
 import { cn, getApiError, resolveImage } from '../../lib/format';
 import { useToast } from '../../hooks/useToast';
 import Modal from '../Modal';

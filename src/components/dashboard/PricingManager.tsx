@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import api from '../../api/client';
-import type { PricingPackage, Trainer } from '../../types';
+import api from '../../lib/client';
+import type { PricingPackage, Trainer } from '../../lib/types';
 import { cn, formatPrice, getApiError } from '../../lib/format';
 import { useToast } from '../../hooks/useToast';
 import Modal from '../Modal';

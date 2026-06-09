@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Send } from 'lucide-react';
-import api from '../../api/client';
+import api from '../../lib/client';
 import { useT } from '../../hooks/useLanguage';
 import { cn } from '../../lib/format';
-import type { Message } from '../../types';
+import type { Message } from '../../lib/types';
 
 interface Peer { id: number; name: string; }
 

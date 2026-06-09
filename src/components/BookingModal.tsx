@@ -4,10 +4,10 @@ import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { CheckCircle2, LogIn } from 'lucide-react';
 import Modal from './Modal';
-import api from '../api/client';
+import api from '../lib/client';
 import { useStudentAuth } from '../hooks/useStudentAuth';
 import { cn, formatPrice } from '../lib/format';
-import type { PricingPackage } from '../types';
+import type { PricingPackage } from '../lib/types';
 
 interface BookingModalProps {
   open: boolean;
