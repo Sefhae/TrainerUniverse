@@ -104,14 +104,18 @@ export default function FaqPage() {
             </h3>
           </div>
           <div className="flex flex-col gap-3 sm:items-end">
-            <Link href="/trainers" className="btn btn-volt w-full sm:w-auto">
-              {t.nav.findTrainer}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/register" className="btn btn-outline-light w-full sm:w-auto">
-              {t.nav.becomeTrainer}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            {/* Inner wrapper sizes to the wider button; both buttons fill it so
+                they end up the same width. */}
+            <div className="flex w-full flex-col gap-3 sm:w-fit">
+              <Link href="/trainers" className="btn btn-volt w-full">
+                {t.nav.findTrainer}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/register" className="btn btn-outline-light w-full">
+                {t.nav.becomeTrainer}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>
