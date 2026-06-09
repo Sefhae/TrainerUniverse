@@ -146,7 +146,7 @@ export const translations = {
       searchSubtitle:
         'Search thousands of vetted coaches by skill and city — then scroll to explore TrainerUniverse.',
       searchSpecialtyPlaceholder: 'What do you want to train?',
-      searchCityPlaceholder: 'City (optional)',
+      searchCityPlaceholder: 'City',
       searchButton: 'Search',
       searchModeLabel: 'Class type',
       searchModeHelp: 'How do you want to train?',
@@ -631,7 +631,7 @@ export const translations = {
       searchSubtitle:
         'Binlerce onaylı koçu yeteneğe ve şehre göre ara — sonra TrainerUniverse’i keşfetmek için aşağı kaydır.',
       searchSpecialtyPlaceholder: 'Ne antrenmanı arıyorsun?',
-      searchCityPlaceholder: 'Şehir (opsiyonel)',
+      searchCityPlaceholder: 'Şehir',
       searchButton: 'Ara',
       searchModeLabel: 'Ders türü',
       searchModeHelp: 'Nasıl antrenman yapmak istersin?',

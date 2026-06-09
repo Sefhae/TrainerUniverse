@@ -14,8 +14,8 @@
     --glow: 200 255 0; /* volt — neon orbs glow against the dark hero */
   }
   .theme-light {
-    --surface: 245 245 240; /* bone — soft warm off-white, not stark white */
-    --surface-2: 255 255 255; /* white cards lift above the bone surface */
+    --surface: 255 255 255; /* pure white page background */
+    --surface-2: 255 255 255; /* cards/panels — distinguished by their borders + shadows */
     --content: 10 10 10; /* ink text */
     --accent: 74 102 0; /* deep volt — legible on light surfaces */
     --glow: 140 183 75; /* logo mid-green — reads on bone where neon volt vanishes */
