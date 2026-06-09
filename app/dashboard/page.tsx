@@ -89,7 +89,7 @@ function DashboardContent() {
       <div className="mx-auto max-w-7xl px-5 py-8 lg:px-8 lg:py-10">
         <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
           {/* Sidebar */}
-          <aside className="lg:sticky lg:top-[88px] lg:self-start">
+          <aside className="min-w-0 lg:sticky lg:top-[88px] lg:self-start">
             <div className="bg-ink text-bone">
               <div className="flex items-center gap-3 border-b border-white/10 p-5">
                 <div className="h-12 w-12 shrink-0 overflow-hidden bg-charcoal">

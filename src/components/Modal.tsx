@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '../lib/format';
 
@@ -20,6 +21,9 @@ const SIZES: Record<NonNullable<ModalProps['size']>, string> = {
 };
 
 export default function Modal({ open, onClose, title, subtitle, size = 'md', children }: ModalProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -34,9 +38,9 @@ export default function Modal({ open, onClose, title, subtitle, size = 'md', chi
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
       className="animate-fade-in fixed inset-0 z-[150] flex items-end justify-center bg-ink/80 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onMouseDown={onClose}
@@ -67,6 +71,7 @@ export default function Modal({ open, onClose, title, subtitle, size = 'md', chi
         )}
         <div className="px-6 py-6">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
