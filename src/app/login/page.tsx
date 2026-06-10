@@ -324,31 +324,6 @@ function AuthForm() {
                     : <><span>{t.loginSubmit}</span><ArrowRight className="h-4 w-4" /></>}
                 </button>
               </form>
-
-              {/* Demo box */}
-              <div className="mt-6 border border-ink/10 bg-white p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45">{t.demoTitle}</p>
-                <div className="mt-2 space-y-1 text-sm text-ink/60">
-                  <p>{t.demoTrainer}: <span className="font-mono">marcus@fitconnect.com · trainer123</span></p>
-                  <p>{t.demoStudent}: <span className="font-mono">demo.student@fitconnect.com · student123</span></p>
-                </div>
-                <div className="mt-2 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => { setEmail('marcus@fitconnect.com'); setPassword('trainer123'); }}
-                    className="text-[12px] font-semibold uppercase tracking-[0.1em] text-ink underline hover:text-ink/60"
-                  >
-                    {t.fillTrainer}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setEmail('demo.student@fitconnect.com'); setPassword('student123'); }}
-                    className="text-[12px] font-semibold uppercase tracking-[0.1em] text-ink underline hover:text-ink/60"
-                  >
-                    {t.fillStudent}
-                  </button>
-                </div>
-              </div>
             </>
           )}
 
