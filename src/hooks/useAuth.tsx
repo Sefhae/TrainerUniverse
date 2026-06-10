@@ -21,7 +21,7 @@ interface AuthContextValue extends AuthState {
   hydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithData: (data: { user: User; trainerId: number | null }) => void;
-  register: (payload: RegisterPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<{ needsConfirmation: boolean }>;
   logout: () => Promise<void>;
 }
 
@@ -64,8 +64,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const register = useCallback(async (payload: RegisterPayload) => {
-    const { data } = await api.post<AuthResponse>('/auth/register', payload);
+    const { data } = await api.post<AuthResponse & { needsConfirmation?: boolean }>(
+      '/auth/register',
+      payload
+    );
+    // Email confirmation on → no session yet; the caller shows a "check email" message.
+    if (data.needsConfirmation) return { needsConfirmation: true };
     setState({ user: data.user, trainerId: data.trainerId });
+    return { needsConfirmation: false };
   }, []);
 
   const logout = useCallback(async () => {

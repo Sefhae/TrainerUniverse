@@ -14,7 +14,7 @@ interface StudentAuthContextValue extends StudentAuthState {
   hydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithData: (data: { user: User; studentId: number | null }) => void;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<{ needsConfirmation: boolean }>;
   logout: () => Promise<void>;
 }
 
@@ -56,8 +56,13 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
-    const { data } = await api.post<StudentAuthResponse>('/auth/student-register', { name, email, password });
+    const { data } = await api.post<StudentAuthResponse & { needsConfirmation?: boolean }>(
+      '/auth/student-register',
+      { name, email, password }
+    );
+    if (data.needsConfirmation) return { needsConfirmation: true };
     setState({ user: data.user, studentId: data.studentId });
+    return { needsConfirmation: false };
   }, []);
 
   const logout = useCallback(async () => {

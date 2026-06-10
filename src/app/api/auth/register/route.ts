@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/supabase-server';
+import { getAdminSupabase } from '@/lib/supabase-admin';
 import { getAuthContext } from '@/lib/supabase-auth';
 import { authResponse, authErrorResponse, normalizeEmail } from '@/lib/auth-helpers';
 import { validatePassword } from '@/lib/password';
@@ -24,43 +25,57 @@ export async function POST(req: NextRequest) {
     const normalizedEmail = normalizeEmail(email);
     const supabase = await getServerSupabase();
 
-    // 1) Create the Supabase Auth user (this also sets the session cookies when
-    //    email confirmation is disabled — see SUPABASE_SETUP.md, step 4).
+    // 1) Create the Supabase Auth user. When "Confirm email" is ON, this sends a
+    //    confirmation email and returns NO session; the link points at /auth/callback.
     const { data: signUp, error: signUpError } = await supabase.auth.signUp({
       email: normalizedEmail,
       password: String(password),
+      options: { emailRedirectTo: `${req.nextUrl.origin}/auth/callback` },
     });
     if (signUpError) return authErrorResponse(signUpError);
     if (!signUp.user) return NextResponse.json({ error: 'Registration failed.' }, { status: 500 });
-    if (!signUp.session)
-      return NextResponse.json({ error: 'Please confirm your email, then sign in.' }, { status: 200 });
 
-    // 2) Create the app-side user row linked to the auth user.
-    const { data: appUser, error: userError } = await supabase
+    // 2) Create the app-side rows with the service-role client so it works even
+    //    when there's no session yet (email confirmation on). Idempotent per auth
+    //    user, so re-submitting an unconfirmed signup won't duplicate rows.
+    const admin = getAdminSupabase();
+    const { data: existing } = await admin
       .from('users')
-      .insert({ auth_id: signUp.user.id, email: normalizedEmail, role: 'trainer' })
       .select('id')
-      .single();
-    if (userError || !appUser) throw userError ?? new Error('Could not create user row.');
+      .eq('auth_id', signUp.user.id)
+      .maybeSingle();
 
-    // 3) Publish the trainer profile immediately (matches the old flow).
-    const { data: profile, error: profileError } = await supabase
-      .from('trainer_profiles')
-      .insert({ user_id: appUser.id, name: String(name).trim(), is_published: 1 })
-      .select('id')
-      .single();
-    if (profileError || !profile) throw profileError ?? new Error('Could not create profile.');
+    if (!existing) {
+      const { data: appUser, error: userError } = await admin
+        .from('users')
+        .insert({ auth_id: signUp.user.id, email: normalizedEmail, role: 'trainer' })
+        .select('id')
+        .single();
+      if (userError || !appUser) throw userError ?? new Error('Could not create user row.');
 
-    // 4) Link chosen specialties (unknown names are simply skipped).
-    if (Array.isArray(specialties) && specialties.length) {
-      const { data: specRows } = await supabase
-        .from('specialties')
-        .select('id, name')
-        .in('name', specialties.map(String));
-      const links = (specRows ?? []).map((s) => ({ trainer_id: profile.id, specialty_id: s.id }));
-      if (links.length) await supabase.from('trainer_specialties').insert(links);
+      const { data: profile, error: profileError } = await admin
+        .from('trainer_profiles')
+        .insert({ user_id: appUser.id, name: String(name).trim(), is_published: 1 })
+        .select('id')
+        .single();
+      if (profileError || !profile) throw profileError ?? new Error('Could not create profile.');
+
+      if (Array.isArray(specialties) && specialties.length) {
+        const { data: specRows } = await admin
+          .from('specialties')
+          .select('id, name')
+          .in('name', specialties.map(String));
+        const links = (specRows ?? []).map((s) => ({ trainer_id: profile.id, specialty_id: s.id }));
+        if (links.length) await admin.from('trainer_specialties').insert(links);
+      }
     }
 
+    // 3a) Email confirmation ON → no session yet. Tell the client to check email.
+    if (!signUp.session) {
+      return NextResponse.json({ needsConfirmation: true }, { status: 201 });
+    }
+
+    // 3b) Confirmation OFF → a session exists, so log the user straight in.
     const ctx = await getAuthContext(supabase);
     if (!ctx) return NextResponse.json({ error: 'Registration failed.' }, { status: 500 });
     return authResponse(ctx, 201);

@@ -76,6 +76,10 @@ export const translations = {
       errRegisterFailed: 'Registration failed. Please try again.',
       toastWelcomeBack: 'Welcome back!',
       toastAccountCreated: 'Account created! Complete your profile to get listed.',
+      toastConfirmEmail: 'Almost there! Check your email to confirm your account, then log in.',
+      continueWithGoogle: 'Continue with Google',
+      orDivider: 'or',
+      chooseRoleGoogle: 'One last step — are you a trainer or a student?',
     },
     nav: {
       home: 'Home',
@@ -579,6 +583,10 @@ export const translations = {
       errRegisterFailed: 'Kayıt başarısız. Lütfen tekrar deneyin.',
       toastWelcomeBack: 'Tekrar hoş geldiniz!',
       toastAccountCreated: 'Hesap oluşturuldu! Listelenmek için profilinizi tamamlayın.',
+      toastConfirmEmail: 'Neredeyse bitti! Hesabını onaylamak için e-postanı kontrol et, sonra giriş yap.',
+      continueWithGoogle: 'Google ile devam et',
+      orDivider: 'veya',
+      chooseRoleGoogle: 'Son bir adım — eğitmen misin, öğrenci mi?',
     },
     nav: {
       home: 'Ana Sayfa',
@@ -1160,6 +1168,10 @@ const esOverrides: Overrides = {
     errRegisterFailed: 'El registro falló. Inténtalo de nuevo.',
     toastWelcomeBack: '¡Bienvenido de nuevo!',
     toastAccountCreated: '¡Cuenta creada! Completa tu perfil para aparecer en la lista.',
+    toastConfirmEmail: '¡Casi listo! Revisa tu correo para confirmar tu cuenta y luego inicia sesión.',
+    continueWithGoogle: 'Continuar con Google',
+    orDivider: 'o',
+    chooseRoleGoogle: 'Un último paso: ¿eres entrenador o estudiante?',
   },
   dashboard: {
     settings: 'Ajustes',
