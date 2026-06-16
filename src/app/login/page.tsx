@@ -216,13 +216,14 @@ function AuthForm() {
         </p>
       </div>
 
-      {/* Form panel */}
-      <div className="flex items-center justify-center bg-bone px-5 py-14">
+      {/* Form panel — flips with the theme. `.auth-panel` scopes the token-based
+          field styles in globals.css so the modals' always-light fields stay put. */}
+      <div className="auth-panel flex items-center justify-center bg-surface px-5 py-14 text-content">
         <div className="w-full max-w-md">
 
           {/* Mode tabs — hidden on role-pick step */}
           {step !== 'role' && (
-            <div className="mb-8 flex border border-ink/15 bg-white">
+            <div className="mb-8 flex border border-content/15 bg-surface-2">
               {(['login', 'register'] as Mode[]).map((m) => (
                 <button
                   key={m}
@@ -230,7 +231,7 @@ function AuthForm() {
                   onClick={() => switchMode(m)}
                   className={cn(
                     'flex-1 py-2.5 text-[13px] font-semibold uppercase tracking-[0.12em] transition-colors duration-200',
-                    mode === m ? 'bg-ink text-bone' : 'text-ink/45 hover:text-ink'
+                    mode === m ? 'bg-content text-surface' : 'text-content/45 hover:text-content'
                   )}
                 >
                   {m === 'login' ? t.tabLogin : t.tabRegister}
@@ -252,15 +253,15 @@ function AuthForm() {
               <button
                 type="button"
                 onClick={handleGoogle}
-                className="flex w-full items-center justify-center gap-3 border border-ink/15 bg-white py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-ink/5"
+                className="flex w-full items-center justify-center gap-3 border border-ink/15 bg-white py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-bone"
               >
                 <GoogleIcon />
                 {t.continueWithGoogle}
               </button>
-              <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-[0.14em] text-ink/35">
-                <span className="h-px flex-1 bg-ink/10" />
+              <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-[0.14em] text-content/35">
+                <span className="h-px flex-1 bg-content/10" />
                 {t.orDivider}
-                <span className="h-px flex-1 bg-ink/10" />
+                <span className="h-px flex-1 bg-content/10" />
               </div>
             </>
           )}
@@ -269,12 +270,12 @@ function AuthForm() {
           {mode === 'login' && (
             <>
               <h2 className="font-display text-5xl leading-none tracking-wide">{t.loginTitle}</h2>
-              <p className="mt-2 text-sm text-ink/55">
+              <p className="mt-2 text-sm text-content/55">
                 {t.noAccount}{' '}
                 <button
                   type="button"
                   onClick={() => switchMode('register')}
-                  className="font-semibold text-ink underline hover:text-ink/70"
+                  className="font-semibold text-content underline hover:text-content/70"
                 >
                   {t.createOne}
                 </button>
@@ -310,7 +311,7 @@ function AuthForm() {
                     <button
                       type="button"
                       onClick={() => setShowPw((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-content/40 hover:text-content transition-colors"
                     >
                       {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -318,9 +319,9 @@ function AuthForm() {
                   {errors.password && <p className="field-error">{errors.password}</p>}
                 </div>
 
-                <button type="submit" disabled={submitting} className="btn btn-dark w-full">
+                <button type="submit" disabled={submitting} className="btn btn-contrast w-full">
                   {submitting
-                    ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-bone border-t-transparent" />
+                    ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-surface border-t-transparent" />
                     : <><span>{t.loginSubmit}</span><ArrowRight className="h-4 w-4" /></>}
                 </button>
               </form>
@@ -331,12 +332,12 @@ function AuthForm() {
           {mode === 'register' && step === 'credentials' && (
             <>
               <h2 className="font-display text-5xl leading-none tracking-wide">{t.registerTitle}</h2>
-              <p className="mt-2 text-sm text-ink/55">
+              <p className="mt-2 text-sm text-content/55">
                 {t.haveAccount}{' '}
                 <button
                   type="button"
                   onClick={() => switchMode('login')}
-                  className="font-semibold text-ink underline hover:text-ink/70"
+                  className="font-semibold text-content underline hover:text-content/70"
                 >
                   {t.logIn}
                 </button>
@@ -384,7 +385,7 @@ function AuthForm() {
                     <button
                       type="button"
                       onClick={() => setShowPw((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-content/40 hover:text-content transition-colors"
                     >
                       {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -398,14 +399,14 @@ function AuthForm() {
                           key={rule.id}
                           className={cn(
                             'flex items-center gap-1.5 text-[11px] transition-colors',
-                            ok ? 'text-green-600' : 'text-ink/40'
+                            ok ? 'text-green-600' : 'text-content/40'
                           )}
                         >
                           <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
                             {ok ? (
                               <Check className="h-3 w-3" strokeWidth={3} />
                             ) : (
-                              <span className="h-1 w-1 rounded-full bg-ink/30" />
+                              <span className="h-1 w-1 rounded-full bg-content/30" />
                             )}
                           </span>
                           {t.pwRules[rule.id as keyof typeof t.pwRules]}
@@ -416,12 +417,12 @@ function AuthForm() {
                 </div>
 
                 <div>
-                  <label className="flex items-start gap-2.5 text-sm text-ink/70">
+                  <label className="flex items-start gap-2.5 text-sm text-content/70">
                     <input
                       type="checkbox"
                       checked={accepted}
                       onChange={(e) => { setAccepted(e.target.checked); setErrors((p) => ({ ...p, accepted: '' })); }}
-                      className="mt-0.5 h-4 w-4 shrink-0 accent-ink"
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-content"
                     />
                     <span>
                       {t.agreePrefix}
@@ -429,7 +430,7 @@ function AuthForm() {
                         href="/user-agreement"
                         target="_blank"
                         rel="noreferrer"
-                        className="font-semibold text-ink underline hover:text-ink/70"
+                        className="font-semibold text-content underline hover:text-content/70"
                       >
                         {t.agreeLink}
                       </a>
@@ -439,7 +440,7 @@ function AuthForm() {
                   {errors.accepted && <p className="field-error">{errors.accepted}</p>}
                 </div>
 
-                <button type="submit" className="btn btn-dark w-full">
+                <button type="submit" className="btn btn-contrast w-full">
                   {t.continue}
                   <ArrowRight className="h-4 w-4" />
                 </button>
@@ -453,14 +454,14 @@ function AuthForm() {
               <button
                 type="button"
                 onClick={() => setStep('credentials')}
-                className="mb-6 flex items-center gap-1.5 text-sm font-semibold text-ink/50 hover:text-ink transition-colors"
+                className="mb-6 flex items-center gap-1.5 text-sm font-semibold text-content/50 hover:text-content transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
                 {t.back}
               </button>
 
               <h2 className="font-display text-4xl leading-none tracking-wide">{t.roleTitle}</h2>
-              <p className="mt-2 text-sm text-ink/55">{t.roleSubtitle}</p>
+              <p className="mt-2 text-sm text-content/55">{t.roleSubtitle}</p>
 
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
                 {/* Trainer card */}
@@ -468,28 +469,28 @@ function AuthForm() {
                   type="button"
                   disabled={submitting}
                   onClick={() => handleRolePick('trainer')}
-                  className="group flex flex-col gap-4 border border-ink/15 bg-white p-6 text-left transition-all duration-200 hover:border-ink hover:shadow-lg disabled:opacity-50"
+                  className="group flex flex-col gap-4 border border-content/15 bg-surface-2 p-6 text-left transition-all duration-200 hover:border-content hover:shadow-lg disabled:opacity-50"
                 >
                   <div className="flex h-10 w-10 items-center justify-center bg-volt text-2xl">
                     🏋️
                   </div>
                   <div>
                     <p className="font-display text-xl tracking-wide">{t.roleTrainer}</p>
-                    <p className="mt-1 text-sm text-ink/55">
+                    <p className="mt-1 text-sm text-content/55">
                       {t.roleTrainerDesc}
                     </p>
                   </div>
                   <ul className="mt-auto space-y-1.5">
                     {t.trainerBenefits.slice(0, 3).map((b) => (
-                      <li key={b} className="flex items-start gap-2 text-xs text-ink/50">
+                      <li key={b} className="flex items-start gap-2 text-xs text-content/50">
                         <Check className="mt-0.5 h-3 w-3 shrink-0 text-accent" strokeWidth={3} />
                         {b}
                       </li>
                     ))}
                   </ul>
                   {submitting
-                    ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink border-t-transparent self-end" />
-                    : <ArrowRight className="h-4 w-4 self-end text-ink/30 transition-colors group-hover:text-ink" />}
+                    ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-content border-t-transparent self-end" />
+                    : <ArrowRight className="h-4 w-4 self-end text-content/30 transition-colors group-hover:text-content" />}
                 </button>
 
                 {/* Student card */}
@@ -497,28 +498,28 @@ function AuthForm() {
                   type="button"
                   disabled={submitting}
                   onClick={() => handleRolePick('student')}
-                  className="group flex flex-col gap-4 border border-ink/15 bg-white p-6 text-left transition-all duration-200 hover:border-ink hover:shadow-lg disabled:opacity-50"
+                  className="group flex flex-col gap-4 border border-content/15 bg-surface-2 p-6 text-left transition-all duration-200 hover:border-content hover:shadow-lg disabled:opacity-50"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center bg-ink text-2xl">
+                  <div className="flex h-10 w-10 items-center justify-center bg-content text-2xl">
                     📚
                   </div>
                   <div>
                     <p className="font-display text-xl tracking-wide">{t.roleStudent}</p>
-                    <p className="mt-1 text-sm text-ink/55">
+                    <p className="mt-1 text-sm text-content/55">
                       {t.roleStudentDesc}
                     </p>
                   </div>
                   <ul className="mt-auto space-y-1.5">
                     {t.studentBenefits.slice(0, 3).map((b) => (
-                      <li key={b} className="flex items-start gap-2 text-xs text-ink/50">
-                        <Check className="mt-0.5 h-3 w-3 shrink-0 text-ink/40" strokeWidth={3} />
+                      <li key={b} className="flex items-start gap-2 text-xs text-content/50">
+                        <Check className="mt-0.5 h-3 w-3 shrink-0 text-content/40" strokeWidth={3} />
                         {b}
                       </li>
                     ))}
                   </ul>
                   {submitting
-                    ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink border-t-transparent self-end" />
-                    : <ArrowRight className="h-4 w-4 self-end text-ink/30 transition-colors group-hover:text-ink" />}
+                    ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-content border-t-transparent self-end" />
+                    : <ArrowRight className="h-4 w-4 self-end text-content/30 transition-colors group-hover:text-content" />}
                 </button>
               </div>
             </>
@@ -531,7 +532,7 @@ function AuthForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-[calc(100vh-72px)] bg-bone" />}>
+    <Suspense fallback={<div className="min-h-[calc(100vh-72px)] bg-surface" />}>
       <AuthForm />
     </Suspense>
   );

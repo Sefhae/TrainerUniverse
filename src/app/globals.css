@@ -54,6 +54,11 @@
   .btn-dark {
     @apply bg-ink text-bone hover:bg-charcoal;
   }
+  /* Solid primary on a flipping panel — inverts with the theme so it stays
+     high-contrast on both dark (bone button) and light (ink button) surfaces. */
+  .btn-contrast {
+    @apply bg-content text-surface hover:bg-content/85;
+  }
   /* Outline button that lives on a flipping panel — tracks the theme so it
      stays legible on both dark (ink) and light (white) surfaces. */
   .btn-outline-light {
@@ -77,6 +82,20 @@
   }
   .field-error {
     @apply mt-1.5 flex items-center gap-1 text-[12px] font-medium text-red-600;
+  }
+
+  /* Login/register sits on a theme-flipping panel (.auth-panel), so its fields
+     track the theme instead of the always-light defaults shared with modals.
+     The -invalid override comes last so the red border wins at equal specificity. */
+  .auth-panel .field-label {
+    @apply text-content/55;
+  }
+  .auth-panel .field-input {
+    @apply bg-surface-2 border-content/15 text-content
+      placeholder:text-content/35 focus:border-content;
+  }
+  .auth-panel .field-input-invalid {
+    @apply border-red-500 focus:border-red-500;
   }
 
   /* --- bits --- */
